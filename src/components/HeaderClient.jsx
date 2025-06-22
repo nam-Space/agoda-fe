@@ -1,8 +1,8 @@
 import React, { useState } from "react";
-import logoImg from "../images/logo.svg";
-import viImg from "../images/vi.svg";
-import enImg from "../images/en.svg";
-import koreanImg from "../images/korea.png";
+import logoImg from "../images/header/logo.svg";
+import viImg from "../images/header/vi.svg";
+import enImg from "../images/header/en.svg";
+import koreanImg from "../images/header/korea.png";
 import { Link } from "react-router-dom";
 import { Badge, Modal, Popover } from "antd";
 import {
@@ -121,11 +121,31 @@ const HeaderClient = () => {
                 <Popover
                     content={
                         <div className="w-[250px]">
-                            <div className="text-center py-[6px] rounded-[3px] text-[#2067da] border-[1px] border-[#2067da]">
-                                <Link>Đăng nhập</Link>
+                            <p className="bg-[#f8f7f9] px-[24px] py-[12px]">
+                                Đăng nhập
+                            </p>
+                            <div className="mt-[12px]">
+                                <div className="text-center py-[6px] rounded-[3px] text-[#2067da] border-[1px] border-[#2067da]">
+                                    <Link>Đăng nhập</Link>
+                                </div>
+                                <div className="mt-[20px] text-center py-[6px] rounded-[3px] text-white bg-[#2067da] border-[1px] border-[#2067da]">
+                                    <Link>Tạo tài khoản</Link>
+                                </div>
                             </div>
-                            <div className="mt-[24px] text-center py-[6px] rounded-[3px] text-white bg-[#2067da] border-[1px] border-[#2067da]">
-                                <Link>Tạo tài khoản</Link>
+                            <p className="bg-[#f8f7f9] px-[24px] py-[12px] mt-[12px]">
+                                Cài đặt
+                            </p>
+                            <div className="flex items-center gap-[12px] font-bold p-[12px] border-[1px] rounded-[10px] border-white">
+                                <div className="flex items-center gap-[12px]">
+                                    <img
+                                        src={viImg}
+                                        className="w-[30px] h-[24px]"
+                                    />
+                                    <span className="text-[16px]">
+                                        {" "}
+                                        Tiếng Việt
+                                    </span>
+                                </div>
                             </div>
                         </div>
                     }
