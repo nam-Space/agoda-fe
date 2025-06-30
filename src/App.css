@@ -23,3 +23,36 @@
     border-radius: 16px;
     width: 1124px;
 }
+
+.banner-home .ant-tabs .ant-tabs-nav .ant-tabs-nav-wrap {
+    overflow: unset;
+}
+
+.tab-profile-container .ant-tabs-nav {
+    margin-bottom: 8px;
+}
+
+.tab-profile-container .ant-tabs-nav-wrap {
+    justify-content: center;
+    background-color: white;
+}
+
+.tab-profile-container .ant-tabs-nav-wrap .ant-tabs-nav-list {
+    width: 100%;
+    display: grid;
+    grid-template-columns: auto auto auto;
+}
+
+.tab-profile-container .ant-tabs-nav-wrap .ant-tabs-nav-list .ant-tabs-tab {
+    justify-content: center;
+}
+
+.swiper > .swiper-pagination {
+    position: static;
+    margin-top: 16px;
+}
+
+.swiper > .swiper-pagination > .swiper-pagination-bullet {
+    width: 12px;
+    height: 12px;
+}
