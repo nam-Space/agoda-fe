@@ -79,7 +79,7 @@ const HeaderClient = () => {
                         </Popover>
                     </div>
                     <div>
-                        <Link>Hoạt động</Link>
+                        <Link to={"/activity"}>Hoạt động</Link>
                     </div>
                     <div>
                         <Link>Phiếu giảm giá và ưu đãi</Link>
