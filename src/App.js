@@ -11,6 +11,7 @@ import FavouritePage from 'pages/FavouritePage';
 import FavouriteRoomPage from 'pages/FavouriteRoomPage';
 import CartPage from 'pages/CartPage';
 import ActivityPage from 'pages/ActivityPage';
+import ActivityCityPage from 'pages/ActivityCityPage';
 
 function App() {
   const router = createBrowserRouter([
@@ -37,6 +38,11 @@ function App() {
           path: "activity",
           element:
             <ActivityPage />
+        },
+        {
+          path: "activity/:cityId",
+          element:
+            <ActivityCityPage />
         },
       ],
     },

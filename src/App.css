@@ -47,6 +47,14 @@
     justify-content: center;
 }
 
+.tab-activity-container .ant-tabs-nav-wrap {
+    justify-content: center;
+}
+
+.tab-activity-container .ant-tabs-nav {
+    box-shadow: 0px 1px 3px 0px rgba(4, 7, 10, 0.16);
+}
+
 .swiper > .swiper-pagination {
     position: static;
     margin-top: 16px;
@@ -55,4 +63,32 @@
 .swiper > .swiper-pagination > .swiper-pagination-bullet {
     width: 12px;
     height: 12px;
+}
+
+.ant-collapse .ant-collapse-item .ant-collapse-header {
+    padding: 0;
+}
+
+.ant-collapse
+    .ant-collapse-item
+    .ant-collapse-header
+    .ant-collapse-header-text {
+    order: 1;
+}
+
+.ant-collapse
+    .ant-collapse-item
+    .ant-collapse-header
+    .ant-collapse-expand-icon {
+    order: 2;
+    margin-top: 3px;
+    padding-right: 0;
+}
+
+.ant-collapse
+    .ant-collapse-item
+    .ant-collapse-content
+    .ant-collapse-content-box {
+    padding: 0;
+    margin-top: 16px;
 }
