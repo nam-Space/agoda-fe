@@ -1,6 +1,6 @@
 import React from "react";
 import bgImg from "../../images/home/bg-agoda.png";
-import { Tabs } from "antd";
+import { Badge, Tabs } from "antd";
 import { FaHotel } from "react-icons/fa6";
 import { FaHome } from "react-icons/fa";
 import { MdFlightTakeoff } from "react-icons/md";
@@ -40,6 +40,12 @@ const BackgroundHome = () => {
             key: "3",
             label: (
                 <div className="flex items-center gap-[5px]">
+                    <Badge.Ribbon
+                        text="Đặt gói tiết kiệm"
+                        color="red"
+                        placement="start"
+                        className="top-[-30px] h-[18px] text-[10px] leading-[18px]"
+                    ></Badge.Ribbon>
                     <MdFlightTakeoff className="text-[18px]" />
                     Máy bay + K.sạn
                 </div>
@@ -60,6 +66,12 @@ const BackgroundHome = () => {
             key: "5",
             label: (
                 <div className="flex items-center gap-[5px]">
+                    <Badge.Ribbon
+                        text="Mới!"
+                        color="red"
+                        placement="start"
+                        className="top-[-30px] h-[18px] text-[10px] leading-[18px]"
+                    ></Badge.Ribbon>
                     <LuFerrisWheel className="text-[18px]" />
                     Hoạt động
                 </div>
