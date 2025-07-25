@@ -12,6 +12,8 @@ import FavouriteRoomPage from 'pages/FavouriteRoomPage';
 import CartPage from 'pages/CartPage';
 import ActivityPage from 'pages/ActivityPage';
 import ActivityCityPage from 'pages/ActivityCityPage';
+import HotelPage from 'pages/hotel/HotelPage';
+import HotelPageBooking from 'pages/hotel/HotelPageBooking';
 
 function App() {
   const router = createBrowserRouter([
@@ -43,6 +45,16 @@ function App() {
           path: "activity/:cityId",
           element:
             <ActivityCityPage />
+        },
+        {
+          path: "hotel",
+          element:
+            <HotelPage /> // Add HotelPage route
+        },
+        {
+          path: "hotel-booking",
+          element:
+            <HotelPageBooking /> // Add HotelPage route
         },
       ],
     },
