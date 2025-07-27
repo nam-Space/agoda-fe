@@ -1,7 +1,10 @@
 import { PlusOutlined, SearchOutlined } from "@ant-design/icons";
-import { DatePicker, Input, Radio, Select } from "antd";
+import { DatePicker, Input, InputNumber, Radio, Select } from "antd";
 import React, { useState } from "react";
+import { HiOutlineUsers } from "react-icons/hi2";
 import { IoAirplaneOutline } from "react-icons/io5";
+import { MdOutlineMeetingRoom } from "react-icons/md";
+import { LiaChildSolid } from "react-icons/lia";
 
 const { RangePicker } = DatePicker;
 
@@ -50,27 +53,25 @@ const HotelTab = () => {
                 />
                 <div className="mt-[12px] grid grid-cols-2 gap-[12px]">
                     <RangePicker />
-                    <Select
-                        showSearch
-                        placeholder="Select a person"
-                        optionFilterProp="label"
-                        onChange={onChange}
-                        onSearch={onSearch}
-                        options={[
-                            {
-                                value: "jack",
-                                label: "Jack",
-                            },
-                            {
-                                value: "lucy",
-                                label: "Lucy",
-                            },
-                            {
-                                value: "tom",
-                                label: "Tom",
-                            },
-                        ]}
-                    />
+                    <div className="grid grid-cols-3 gap-[12px]">
+                        <InputNumber
+                            addonBefore={<span>Phòng</span>}
+                            prefix={
+                                <MdOutlineMeetingRoom className="text-[22px]" />
+                            }
+                            style={{ width: "100%" }}
+                        />
+                        <InputNumber
+                            addonBefore={<span>Người lớn</span>}
+                            prefix={<HiOutlineUsers className="text-[22px]" />}
+                            style={{ width: "100%" }}
+                        />
+                        <InputNumber
+                            addonBefore={<span>Trẻ em</span>}
+                            prefix={<LiaChildSolid className="text-[22px]" />}
+                            style={{ width: "100%" }}
+                        />
+                    </div>
                 </div>
                 <div>
                     {additionFlight ? (

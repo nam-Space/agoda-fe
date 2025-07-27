@@ -12,6 +12,10 @@ import FavouriteRoomPage from 'pages/FavouriteRoomPage';
 import CartPage from 'pages/CartPage';
 import ActivityPage from 'pages/ActivityPage';
 import ActivityCityPage from 'pages/ActivityCityPage';
+import HotelPage from 'pages/hotel/HotelPage';
+import HotelPageBooking from 'pages/hotel/HotelPageBooking';
+import BookingVehiclesPage from 'pages/BookingVehiclesPage';
+import BookingContactInfomationPage from 'pages/BookingContactInfomationPage';
 
 function App() {
   const router = createBrowserRouter([
@@ -43,6 +47,26 @@ function App() {
           path: "activity/:cityId",
           element:
             <ActivityCityPage />
+        },
+        {
+          path: "hotel",
+          element:
+            <HotelPage /> // Add HotelPage route
+        },
+        {
+          path: "hotel-booking",
+          element:
+            <HotelPageBooking /> // Add HotelPage route
+        },
+        {
+          path: "booking-vehicles",
+          element:
+            <BookingVehiclesPage /> // Add HotelPage route
+        },
+        {
+          path: "booking-contact-information",
+          element:
+            <BookingContactInfomationPage /> // Add HotelPage route
         },
       ],
     },

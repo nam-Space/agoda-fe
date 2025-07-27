@@ -1,0 +1,117 @@
+import React, { useState } from 'react';
+import { Tune } from '@mui/icons-material';
+
+const FilterSection = () => {
+    const [showMoreFilters, setShowMoreFilters] = useState(false); // State to toggle additional filters
+    const [selectedFilters, setSelectedFilters] = useState([]); // State to track selected filters
+
+    const toggleShowMoreFilters = () => {
+        setShowMoreFilters(!showMoreFilters); // Toggle between showing more filters and hiding them
+    };
+
+    const toggleFilterSelection = (filter) => {
+        if (selectedFilters.includes(filter)) {
+            setSelectedFilters(selectedFilters.filter((item) => item !== filter)); // Remove filter if already selected
+        } else {
+            setSelectedFilters([...selectedFilters, filter]); // Add filter if not selected
+        }
+    };
+
+    const clearAllFilters = () => {
+        setSelectedFilters([]); // Reset selected filters
+    };
+
+    return (
+        <div className="filter-section bg-white border border-gray-300 rounded-lg p-4">
+            {/* Title */}
+            <div className="flex justify-between items-center mb-4">
+                <h2 className="text-lg font-bold text-gray-800">Chọn phòng</h2>
+                <a href="#" className="text-blue-600 hover:underline text-sm font-bold">Chúng tôi khớp giá!</a>
+            </div>
+
+            {/* Filters */}
+            <div className="filters">
+                <div className="flex justify-between items-center mb-4">
+                    <div className="flex items-center space-x-2">
+                        <Tune className="text-gray-600" />
+                        <span className="text-sm font-bold text-gray-800">Chọn lọc:</span>
+                    </div>
+                    <button
+                        onClick={clearAllFilters}
+                        className="text-blue-600 hover:underline text-sm"
+                    >
+                        Xóa hết
+                    </button>
+                </div>
+
+                {/* Tip */}
+                <p className="text-sm text-gray-600 mb-4">
+                    <span className="text-green-600 font-bold">Mẹo:</span> Phải một thời gian mới đến ngày quý khách đến/đi. Hãy thử một ưu đãi có
+                    <a href="#" className="text-green-600 hover:underline"> hủy Miễn Phí</a> để linh hoạt trong trường hợp kế hoạch thay đổi.
+                </p>
+
+                {/* Filter Buttons */}
+                <div className="grid grid-cols-3 gap-2">
+                    {[
+                        { label: 'Không hút thuốc (5)', icon: '🚭' },
+                        { label: 'Nhà bếp (10)', icon: '🏠' },
+                        { label: 'Giường đôi lớn (5)', icon: '🛏️' },
+                        { label: 'Hướng biển (3)', icon: '🌊' },
+                        { label: '≥ 20 m² (10)', icon: '📏' },
+                        { label: '≥ 40 m² (10)', icon: '📏' },
+                        { label: '≥ 60 m² (3)', icon: '📏' },
+                        { label: 'Lựa chọn trả tiền sau (4)', icon: '💳' },
+                        { label: 'Hủy miễn phí (10)', icon: '🔄' },
+                    ].map((filter, index) => (
+                        <button
+                            key={index}
+                            onClick={() => toggleFilterSelection(filter.label)}
+                            className={`flex items-center border rounded-full px-4 py-2 text-sm ${
+                                selectedFilters.includes(filter.label)
+                                    ? 'bg-blue-600 text-white'
+                                    : 'bg-white border-gray-300 text-gray-800'
+                            }`}
+                        >
+                            <span className="mr-2">{filter.icon}</span> {filter.label}
+                        </button>
+                    ))}
+                </div>
+
+                {/* Additional Filters */}
+                {showMoreFilters && (
+                    <div className="grid grid-cols-3 gap-2 mt-4">
+                        {[
+                            { label: 'Đánh giá cao (8)', icon: '🌟' },
+                            { label: 'Bồn tắm (5)', icon: '🛁' },
+                            { label: 'Gần bãi biển (7)', icon: '🏖️' },
+                        ].map((filter, index) => (
+                            <button
+                                key={index}
+                                onClick={() => toggleFilterSelection(filter.label)}
+                                className={`flex items-center border rounded-full px-4 py-2 text-sm ${
+                                    selectedFilters.includes(filter.label)
+                                        ? 'bg-blue-600 text-white'
+                                        : 'bg-white border-gray-300 text-gray-800'
+                                }`}
+                            >
+                                <span className="mr-2">{filter.icon}</span> {filter.label}
+                            </button>
+                        ))}
+                    </div>
+                )}
+
+                {/* More Filters Link */}
+                <div className="text-center mt-4">
+                    <button
+                        onClick={toggleShowMoreFilters}
+                        className="text-blue-600 hover:underline text-sm"
+                    >
+                        {showMoreFilters ? 'Thu gọn' : 'Xem 3 mục khác'}
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+export default FilterSection;
