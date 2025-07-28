@@ -4,6 +4,7 @@ import { Navigation } from "swiper/modules";
 import { IoIosStar } from "react-icons/io";
 import { Tag } from "antd";
 import { BsLightningChargeFill } from "react-icons/bs";
+import { Link } from "react-router-dom";
 
 const TopActivity = () => {
     return (
@@ -21,7 +22,10 @@ const TopActivity = () => {
                     >
                         {new Array(15).fill(0).map((item, index) => (
                             <SwiperSlide key={index}>
-                                <div className="rounded-[16px] overflow-hidden border-[1px] border-[#d5d9e2] hover:shadow-[rgba(4,7,10,0.24)_0px_4px_10px_0px] transition-all duration-200">
+                                <Link
+                                    to={"/activity/detail/1"}
+                                    className="rounded-[16px] overflow-hidden border-[1px] border-[#d5d9e2] hover:shadow-[rgba(4,7,10,0.24)_0px_4px_10px_0px] transition-all duration-200"
+                                >
                                     <img
                                         src="https://media-cdn.tripadvisor.com/media/attractions-splice-spp-720x480/13/e5/1b/2f.jpg"
                                         className="w-full h-[170px] object-cover"
@@ -78,7 +82,7 @@ const TopActivity = () => {
                                             </div>
                                         </div>
                                     </div>
-                                </div>
+                                </Link>
                             </SwiperSlide>
                         ))}
                     </Swiper>

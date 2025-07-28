@@ -23,7 +23,7 @@ const HeaderClient = () => {
     return (
         <div className="h-[60px] flex items-center justify-between px-[16px] shadow-[rgba(0,0,0,0.2)_0px_1px_3px_1px]">
             <div className="px-[16px] flex items-center gap-[12px]">
-                <Link to={"/hotel"}>
+                <Link to={"/"}>
                     <img src={logoImg} className="h-[37px]" />
                 </Link>
                 <div className="px-[16px] flex items-center gap-[28px]">
