@@ -3,10 +3,12 @@ import { DatePicker, Input, InputNumber, Radio, Select } from "antd";
 import React, { useState } from "react";
 import { HiOutlineUsers } from "react-icons/hi2";
 import { IoAirplaneOutline, IoLocationOutline } from "react-icons/io5";
+import { useNavigate } from "react-router-dom";
 
 const { RangePicker } = DatePicker;
 
 const AirportTab = () => {
+    const navigate = useNavigate();
     const [option, setOption] = useState("from-airport");
 
     return (
@@ -64,7 +66,10 @@ const AirportTab = () => {
                         style={{ width: "100%" }}
                     />
                 </div>
-                <div className="absolute left-[50%] translate-x-[-50%] w-[466px] mt-[20px] text-center py-[12px] text-white bg-[#5392f9] border-[1px] border-[#5392f9] text-[20px] rounded-[8px] cursor-pointer">
+                <div
+                    onClick={() => navigate("/booking-vehicles")}
+                    className="absolute left-[50%] translate-x-[-50%] w-[466px] mt-[20px] text-center py-[12px] text-white bg-[#5392f9] border-[1px] border-[#5392f9] text-[20px] rounded-[8px] cursor-pointer"
+                >
                     Tìm
                 </div>
             </div>

@@ -8,6 +8,7 @@ import { ImSpoonKnife } from "react-icons/im";
 import { IoIosStar, IoMdMusicalNote } from "react-icons/io";
 import { MdTour, MdWindow } from "react-icons/md";
 import { PiListChecksFill } from "react-icons/pi";
+import { Link } from "react-router-dom";
 
 const ActivityCity = () => {
     const [selectedItem, setSelectedItem] = useState(0);
@@ -488,7 +489,8 @@ const ActivityCity = () => {
                     <div className="col-start-2 col-end-7">
                         <div className="grid grid-cols-4 gap-[12px]">
                             {new Array(30).fill(0).map((item, index) => (
-                                <div
+                                <Link
+                                    to={"/activity/detail/1"}
                                     key={index}
                                     className="bg-white rounded-[16px] overflow-hidden border-[1px] border-[#d5d9e2] hover:shadow-[rgba(4,7,10,0.24)_0px_4px_10px_0px] transition-all duration-200"
                                 >
@@ -547,7 +549,7 @@ const ActivityCity = () => {
                                             </div>
                                         </div>
                                     </div>
-                                </div>
+                                </Link>
                             ))}
                         </div>
                         <div className="mt-[16px] flex items-center justify-between">

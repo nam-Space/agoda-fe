@@ -8,7 +8,7 @@ const ExploreLocationNearby = () => {
         <div>
             <div className="mt-[48px] max-w-[83.33333%] mx-auto">
                 <h2 className="text-[24px] leading-[29px] font-semibold">
-                    Các hoạt động hàng đầu gần quý khách
+                    Khám phá các địa điểm xung quanh
                 </h2>
                 <div className="mt-[12px]">
                     <Swiper
@@ -20,7 +20,7 @@ const ExploreLocationNearby = () => {
                     >
                         {new Array(15).fill(0).map((item, index) => (
                             <SwiperSlide key={index}>
-                                <Link to={"/activity/1"}>
+                                <Link to={"/activity/city/1"}>
                                     <img
                                         src="https://pix6.agoda.net/geo/city/16552/1_16552_02.jpg?ca=6&ce=1&s=396x298&ar=4x3"
                                         className="w-full h-[148px] object-cover rounded-[16px]"
