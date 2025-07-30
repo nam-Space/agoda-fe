@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import HotelMapPopup from 'components/Hotel/HotelMapPopup';
+import { useState } from 'react';
 
 const HotelOverviewSection = ({
     title,
@@ -15,10 +16,11 @@ const HotelOverviewSection = ({
     hotSaleText,
     hotSaleCount,
 }) => {
-    const [isExpanded, setIsExpanded] = useState(false); // State to toggle readMore functionality
+    const [isExpanded, setIsExpanded] = useState(false);
+    const [showMap, setShowMap] = useState(false);
 
     const toggleReadMore = () => {
-        setIsExpanded(!isExpanded); // Toggle between expanded and truncated text
+        setIsExpanded(!isExpanded);
     };
 
     return (
@@ -27,9 +29,24 @@ const HotelOverviewSection = ({
             <div className="mb-6">
                 <h1 className="text-2xl font-bold text-gray-800">{title}</h1>
                 <p className="text-sm text-gray-600">
-                    {address} -
-                    <a href={mapLink} className="text-blue-600 hover:underline">TRÊN BẢN ĐỒ</a>
+                    {address} -{' '}
+                    <a
+                        href="#"
+                        onClick={(e) => {
+                            e.preventDefault();
+                            setShowMap(true);
+                        }}
+                        className="text-blue-600 hover:underline"
+                    >
+                        TRÊN BẢN ĐỒ
+                    </a>
                 </p>
+
+                {/* SHOW POPUP OUTSIDE <p> TAG! */}
+                {showMap && (
+                    <HotelMapPopup onClose={() => setShowMap(false)} />
+                )}
+
                 <div className="flex space-x-2 mt-4">
                     {tags.map((tag, index) => (
                         <span
@@ -42,22 +59,20 @@ const HotelOverviewSection = ({
                 </div>
             </div>
 
-            {/* Highlights Section */}
-            <div className="highlights-section grid grid-cols-5 gap-4 mb-6">
-                {highlights.map((highlight, index) => (
-                    <div key={index} className="flex flex-col items-center">
-                        {highlight.icon ? (
-                            <img src={highlight.icon} alt="Icon" className="w-8 h-8 mb-2" />
-                        ) : (
-                            <span className="w-8 h-8 mb-2 flex items-center justify-center">
-                                {/* Placeholder content */}
-                                <p className="text-xs text-gray-600"></p>
-                            </span>
-                        )}
-                        <p className="text-sm text-gray-600">{highlight.text}</p>
+           {/* Highlights Section */}
+           <div className="highlights-section grid grid-cols-5 gap-4 mb-6">
+            {highlights.map((highlight, index) => (
+                <div key={index} className="flex flex-col items-center text-center">
+                    {highlight.icon ? (
+                        <img src={highlight.icon} alt="Icon" className="w-8 h-8 mb-1" />
+                    ) : (
+                    <span className="w-8 h-8 mb-1 flex items-center justify-center" />
+                    )}
+                    <p className="text-sm text-gray-600 leading-5">{highlight.text}</p>
                     </div>
                 ))}
-            </div>
+                </div>
+
 
             {/* Room and Space Section */}
             <div className="room-space-section mb-6">
@@ -87,6 +102,7 @@ const HotelOverviewSection = ({
                         </div>
                     ))}
                 </div>
+
                 <hr className="border-t border-gray-300 mb-4" />
                 <h2 className="text-lg font-bold text-gray-800 mb-4">Cơ sở vật chất</h2>
                 <ul className="grid grid-cols-2 gap-4 text-sm text-gray-600">
@@ -94,14 +110,16 @@ const HotelOverviewSection = ({
                         <li key={index}>✔ {facility}</li>
                     ))}
                 </ul>
+
                 <hr className="border-t border-gray-300 mb-4" />
                 <h2 className="text-lg font-bold text-gray-800 mb-4">Về chúng tôi</h2>
                 <p className="text-sm text-gray-600 mb-4">
-                    {isExpanded ? aboutText : `${aboutText.substring(0, 100)}...`} {/* Show truncated or full text */}
+                    {isExpanded ? aboutText : `${aboutText.substring(0, 100)}...`}
                 </p>
                 <button onClick={toggleReadMore} className="text-blue-600 hover:underline">
-                    {isExpanded ? 'Thu gọn' : 'Đọc thêm'} {/* Toggle button text */}
+                    {isExpanded ? 'Thu gọn' : 'Đọc thêm'}
                 </button>
+
                 <hr className="border-t border-gray-300 mb-4" />
                 <div className="bg-red-100 text-red-600 p-4 rounded-lg">
                     <p className="text-sm font-bold">{hotSaleText}</p>
