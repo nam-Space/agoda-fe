@@ -1,22 +1,20 @@
 
-import { createBrowserRouter, RouterProvider } from 'react-router-dom';
-import './App.css';
-import HomePage from 'pages/HomePage';
-import ProfileHotelPage from 'pages/ProfileHotelPage';
-import ProfileFlightPage from 'pages/ProfileFlightPage';
-import ProfileActivityPage from 'pages/ProfileActivityPage';
-import ProfileChatPage from 'pages/ProfileChatPage';
-import ProfilePage from 'pages/ProfilePage';
+import ActivityCityPage from 'pages/activity/ActivityCityPage';
+import ActivityPage from 'pages/activity/ActivityPage';
+import CartPage from 'pages/CartPage';
 import FavouritePage from 'pages/FavouritePage';
 import FavouriteRoomPage from 'pages/FavouriteRoomPage';
-import CartPage from 'pages/CartPage';
-import ActivityPage from 'pages/activity/ActivityPage';
-import ActivityCityPage from 'pages/activity/ActivityCityPage';
+import FlightPage from 'pages/flight/FlightPage';
+import HomePage from 'pages/HomePage';
 import HotelPage from 'pages/hotel/HotelPage';
 import HotelPageBooking from 'pages/hotel/HotelPageBooking';
-import BookingVehiclesPage from 'pages/BookingVehiclesPage';
-import BookingContactInfomationPage from 'pages/BookingContactInfomationPage';
-import ActivityDetailPage from 'pages/activity/ActivityDetailPage';
+import ProfileActivityPage from 'pages/ProfileActivityPage';
+import ProfileChatPage from 'pages/ProfileChatPage';
+import ProfileFlightPage from 'pages/ProfileFlightPage';
+import ProfileHotelPage from 'pages/ProfileHotelPage';
+import ProfilePage from 'pages/ProfilePage';
+import { createBrowserRouter, RouterProvider } from 'react-router-dom';
+import './App.css';
 
 function App() {
   const router = createBrowserRouter([
@@ -45,14 +43,9 @@ function App() {
             <ActivityPage />
         },
         {
-          path: "activity/city/:cityId",
+          path: "activity/:cityId",
           element:
             <ActivityCityPage />
-        },
-        {
-          path: "activity/detail/:activityId",
-          element:
-            <ActivityDetailPage />
         },
         {
           path: "hotel",
@@ -65,14 +58,9 @@ function App() {
             <HotelPageBooking /> // Add HotelPage route
         },
         {
-          path: "booking-vehicles",
+          path: "flight",
           element:
-            <BookingVehiclesPage /> // Add HotelPage route
-        },
-        {
-          path: "booking-contact-information",
-          element:
-            <BookingContactInfomationPage /> // Add HotelPage route
+            <FlightPage /> // Add HotelPage route
         },
       ],
     },
