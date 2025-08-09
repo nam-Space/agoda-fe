@@ -17,6 +17,7 @@ import HotelPageBooking from 'pages/hotel/HotelPageBooking';
 import BookingVehiclesPage from 'pages/BookingVehiclesPage';
 import BookingContactInfomationPage from 'pages/BookingContactInfomationPage';
 import ActivityDetailPage from 'pages/activity/ActivityDetailPage';
+import CityPage from 'pages/CityPage'
 
 function App() {
   const router = createBrowserRouter([
@@ -63,6 +64,11 @@ function App() {
           path: "hotel-booking",
           element:
             <HotelPageBooking /> // Add HotelPage route
+        },
+        {
+          path: "city/:cityName",
+          element:
+            <CityPage /> // Add HotelPage route
         },
         {
           path: "booking-vehicles",
