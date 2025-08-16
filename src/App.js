@@ -15,6 +15,9 @@ import ProfileHotelPage from 'pages/ProfileHotelPage';
 import ProfilePage from 'pages/ProfilePage';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import './App.css';
+import ActivityDetailPage from 'pages/activity/ActivityDetailPage';
+import BookingVehiclesPage from 'pages/BookingVehiclesPage';
+import BookingContactInfomationPage from 'pages/BookingContactInfomationPage';
 
 function App() {
   const router = createBrowserRouter([
@@ -43,9 +46,14 @@ function App() {
             <ActivityPage />
         },
         {
-          path: "activity/:cityId",
+          path: "activity/city/:cityId",
           element:
             <ActivityCityPage />
+        },
+        {
+          path: "activity/detail/:activityId",
+          element:
+            <ActivityDetailPage />
         },
         {
           path: "hotel",
@@ -61,6 +69,16 @@ function App() {
           path: "flight",
           element:
             <FlightPage /> // Add HotelPage route
+        },
+        {
+          path: "booking-vehicles",
+          element:
+            <BookingVehiclesPage /> // Add HotelPage route
+        },
+        {
+          path: "booking-contact-information",
+          element:
+            <BookingContactInfomationPage /> // Add HotelPage route
         },
       ],
     },
