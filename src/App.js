@@ -1,6 +1,7 @@
 
 import ActivityCityPage from 'pages/activity/ActivityCityPage';
 import ActivityPage from 'pages/activity/ActivityPage';
+import ActivityDetailPage from 'pages/activity/ActivityDetailPage';
 import CartPage from 'pages/CartPage';
 import FavouritePage from 'pages/FavouritePage';
 import FavouriteRoomPage from 'pages/FavouriteRoomPage';
@@ -15,9 +16,9 @@ import ProfileHotelPage from 'pages/ProfileHotelPage';
 import ProfilePage from 'pages/ProfilePage';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import './App.css';
-import ActivityDetailPage from 'pages/activity/ActivityDetailPage';
 import BookingVehiclesPage from 'pages/BookingVehiclesPage';
 import BookingContactInfomationPage from 'pages/BookingContactInfomationPage';
+import CityPage from 'pages/CityPage'
 
 function App() {
   const router = createBrowserRouter([
@@ -64,6 +65,11 @@ function App() {
           path: "hotel-booking",
           element:
             <HotelPageBooking /> // Add HotelPage route
+        },
+        {
+          path: "city/:cityName",
+          element:
+            <CityPage /> 
         },
         {
           path: "flight",
