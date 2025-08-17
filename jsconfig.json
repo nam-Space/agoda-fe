@@ -6,8 +6,7 @@
             "styles/*": ["src/styles/*"],
             "config/*": ["src/config/*"],
             "constants/*": ["src/constants/*"],
-            "pages/*": ["src/pages/*"],
-            "redux/*": ["src/redux/*"]
+            "pages/*": ["src/pages/*"]
         }
     },
     "include": ["src"]
