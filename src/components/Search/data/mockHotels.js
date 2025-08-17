@@ -1,0 +1,80 @@
+export const mockHotels = [
+  {
+    id: '1',
+    name: 'Sunrise Premium Resort Hội An',
+    image: 'https://images.pexels.com/photos/338504/pexels-photo-338504.jpeg?auto=compress&cs=tinysrgb&w=800',
+    rating: 4.5,
+    reviews: 2847,
+    price: 1200000,
+    originalPrice: 1500000,
+    location: 'Bãi biển An Bàng, Hội An',
+    amenities: ['WiFi', 'Hồ bơi', 'Spa', 'Nhà hàng', 'Parking'],
+    discount: 20,
+    freeBreakfast: true,
+    freeCancellation: true
+  },
+  {
+    id: '2',
+    name: 'InterContinental Nha Trang',
+    image: 'https://images.pexels.com/photos/261102/pexels-photo-261102.jpeg?auto=compress&cs=tinysrgb&w=800',
+    rating: 4.8,
+    reviews: 1532,
+    price: 2800000,
+    location: 'Trần Phú, Nha Trang',
+    amenities: ['WiFi', 'Hồ bơi', 'Spa', 'Gym', 'Nhà hàng', 'Bar', 'Parking'],
+    freeBreakfast: true,
+    freeCancellation: true
+  },
+  {
+    id: '3',
+    name: 'Sheraton Nha Trang Hotel',
+    image: 'https://images.pexels.com/photos/1838554/pexels-photo-1838554.jpeg?auto=compress&cs=tinysrgb&w=800',
+    rating: 4.6,
+    reviews: 987,
+    price: 2100000,
+    originalPrice: 2500000,
+    location: 'Trần Phú, Nha Trang',
+    amenities: ['WiFi', 'Hồ bơi', 'Spa', 'Gym', 'Nhà hàng'],
+    discount: 16,
+    freeBreakfast: false,
+    freeCancellation: true
+  },
+  {
+    id: '4',
+    name: 'Vinpearl Resort & Golf Nam Hội An',
+    image: 'https://images.pexels.com/photos/164595/pexels-photo-164595.jpeg?auto=compress&cs=tinysrgb&w=800',
+    rating: 4.7,
+    reviews: 756,
+    price: 3200000,
+    location: 'Duy Xuyên, Quảng Nam',
+    amenities: ['WiFi', 'Hồ bơi', 'Spa', 'Golf', 'Nhà hàng', 'Bar'],
+    freeBreakfast: true,
+    freeCancellation: false
+  },
+  {
+    id: '5',
+    name: 'Nha Trang Lodge',
+    image: 'https://images.pexels.com/photos/271639/pexels-photo-271639.jpeg?auto=compress&cs=tinysrgb&w=800',
+    rating: 4.2,
+    reviews: 623,
+    price: 850000,
+    originalPrice: 1100000,
+    location: 'Nguyễn Thị Minh Khai, Nha Trang',
+    amenities: ['WiFi', 'Nhà hàng', 'Parking'],
+    discount: 23,
+    freeBreakfast: false,
+    freeCancellation: true
+  },
+  {
+    id: '6',
+    name: 'Amiana Resort & Villas Nha Trang',
+    image: 'https://images.pexels.com/photos/1450353/pexels-photo-1450353.jpeg?auto=compress&cs=tinysrgb&w=800',
+    rating: 4.4,
+    reviews: 1204,
+    price: 1800000,
+    location: 'Pam Bay, Nha Trang',
+    amenities: ['WiFi', 'Hồ bơi', 'Spa', 'Nhà hàng', 'Bar', 'Parking'],
+    freeBreakfast: true,
+    freeCancellation: true
+  }
+];
