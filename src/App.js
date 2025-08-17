@@ -19,6 +19,7 @@ import './App.css';
 import BookingVehiclesPage from 'pages/BookingVehiclesPage';
 import BookingContactInfomationPage from 'pages/BookingContactInfomationPage';
 import CityPage from 'pages/CityPage'
+import SearchHouseAndApartment from 'pages/SearchHouseAndApartment';
 import LoginPage from 'pages/LoginPage';
 import RegisterPage from 'pages/RegisterPage';
 import ForgotPasswordPage from 'pages/ForgotPasswordPage';
@@ -109,6 +110,11 @@ function App() {
           path: "flight",
           element:
             <FlightPage /> // Add HotelPage route
+        },
+        {
+          path: "search",
+          element:
+            <SearchHouseAndApartment />
         },
         {
           path: "booking-vehicles",

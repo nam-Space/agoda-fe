@@ -132,12 +132,12 @@ const Question = () => {
         </div>
 
         {/* Kinh nghiệm du lịch Đà Nẵng */}
-        <div className="mt-16">
-            <h2 className="text-3xl font-bold text-blue-700 mb-8 text-center">Kinh nghiệm du lịch Đà Nẵng</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="mt-16 text-center">
+            <h2 className="text-3xl font-bold text-blue-700 mb-8">Kinh nghiệm du lịch Đà Nẵng</h2>
+            <div className="grid grid-cols-1 gap-2">
                 <div>
                     <h3 className="text-xl font-semibold text-gray-800 mb-3">10 lý do bạn nên đến Đà Nẵng</h3>
-                    <ul className="list-disc pl-5 text-gray-700 space-y-2 mb-6">
+                    <ul className="list-none pl-5 text-gray-700 space-y-2 mb-6">
                         <li>Nằm giữa Hà Nội và TP.HCM, Đà Nẵng là điểm đến hấp dẫn, tránh xa sự ồn ào.</li>
                         <li>Nhiều bãi biển đẹp, chùa cổ kính, sông êm đềm, đồi núi xanh ngắt.</li>
                         <li>Thành phố đa dạng văn hóa, nghệ thuật, nhiều lễ hội và sự kiện quanh năm.</li>
@@ -158,7 +158,7 @@ const Question = () => {
                 </div>
                 <div>
                     <h3 className="text-xl font-semibold text-gray-800 mb-3">Một số lưu ý hữu ích cho du khách</h3>
-                    <ul className="list-disc pl-5 text-gray-700 space-y-2">
+                    <ul className="list-none pl-5 text-gray-700 space-y-2">
                         <li>Chuẩn bị quần áo phù hợp, giày dép thoải mái cho hoạt động ngoài trời.</li>
                         <li>Nên mang theo sách hướng dẫn hoặc tham gia tour địa phương để hiểu rõ lịch sử, văn hóa.</li>
                         <li>Thử các món đặc sản như bánh tráng cuốn thịt heo, mì Quảng, bún mắm, bánh bèo.</li>
@@ -167,7 +167,7 @@ const Question = () => {
                 </div>
                 <div>
                     <h3 className="text-xl font-semibold text-gray-800 mb-3">Khám phá những điều thú vị về Đà Nẵng</h3>
-                    <ul className="list-disc pl-5 text-gray-700 space-y-2 mb-6">
+                    <ul className="list-none pl-5 text-gray-700 space-y-2 mb-6">
                         <li>Tham quan Ngũ Hành Sơn, hang động và chùa cổ kính.</li>
                         <li>Khám phá Bảo tàng Đà Nẵng với nhiều hiện vật quý giá.</li>
                         <li>Đi bộ trên Cầu Rồng, biểu tượng kiến trúc của thành phố.</li>
@@ -183,7 +183,7 @@ const Question = () => {
                 </div>
                 <div>
                     <h3 className="text-xl font-semibold text-gray-800 mb-3">Cách di chuyển trong Đà Nẵng</h3>
-                    <ul className="list-disc pl-5 text-gray-700 space-y-2 mb-6">
+                    <ul className="list-none pl-5 text-gray-700 space-y-2 mb-6">
                         <li>Di chuyển bằng xe đạp, xe máy, taxi hoặc xe buýt địa phương.</li>
                         <li>Đi bộ thuận tiện trong khu vực trung tâm thành phố.</li>
                         <li>Có thể thuê xe đạp, xe máy tại các cửa hàng địa phương.</li>
@@ -192,7 +192,7 @@ const Question = () => {
                 </div>
                 <div>
                     <h3 className="text-xl font-semibold text-gray-800 mb-3">Những trải nghiệm thú vị khi đến Đà Nẵng</h3>
-                    <ul className="list-disc pl-5 text-gray-700 space-y-2 mb-6">
+                    <ul className="list-none pl-5 text-gray-700 space-y-2 mb-6">
                         <li>Lướt sóng, lặn biển, đi bộ trên bãi biển.</li>
                         <li>Đua thuyền buồm, chèo thuyền trên sông Hàn.</li>
                         <li>Tham gia lễ hội ánh sáng Đà Nẵng vào tháng 3, với âm nhạc, triển lãm ánh sáng và pháo hoa.</li>
