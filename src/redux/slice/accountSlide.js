@@ -1,33 +1,14 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import { callGetAccount } from "config/api";
-import { callFetchAccount } from "config/api";
+import Cookies from "js-cookie";
 // First, create the thunk
 export const fetchAccount = createAsyncThunk(
     "account/fetchAccount",
     async () => {
         const response = await callGetAccount();
-        return response.data;
+        return response;
     }
 );
-
-// interface IState {
-//     isAuthenticated: boolean;
-//     isLoading: boolean;
-//     isRefreshToken: boolean;
-//     errorRefreshToken: string;
-//     user: {
-//         id: number;
-//         email: string;
-//         name: string;
-//         birthDay?: Date;
-//         phone: string;
-//         gender?: string;
-//         avatar?: string;
-//         role: IRole;
-//         permissions: IPermission[];
-//     };
-//     activeMenu: string;
-// }
 
 const initialState = {
     isAuthenticated: false,
@@ -36,16 +17,15 @@ const initialState = {
     errorRefreshToken: "",
     user: {
         id: 0,
+        username: "",
         email: "",
-        name: "",
-        birthDay: new Date(),
-        phone: "",
+        first_name: "",
+        last_name: "",
+        birthDay: null,
+        phone_number: "",
         gender: "",
         avatar: "",
-        role: {
-            id: 0,
-            name: "",
-        },
+        role: ""
     },
 
     activeMenu: "home",
@@ -64,29 +44,31 @@ export const accountSlide = createSlice({
             state.isAuthenticated = true;
             state.isLoading = false;
             state.user.id = action?.payload?.id;
+            state.user.username = action?.payload?.username;
             state.user.email = action.payload.email;
-            state.user.name = action.payload.name;
+            state.user.first_name = action.payload.first_name;
+            state.user.last_name = action.payload.last_name;
             state.user.birthDay = action.payload.birthDay;
-            state.user.phone = action.payload.phone;
+            state.user.phone_number = action.payload.phone_number;
             state.user.gender = action.payload.gender;
             state.user.avatar = action.payload?.avatar;
             state.user.role = action.payload.role;
         },
         setLogoutAction: (state, action) => {
-            localStorage.removeItem("access_token");
+            localStorage.removeItem("access_token_agoda");
+            Cookies.remove('refresh_token_agoda');
             state.isAuthenticated = false;
             state.user = {
                 id: 0,
+                username: "",
                 email: "",
-                name: "",
-                birthDay: new Date(),
-                phone: "",
+                first_name: "",
+                last_name: "",
+                birthDay: null,
+                phone_number: "",
                 gender: "",
                 avatar: "",
-                role: {
-                    id: 0,
-                    name: "",
-                },
+                role: ""
             };
         },
         setRefreshTokenAction: (state, action) => {
@@ -104,17 +86,20 @@ export const accountSlide = createSlice({
         });
 
         builder.addCase(fetchAccount.fulfilled, (state, action) => {
+
             if (action.payload) {
                 state.isAuthenticated = true;
                 state.isLoading = false;
-                state.user.id = action?.payload?.user?.id;
-                state.user.email = action.payload?.user?.email;
-                state.user.name = action.payload?.user?.name;
-                state.user.birthDay = action.payload?.user?.birthDay;
-                state.user.phone = action.payload?.user?.phone;
-                state.user.gender = action.payload?.user?.gender;
-                state.user.avatar = action.payload?.user?.avatar;
-                state.user.role = action?.payload?.user?.role;
+                state.user.id = action?.payload?.id;
+                state.user.username = action?.payload?.username;
+                state.user.email = action.payload?.email;
+                state.user.first_name = action.payload?.first_name;
+                state.user.last_name = action.payload?.last_name;
+                state.user.birthDay = action.payload?.birthDay;
+                state.user.phone_number = action.payload?.phone_number;
+                state.user.gender = action.payload?.gender;
+                state.user.avatar = action.payload?.avatar;
+                state.user.role = action?.payload?.role;
             }
         });
 

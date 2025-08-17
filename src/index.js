@@ -11,13 +11,16 @@ import 'swiper/css/navigation';
 import "leaflet/dist/leaflet.css";
 import { Provider } from 'react-redux';
 import { store } from './redux/store'
+import { CookiesProvider } from 'react-cookie';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
-    <Provider store={store}>
-      <App />
-      <ToastContainer />
-    </Provider>
+    <CookiesProvider>
+      <Provider store={store}>
+        <App />
+        <ToastContainer />
+      </Provider>
+    </CookiesProvider>
   </React.StrictMode>
 );

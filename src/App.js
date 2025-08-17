@@ -19,13 +19,47 @@ import './App.css';
 import BookingVehiclesPage from 'pages/BookingVehiclesPage';
 import BookingContactInfomationPage from 'pages/BookingContactInfomationPage';
 import CityPage from 'pages/CityPage'
+import LoginPage from 'pages/LoginPage';
+import RegisterPage from 'pages/RegisterPage';
+import ForgotPasswordPage from 'pages/ForgotPasswordPage';
+import { useAppDispatch, useAppSelector } from './redux/hooks';
+import { useEffect } from 'react';
+import { fetchAccount } from './redux/slice/accountSlide';
+import { Spin } from 'antd';
 
 function App() {
+  const dispatch = useAppDispatch();
+  const isLoading = useAppSelector(state => state.account.isLoading);
+
+
+  useEffect(() => {
+    dispatch(fetchAccount())
+  }, [])
+
+  if (isLoading) {
+    return <Spin spinning={true} fullscreen />
+  }
+
   const router = createBrowserRouter([
     {
       path: "/",
       children: [
         { index: true, element: <HomePage /> },
+        {
+          path: "login",
+          element:
+            <LoginPage />
+        },
+        {
+          path: "register",
+          element:
+            <RegisterPage />
+        },
+        {
+          path: "forgot-password",
+          element:
+            <ForgotPasswordPage />
+        },
         {
           path: "favourite",
           element:
@@ -69,7 +103,7 @@ function App() {
         {
           path: "city/:cityName",
           element:
-            <CityPage /> 
+            <CityPage />
         },
         {
           path: "flight",
