@@ -74,39 +74,6 @@ const FilterSection = () => {
                         </button>
                     ))}
                 </div>
-
-                {/* Additional Filters
-                {showMoreFilters && (
-                    <div className="grid grid-cols-3 gap-2 mt-4">
-                        {[
-                            { label: 'Đánh giá cao (8)', icon: '🌟' },
-                            { label: 'Bồn tắm (5)', icon: '🛁' },
-                            { label: 'Gần bãi biển (7)', icon: '🏖️' },
-                        ].map((filter, index) => (
-                            <button
-                                key={index}
-                                onClick={() => toggleFilterSelection(filter.label)}
-                                className={`flex items-center border rounded-full px-4 py-2 text-sm ${
-                                    selectedFilters.includes(filter.label)
-                                        ? 'bg-blue-600 text-white'
-                                        : 'bg-white border-gray-300 text-gray-800'
-                                }`}
-                            >
-                                <span className="mr-2">{filter.icon}</span> {filter.label}
-                            </button>
-                        ))}
-                    </div>
-                )} */}
-
-                {/* More Filters Link
-                <div className="text-center mt-4">
-                    <button
-                        onClick={toggleShowMoreFilters}
-                        className="text-blue-600 hover:underline text-sm"
-                    >
-                        {showMoreFilters ? 'Thu gọn' : 'Xem 3 mục khác'}
-                    </button>
-                </div> */}
             </div>
         </div>
     );

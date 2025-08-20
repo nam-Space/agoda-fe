@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import icMap from '../../images/hotel/map.jpg';
-import HotelMapPopup from './HotelMapPopup';
+import HomeMapPopup from './HomeMapPopup';
 
 const MapCard = () => {
   const [open, setOpen] = useState(false);
@@ -54,7 +54,7 @@ const MapCard = () => {
         </div>
       </div>
 
-      {open && <HotelMapPopup onClose={() => setOpen(false)} />}
+      {open && <HomeMapPopup onClose={() => setOpen(false)} />}
     </>
   );
 };

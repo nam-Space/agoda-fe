@@ -1,7 +1,7 @@
-import HotelMapPopup from 'components/Home&Apartment/HotelMapPopup';
+import HomeMapPopup from 'components/Home&Apartment/HomeMapPopup';
 import { useState } from 'react';
 
-const HotelOverviewSection = ({
+const HomeOverviewSection = ({
     title,
     address,
     mapLink,
@@ -44,7 +44,7 @@ const HotelOverviewSection = ({
 
                 {/* SHOW POPUP OUTSIDE <p> TAG! */}
                 {showMap && (
-                    <HotelMapPopup onClose={() => setShowMap(false)} />
+                    <HomeMapPopup onClose={() => setShowMap(false)} />
                 )}
 
                 <div className="flex space-x-2 mt-4">
@@ -78,12 +78,6 @@ const HotelOverviewSection = ({
             <div className="room-space-section mb-6">
                 <h2 className="text-lg font-bold text-gray-800 mb-4">Không gian & phòng</h2>
                 <div className="grid grid-cols-3 gap-4">
-                    {/* {roomDetails.map((room, index) => (
-                        <div key={index} className="p-4 border border-gray-300 rounded-lg">
-                            <h3 className="text-sm font-bold text-gray-800 mb-2">{room.title}</h3>
-                            <p className="text-sm text-gray-600">{room.description}</p>
-                        </div>
-                    ))} */}
                     {roomDetails.map((room, index) => (
                         <div key={index} className="flex items-center gap-2">
                             {room.icon}
@@ -136,4 +130,4 @@ const HotelOverviewSection = ({
     );
 };
 
-export default HotelOverviewSection;
+export default HomeOverviewSection;

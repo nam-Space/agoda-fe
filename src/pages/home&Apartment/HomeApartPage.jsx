@@ -4,12 +4,12 @@ import HeaderClient from 'components/HeaderClient';
 import ActivitySlider from 'components/Home&Apartment/ActivitySliderSection';
 import ExperienceSection from 'components/Home&Apartment/ExperenceSection';
 import FilterSection from 'components/Home&Apartment/FilterSection';
+import HomeOverviewSection from 'components/Home&Apartment/HomeOverviewSection';
 import HostAndAmenitiesSection from 'components/Home&Apartment/HostAndAmenitiesSection';
-import HostProfileLink from 'components/Home&Apartment/HostProfileLink';
-import HotelOverviewSection from 'components/Home&Apartment/HotelOverviewSection';
 import MapCard from 'components/Home&Apartment/MapCard';
 import RoomOptionsSection from 'components/Home&Apartment/RoomOptionsSection';
 import GallerySection from 'components/Hotel/GallerySection';
+import HostProfileLink from 'components/Hotel/HostProfileLink';
 import FlightBookingSection from 'components/Hotel/HotelBooking/FlightBookingSection';
 import PlanYourTripSection from 'components/Hotel/HotelBooking/PlanYourTripSection';
 
@@ -26,7 +26,7 @@ import icTable from '../../images/hotel/ic_table.png';
 
 import Faq from 'components/Home&Apartment/Faq-accordion';
 
-const HotelPageBooking = () => {
+const HomeApartPage = () => {
     const breadcrumbs = [
         { text: 'Trang chủ', link: '/', isActive: true },
         { text: 'Khách sạn Việt Nam (107.219)', link: '/vietnam-hotels', isActive: false },
@@ -68,7 +68,7 @@ const HotelPageBooking = () => {
                             {/* Overview Section with MapCard */}
                             <div id="overview" className="section flex flex-col lg:flex-row items-start">
                                 <div className="lg:w-2/3">
-                                    <HotelOverviewSection
+                                    <HomeOverviewSection
                                         title="Nhà dân Cactusland - Trần Hưng Đạo (Cactusland Homestay - Tran Hung Dao)"
                                         address="393/30 Trần Hưng Đạo, Phường Cầu Kho, Quận 1, TP Hồ Chí Minh, Việt Nam"
                                         mapLink="#"
@@ -180,4 +180,4 @@ const HotelPageBooking = () => {
     );
 };
 
-export default HotelPageBooking;
+export default HomeApartPage;

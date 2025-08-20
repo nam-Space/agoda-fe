@@ -113,7 +113,7 @@ function App() {
             <FlightPage /> // Add FlightPage route
         },
         {
-          path: "home&apartment",
+          path: "home-apartment",
           element:
             <HomeApartPage />
         },
