@@ -1,32 +1,33 @@
 
+import { Spin } from 'antd';
 import ActivityCityPage from 'pages/activity/ActivityCityPage';
-import ActivityPage from 'pages/activity/ActivityPage';
 import ActivityDetailPage from 'pages/activity/ActivityDetailPage';
+import ActivityPage from 'pages/activity/ActivityPage';
+import BookingContactInfomationPage from 'pages/BookingContactInfomationPage';
+import BookingVehiclesPage from 'pages/BookingVehiclesPage';
 import CartPage from 'pages/CartPage';
+import CityPage from 'pages/CityPage';
 import FavouritePage from 'pages/FavouritePage';
 import FavouriteRoomPage from 'pages/FavouriteRoomPage';
 import FlightPage from 'pages/flight/FlightPage';
+import ForgotPasswordPage from 'pages/ForgotPasswordPage';
+import HomeApartPage from 'pages/home&Apartment/HomeApartPage';
 import HomePage from 'pages/HomePage';
 import HotelPage from 'pages/hotel/HotelPage';
 import HotelPageBooking from 'pages/hotel/HotelPageBooking';
+import LoginPage from 'pages/LoginPage';
 import ProfileActivityPage from 'pages/ProfileActivityPage';
 import ProfileChatPage from 'pages/ProfileChatPage';
 import ProfileFlightPage from 'pages/ProfileFlightPage';
 import ProfileHotelPage from 'pages/ProfileHotelPage';
 import ProfilePage from 'pages/ProfilePage';
+import RegisterPage from 'pages/RegisterPage';
+import SearchHouseAndApartment from 'pages/SearchHouseAndApartment';
+import { useEffect } from 'react';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import './App.css';
-import BookingVehiclesPage from 'pages/BookingVehiclesPage';
-import BookingContactInfomationPage from 'pages/BookingContactInfomationPage';
-import CityPage from 'pages/CityPage'
-import SearchHouseAndApartment from 'pages/SearchHouseAndApartment';
-import LoginPage from 'pages/LoginPage';
-import RegisterPage from 'pages/RegisterPage';
-import ForgotPasswordPage from 'pages/ForgotPasswordPage';
 import { useAppDispatch, useAppSelector } from './redux/hooks';
-import { useEffect } from 'react';
 import { fetchAccount } from './redux/slice/accountSlide';
-import { Spin } from 'antd';
 
 function App() {
   const dispatch = useAppDispatch();
@@ -109,7 +110,12 @@ function App() {
         {
           path: "flight",
           element:
-            <FlightPage /> // Add HotelPage route
+            <FlightPage /> // Add FlightPage route
+        },
+        {
+          path: "home&apartment",
+          element:
+            <HomeApartPage />
         },
         {
           path: "search",

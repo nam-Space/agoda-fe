@@ -1,11 +1,11 @@
+import React, { useState } from 'react';
 import { CalendarToday, People, Search } from '@mui/icons-material';
-import { useState } from 'react';
 
 const SearchBar = () => {
     const [isDatePickerOpen, setIsDatePickerOpen] = useState(false); // State to track date picker visibility
     const [activeTab, setActiveTab] = useState('overnight'); // State to track active tab
-    const [selectedDate1, setSelectedDate1] = useState('22 tháng 8 2025'); // State for the first button
-    const [selectedDate2, setSelectedDate2] = useState('24 tháng 8 2025'); // State for the second button
+    const [selectedDate1, setSelectedDate1] = useState('28 tháng 7 2025'); // State for the first button
+    const [selectedDate2, setSelectedDate2] = useState('29 tháng 7 2025'); // State for the second button
     const [currentMonth, setCurrentMonth] = useState(7); // State to track the current month
     const currentYear = 2025; // Fixed year for this example
     const [activeButton, setActiveButton] = useState(null); // Track which button is active
