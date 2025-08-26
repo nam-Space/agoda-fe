@@ -46,21 +46,25 @@ export default function LoginPage() {
             // Simulate API call
             const res = await callLogin({ username, password });
             if (res.isSuccess) {
-                localStorage.setItem("access_token_agoda", res.access);
-                setCookie("refresh_token_agoda", res.refresh);
+                localStorage.setItem("access_token_agoda", res.data.access);
+                setCookie("refresh_token_agoda", res.data.refresh);
                 const resAccount = await callGetAccount();
-                dispatch(setUserLoginInfo(resAccount));
-                toast.success("Đăng nhập thành công!", {
-                    position: "bottom-right",
-                });
-                navigate("/");
+                if (resAccount?.isSuccess) {
+                    dispatch(setUserLoginInfo(resAccount.data));
+                    toast.success("Đăng nhập thành công!", {
+                        position: "bottom-right",
+                    });
+                    navigate("/");
+                }
             } else {
                 toast.error(res.message, {
                     position: "bottom-right",
                 });
             }
         } catch (error) {
-            message.error("Email hoặc mật khẩu không chính xác!");
+            toast.error(error.message, {
+                position: "bottom-right",
+            });
         } finally {
             setLoading(false);
         }

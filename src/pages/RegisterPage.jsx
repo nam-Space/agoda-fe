@@ -56,12 +56,9 @@ export default function RegisterPage() {
                 role: ROLE.CUSTOMER,
             });
             if (res.isSuccess) {
-                toast.success(
-                    "Đăng ký thành công! Vui lòng kiểm tra email để xác thực tài khoản.",
-                    {
-                        position: "bottom-right",
-                    }
-                );
+                toast.success("Đăng ký thành công!", {
+                    position: "bottom-right",
+                });
                 form.resetFields();
                 navigate("/login");
             } else {
@@ -70,7 +67,9 @@ export default function RegisterPage() {
                 });
             }
         } catch (error) {
-            message.error("Có lỗi xảy ra, vui lòng thử lại!");
+            toast.error(error.message, {
+                position: "bottom-right",
+            });
         } finally {
             setLoading(false);
         }

@@ -18,6 +18,7 @@ import { callLogout } from "config/api";
 import { setLogoutAction } from "../redux/slice/accountSlide";
 import { toast } from "react-toastify";
 import Cookies from "js-cookie";
+import { getUserAvatar } from "utils/imageUrl";
 
 const HeaderClient = () => {
     const dispatch = useAppDispatch();
@@ -201,7 +202,10 @@ const HeaderClient = () => {
                             onOpenChange={(val) => setOpenMenuProfile(val)}
                         >
                             <div className="flex p-[5px] relative items-center gap-[8px] cursor-pointer border-[1px] border-white after:bg-[#2067da] after:absolute after:top-0 after:left-0 after:right-0 after:bottom-0 after:opacity-0 hover:after:opacity-10 after:transition-all after:duration-300 after:rounded-[8px]">
-                                <Avatar size="large">
+                                <Avatar
+                                    size="large"
+                                    src={getUserAvatar(user?.avatar)}
+                                >
                                     {user?.first_name?.substring(0, 1)}
                                 </Avatar>
                                 <div>
