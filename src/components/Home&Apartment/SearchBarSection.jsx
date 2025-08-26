@@ -6,12 +6,12 @@ const SearchBar = () => {
     const [activeTab, setActiveTab] = useState('overnight'); // State to track active tab
     const [selectedDate1, setSelectedDate1] = useState('22 tháng 8 2025'); // State for the first button
     const [selectedDate2, setSelectedDate2] = useState('24 tháng 8 2025'); // State for the second button
-    const [currentMonth, setCurrentMonth] = useState(7); // State to track the current month
+    const [currentMonth, setCurrentMonth] = useState(8); // State to track the current month
     const currentYear = 2025; // Fixed year for this example
     const [activeButton, setActiveButton] = useState(null); // Track which button is active
     const [isDropdownOpen, setIsDropdownOpen] = useState(false); // State for dropdown visibility
     const [rooms, setRooms] = useState(1); // State for number of rooms
-    const [adults, setAdults] = useState(2); // State for number of adults
+    const [adults, setAdults] = useState(1); // State for number of adults
     const [children, setChildren] = useState(0);
 
     const toggleDatePicker = (button) => {
@@ -82,7 +82,7 @@ const SearchBar = () => {
                 <Search className="text-gray-600 mr-2" />
                 <input
                     type="text"
-                    placeholder="The Song House Vung Tau"
+                    placeholder="Nhà dân Cactusland - Trần Hưng Đạo"
                     className="border-none outline-none w-full"
                 />
             </div>
