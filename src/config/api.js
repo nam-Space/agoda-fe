@@ -15,7 +15,7 @@ export const callRegister = (data) => {
 };
 
 export const callGetAccount = (config) => {
-    return axios.get(`/api/accounts/profile/`, {}, config);
+    return axios.get(`/api/accounts/profile/`, config);
 }
 
 export const callRefreshToken = (data) => {

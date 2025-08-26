@@ -44,14 +44,14 @@ instance.interceptors.response.use(
             if (res.isSuccess) {
                 error.config.headers[
                     "Authorization"
-                ] = `Bearer ${res.access}`;
-                localStorage.setItem("access_token_agoda", res.access);
+                ] = `Bearer ${res.data.access}`;
+                localStorage.setItem("access_token_agoda", res.data.access);
                 return instance.request(error.config);
             }
         }
 
         if (
-            error.response.status === 401 &&
+            error.response.status === 400 &&
             error.config.url === "/api/accounts/refresh-token/"
         ) {
             const message =
