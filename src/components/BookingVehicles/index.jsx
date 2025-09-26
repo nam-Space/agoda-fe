@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
     DatePicker,
     Select,
@@ -13,6 +13,8 @@ import {
     Badge,
     InputNumber,
     Checkbox,
+    Radio,
+    Popover,
 } from "antd";
 import {
     SearchOutlined,
@@ -49,114 +51,20 @@ import { MapContainer, Marker, Popup, TileLayer } from "react-leaflet";
 import MarkerClusterGroup from "react-leaflet-cluster";
 import { IoAirplaneOutline, IoLocationOutline } from "react-icons/io5";
 import { HiOutlineUsers } from "react-icons/hi2";
-import { Link } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import dayjs from "dayjs";
+import { toast } from "react-toastify";
+import { callFetchCar } from "config/api";
+import { formatCurrency } from "utils/formatCurrency";
 
 const { Option } = Select;
 const { RangePicker } = DatePicker;
 
-const vehicleData = [
-    {
-        id: 1,
-        name: "Xe sedan",
-        description: "Toyota Vios, Nissan Sunny, Kia Soluto hoặc tương tự",
-        price: "403.176",
-        image: "https://agoda.transferz.com/transferz/vehicles/SEDAN.jpg",
-        rating: 4.5,
-        passengers: 4,
-        luggage: 2,
-        category: "Superb",
-        features: ["Ăn phụ thu miễn phí", "Bảo hiểm Giao gỡ & Chủ hộ miễn phí"],
-    },
-    {
-        id: 2,
-        name: "Xe sedan hạng phổ thông",
-        description: "Toyota Vios, Nissan Sunny hoặc tương tự",
-        price: "403.176",
-        image: "https://agoda.transferz.com/transferz/vehicles/SEDAN.jpg",
-        rating: 4.1,
-        passengers: 4,
-        luggage: 2,
-        category: "Exceptional",
-        features: ["Ăn phụ thu miễn phí", "Bảo hiểm Giao gỡ & Chủ hộ miễn phí"],
-    },
-    {
-        id: 3,
-        name: "Xe minivan",
-        description:
-            "Toyota Hiace, Mercedes-Benz Vito, Peugeot Traveller hoặc tương tự",
-        price: "450.132",
-        image: "https://agoda.transferz.com/transferz/vehicles/SEDAN.jpg",
-        rating: 4.1,
-        passengers: 8,
-        luggage: 4,
-        category: "Exceptional",
-        features: ["Ăn phụ thu miễn phí", "Bảo hiểm Giao gỡ & Chủ hộ miễn phí"],
-    },
-    {
-        id: 4,
-        name: "Xe ôtô điện tiêu chuẩn 🔋",
-        description: "VinFast VF5 hoặc Toyota Prius hoặc tương tự",
-        price: "542.578",
-        image: "https://agoda.transferz.com/transferz/vehicles/SEDAN.jpg",
-        rating: 4.1,
-        passengers: 4,
-        luggage: 2,
-        category: "Exceptional",
-        features: ["Ăn phụ thu miễn phí", "Bảo hiểm Giao gỡ & Chủ hộ miễn phí"],
-    },
-    {
-        id: 5,
-        name: "Minibus",
-        description:
-            "Toyota Hiace, Mercedes-Benz Vito, Buick GL8 hoặc tương tự",
-        price: "669.947",
-        image: "https://agoda.transferz.com/transferz/vehicles/SEDAN.jpg",
-        rating: 4.0,
-        passengers: 10,
-        luggage: 6,
-        category: "Exceptional",
-        features: ["Ăn phụ thu miễn phí", "Bảo hiểm Giao gỡ & Chủ hộ miễn phí"],
-    },
-    {
-        id: 6,
-        name: "Xe buýt",
-        description: "Mercedes-Benz Sprinter hoặc Iveco Daily hoặc tương tự",
-        price: "776.773",
-        image: "https://agoda.transferz.com/transferz/vehicles/SEDAN.jpg",
-        rating: 4.0,
-        passengers: 16,
-        luggage: 8,
-        category: "Exceptional",
-        features: ["Ăn phụ thu miễn phí", "Bảo hiểm Giao gỡ & Chủ hộ miễn phí"],
-    },
-    {
-        id: 7,
-        name: "Xe ôtô điện cao cấp 🔋",
-        description: "Tesla Model 3, Tesla Model Y, MG 5 hoặc tương tự",
-        price: "794.968",
-        image: "https://agoda.transferz.com/transferz/vehicles/SEDAN.jpg",
-        rating: 4.1,
-        passengers: 4,
-        luggage: 2,
-        category: "Exceptional",
-        features: ["Ăn phụ thu miễn phí", "Bảo hiểm Giao gỡ & Chủ hộ miễn phí"],
-    },
-    {
-        id: 8,
-        name: "Xe sedan thương mại",
-        description:
-            "Mercedes-Benz E-klasse AMG, Lexus IS, Volvo Model 3 hoặc Tesla Model 3, Tesla Model Y, MG 5 hoặc tương tự",
-        price: "1.870.563",
-        image: "https://agoda.transferz.com/transferz/vehicles/SEDAN.jpg",
-        rating: 4.1,
-        passengers: 4,
-        luggage: 2,
-        category: "Superb",
-        features: ["Ăn phụ thu miễn phí", "Bảo hiểm Giao gỡ & Chủ hộ miễn phí"],
-    },
-];
-
 export default function BookingVehicles() {
+    const nagivate = useNavigate();
+    const { state } = useLocation();
+    const { option, formFromAirportIn, formFromLocationIn } = state;
+    const [vehicleData, setVehicleData] = useState([]);
     const [selectedItem, setSelectedItem] = useState(vehicleData[0]);
     const [openExtra, setOpenExtra] = useState(false);
     const [extras, setExtras] = useState({
@@ -167,11 +75,106 @@ export default function BookingVehicles() {
         specialLuggage: false,
     });
 
-    const lat1 = 21.211; // Tọa độ của Noi Bai Airport (Hà Nội)
-    const long1 = 105.797;
+    const [optionBooking, setOptionBooking] = useState(option);
+    const [popoverFromAirportInBooking, setPopoverFromAirportInBooking] =
+        useState({
+            airportIn: false,
+            locationTo: false,
+        });
+    const [popoverFromLocationInBooking, setPopoverFromLocationInBooking] =
+        useState({
+            locationIn: false,
+            airportTo: false,
+        });
 
-    const lat2 = 21.019; // Tọa độ của Mỹ Đình
-    const long2 = 105.7583;
+    const [formFromAirportInBooking, setFormFromAirportInBooking] = useState(
+        formFromAirportIn
+            ? {
+                  ...formFromAirportIn,
+                  timeStart: dayjs(new Date(formFromAirportIn.timeStart)),
+              }
+            : {
+                  airportIn: {
+                      lat: null,
+                      lng: null,
+                      name: "",
+                  },
+                  locationTo: {
+                      lat: null,
+                      lng: null,
+                      name: "",
+                  },
+                  timeStart: null,
+                  capacity: null,
+              }
+    );
+    const [formFromLocationInBooking, setFormFromLocationInBooking] = useState(
+        formFromLocationIn
+            ? {
+                  ...formFromLocationIn,
+                  timeStart: dayjs(new Date(formFromLocationIn.timeStart)),
+              }
+            : {
+                  locationIn: {
+                      lat: null,
+                      lng: null,
+                      name: "",
+                  },
+                  airportTo: {
+                      lat: null,
+                      lng: null,
+                      name: "",
+                  },
+                  timeStart: null,
+                  capacity: null,
+              }
+    );
+
+    const [resultFromAirportInBooking, setResultFromAirportInBooking] =
+        useState({
+            resultsAirportIn: [],
+            resultsLocationTo: [],
+        });
+    const [resultFromLocationInBooking, setResultFromLocationInBooking] =
+        useState({
+            resultsLocationIn: [],
+            resultsAirportTo: [],
+        });
+
+    const handleGetCars = async () => {
+        try {
+            const res = await callFetchCar(`current=1&pageSize=10`);
+            if (res.isSuccess) {
+                setVehicleData(res.data);
+            }
+        } catch (e) {
+            toast.error(e.message, {
+                position: "bottom-right",
+            });
+        }
+    };
+
+    useEffect(() => {
+        handleGetCars();
+    }, []);
+
+    const lat1 =
+        option === "from-airport"
+            ? formFromAirportIn.airportIn.lat
+            : formFromLocationIn.locationIn.lat; // Tọa độ của Noi Bai Airport (Hà Nội)
+    const long1 =
+        option === "from-airport"
+            ? formFromAirportIn.airportIn.lng
+            : formFromLocationIn.locationIn.lng;
+
+    const lat2 =
+        option === "from-airport"
+            ? formFromAirportIn.locationTo.lat
+            : formFromLocationIn.airportTo.lat; // Tọa độ của Mỹ Đình
+    const long2 =
+        option === "from-airport"
+            ? formFromAirportIn.locationTo.lng
+            : formFromLocationIn.airportTo.lng;
 
     // Tính toán trung tâm của hai địa điểm
     const center = [(lat1 + lat2) / 2, (long1 + long2) / 2];
@@ -290,6 +293,26 @@ export default function BookingVehicles() {
         }));
     };
 
+    const handleSubmit = async () => {
+        if (option === "from-airport") {
+            nagivate(`/booking-contact-information`, {
+                state: {
+                    option,
+                    formFromAirportIn,
+                    car: selectedItem,
+                },
+            });
+        } else {
+            nagivate(`/booking-contact-information`, {
+                state: {
+                    option,
+                    formFromLocationIn,
+                    car: selectedItem,
+                },
+            });
+        }
+    };
+
     return (
         <div className="min-h-screen bg-gray-50">
             <div className="max-w-7xl mx-auto px-4 py-6">
@@ -346,10 +369,15 @@ export default function BookingVehicles() {
                             <div className="space-y-3">
                                 <div>
                                     <div className="font-medium">
-                                        Noi Bai International Airport (HAN)
+                                        {option === "from-airport"
+                                            ? formFromAirportIn.airportIn.name
+                                            : formFromLocationIn.locationIn
+                                                  .name}
                                     </div>
                                     <div className="text-sm text-gray-500">
-                                        Bà hạ, 28 tháng 7 năm 2025, 13:00
+                                        {option === "from-airport"
+                                            ? formFromAirportIn.timeStart
+                                            : formFromLocationIn.timeStart}
                                     </div>
                                     <div className="text-xs text-blue-600">
                                         Thời gian đi lấy: 3 phút
@@ -357,20 +385,35 @@ export default function BookingVehicles() {
                                 </div>
                                 <div>
                                     <div className="font-medium">
-                                        BT Homestay 120 Phố Mỹ - Mỹ Đình
+                                        {option === "from-airport"
+                                            ? formFromAirportIn.locationTo.name
+                                            : formFromLocationIn.airportTo.name}
                                     </div>
                                 </div>
                                 <Divider className="my-2" />
                                 <div className="flex items-center justify-between text-sm">
                                     <div className="flex items-center space-x-2">
                                         <UserOutlined />
-                                        <span>2 Hành khách</span>
+                                        <span>
+                                            {option === "from-airport"
+                                                ? formFromAirportIn.capacity
+                                                : formFromLocationIn.capacity}{" "}
+                                            Hành khách
+                                        </span>
                                     </div>
                                 </div>
                                 <div className="flex items-center justify-between text-sm">
                                     <div className="flex items-center space-x-2">
                                         <CalendarOutlined />
-                                        <span>2 Ngày</span>
+                                        <span>
+                                            {selectedItem
+                                                ? (
+                                                      distance /
+                                                      selectedItem.avg_speed
+                                                  ).toFixed(1)
+                                                : 0}{" "}
+                                            giờ
+                                        </span>
                                     </div>
                                 </div>
                             </div>
@@ -381,45 +424,471 @@ export default function BookingVehicles() {
                     <div className="lg:col-span-2">
                         {/* Search Form */}
                         <Card className="mb-6">
+                            <Radio.Group
+                                className="flex gap-[8px]"
+                                value={optionBooking}
+                                onChange={(e) =>
+                                    setOptionBooking(e.target.value)
+                                }
+                            >
+                                <Radio.Button
+                                    value="from-airport"
+                                    className="first:rounded-l-[50px] first:rounded-r-[50px]"
+                                >
+                                    Từ sân bay
+                                </Radio.Button>
+                                <Radio.Button
+                                    value="from-location"
+                                    className="last:rounded-l-[50px] last:rounded-r-[50px] before:!hidden"
+                                >
+                                    Đến sân bay
+                                </Radio.Button>
+                            </Radio.Group>
                             <div className="mt-[12px] grid grid-cols-2 gap-[12px]">
-                                <Input
-                                    placeholder="Sân bay đón khách"
-                                    size="large"
-                                    prefix={
-                                        <IoAirplaneOutline className="text-[22px]" />
-                                    }
-                                    className="mt-[12px]"
-                                />
-                                <Input
-                                    placeholder="Địa điểm đến"
-                                    size="large"
-                                    prefix={
-                                        <IoLocationOutline className="text-[22px]" />
-                                    }
-                                    className="mt-[12px]"
-                                />
+                                {optionBooking === "from-airport" ? (
+                                    <>
+                                        <Popover
+                                            content={
+                                                <div>
+                                                    {resultFromAirportInBooking.resultsAirportIn.map(
+                                                        (place, idx) => (
+                                                            <li
+                                                                key={idx}
+                                                                style={{
+                                                                    padding:
+                                                                        "8px",
+                                                                    borderBottom:
+                                                                        "1px solid #eee",
+                                                                    cursor: "pointer",
+                                                                }}
+                                                                onClick={() => {
+                                                                    setFormFromAirportInBooking(
+                                                                        {
+                                                                            ...formFromAirportInBooking,
+                                                                            airportIn:
+                                                                                {
+                                                                                    lat: place.lat, // lat
+                                                                                    lng: place.lng, // lng
+                                                                                    name: place.name,
+                                                                                },
+                                                                        }
+                                                                    );
+                                                                    setPopoverFromAirportInBooking(
+                                                                        {
+                                                                            ...popoverFromAirportInBooking,
+                                                                            airportIn: false,
+                                                                        }
+                                                                    );
+                                                                }}
+                                                            >
+                                                                {place.name}
+                                                            </li>
+                                                        )
+                                                    )}
+                                                </div>
+                                            }
+                                            title="Sân bay đón khách"
+                                            trigger="click"
+                                            open={
+                                                popoverFromAirportInBooking.airportIn
+                                            }
+                                            onOpenChange={(val) =>
+                                                setPopoverFromAirportInBooking({
+                                                    ...popoverFromAirportInBooking,
+                                                    airportIn: val,
+                                                })
+                                            }
+                                            placement="bottomLeft"
+                                        >
+                                            <Input
+                                                placeholder="Sân bay đón khách"
+                                                size="large"
+                                                prefix={
+                                                    <IoAirplaneOutline className="text-[22px]" />
+                                                }
+                                                className="mt-[12px]"
+                                                value={
+                                                    formFromAirportInBooking
+                                                        .airportIn.name
+                                                }
+                                                onChange={(e) =>
+                                                    setFormFromAirportInBooking(
+                                                        {
+                                                            ...formFromAirportInBooking,
+                                                            airportIn: {
+                                                                lat: null, // lat
+                                                                lng: null, // lng
+                                                                name: e.target
+                                                                    .value,
+                                                            },
+                                                        }
+                                                    )
+                                                }
+                                            />
+                                        </Popover>
+                                        <Popover
+                                            content={
+                                                <div>
+                                                    {resultFromAirportInBooking.resultsLocationTo.map(
+                                                        (place, idx) => (
+                                                            <li
+                                                                key={idx}
+                                                                style={{
+                                                                    padding:
+                                                                        "8px",
+                                                                    borderBottom:
+                                                                        "1px solid #eee",
+                                                                    cursor: "pointer",
+                                                                }}
+                                                                onClick={() => {
+                                                                    setFormFromAirportInBooking(
+                                                                        {
+                                                                            ...formFromAirportInBooking,
+                                                                            locationTo:
+                                                                                {
+                                                                                    lat: place.lat, // lat
+                                                                                    lng: place.lng, // lng
+                                                                                    name: place.name,
+                                                                                },
+                                                                        }
+                                                                    );
+                                                                    setPopoverFromAirportInBooking(
+                                                                        {
+                                                                            ...popoverFromAirportInBooking,
+                                                                            locationTo: false,
+                                                                        }
+                                                                    );
+                                                                }}
+                                                            >
+                                                                {place.name}
+                                                            </li>
+                                                        )
+                                                    )}
+                                                </div>
+                                            }
+                                            title="Địa điểm đến"
+                                            trigger="click"
+                                            open={
+                                                popoverFromAirportInBooking.locationTo
+                                            }
+                                            onOpenChange={(val) =>
+                                                setPopoverFromAirportInBooking({
+                                                    ...popoverFromAirportInBooking,
+                                                    locationTo: val,
+                                                })
+                                            }
+                                            placement="bottomLeft"
+                                        >
+                                            <Input
+                                                placeholder="Địa điểm đến"
+                                                size="large"
+                                                prefix={
+                                                    <IoLocationOutline className="text-[22px]" />
+                                                }
+                                                className="mt-[12px]"
+                                                value={
+                                                    formFromAirportInBooking
+                                                        .locationTo.name
+                                                }
+                                                onChange={(e) =>
+                                                    setFormFromAirportInBooking(
+                                                        {
+                                                            ...formFromAirportInBooking,
+                                                            locationTo: {
+                                                                lat: null, // lat
+                                                                lng: null, // lng
+                                                                name: e.target
+                                                                    .value,
+                                                            },
+                                                        }
+                                                    )
+                                                }
+                                            />
+                                        </Popover>
+                                    </>
+                                ) : (
+                                    <>
+                                        <Popover
+                                            content={
+                                                <div>
+                                                    {resultFromLocationInBooking.resultsLocationIn.map(
+                                                        (place, idx) => (
+                                                            <li
+                                                                key={idx}
+                                                                style={{
+                                                                    padding:
+                                                                        "8px",
+                                                                    borderBottom:
+                                                                        "1px solid #eee",
+                                                                    cursor: "pointer",
+                                                                }}
+                                                                onClick={() => {
+                                                                    setFormFromLocationInBooking(
+                                                                        {
+                                                                            ...formFromLocationInBooking,
+                                                                            locationIn:
+                                                                                {
+                                                                                    lat: place
+                                                                                        .geometry
+                                                                                        .coordinates[1], // lat
+                                                                                    lng: place
+                                                                                        .geometry
+                                                                                        .coordinates[0], // lng
+                                                                                    name:
+                                                                                        place
+                                                                                            .properties
+                                                                                            .name ||
+                                                                                        place
+                                                                                            .properties
+                                                                                            .city ||
+                                                                                        "Unknown",
+                                                                                },
+                                                                        }
+                                                                    );
+                                                                    setPopoverFromLocationInBooking(
+                                                                        {
+                                                                            ...popoverFromLocationInBooking,
+                                                                            locationIn: false,
+                                                                        }
+                                                                    );
+                                                                }}
+                                                            >
+                                                                {place
+                                                                    .properties
+                                                                    .name ||
+                                                                    place
+                                                                        .properties
+                                                                        .city ||
+                                                                    "Unknown"}
+                                                                ,{" "}
+                                                                {
+                                                                    place
+                                                                        .properties
+                                                                        .country
+                                                                }
+                                                            </li>
+                                                        )
+                                                    )}
+                                                </div>
+                                            }
+                                            title="Địa điểm đón khách"
+                                            trigger="click"
+                                            open={
+                                                popoverFromLocationInBooking.locationIn
+                                            }
+                                            onOpenChange={(val) =>
+                                                setPopoverFromLocationInBooking(
+                                                    {
+                                                        ...popoverFromLocationInBooking,
+                                                        locationIn: val,
+                                                    }
+                                                )
+                                            }
+                                            placement="bottomLeft"
+                                        >
+                                            <Input
+                                                placeholder="Địa điểm đón khách"
+                                                size="large"
+                                                prefix={
+                                                    <IoLocationOutline className="text-[22px]" />
+                                                }
+                                                className="mt-[12px]"
+                                                value={
+                                                    formFromLocationInBooking
+                                                        .locationIn.name
+                                                }
+                                                onChange={(e) =>
+                                                    setFormFromLocationInBooking(
+                                                        {
+                                                            ...formFromLocationInBooking,
+                                                            locationIn: {
+                                                                lat: null, // lat
+                                                                lng: null, // lng
+                                                                name: e.target
+                                                                    .value,
+                                                            },
+                                                        }
+                                                    )
+                                                }
+                                            />
+                                        </Popover>
+                                        <Popover
+                                            content={
+                                                <div>
+                                                    {resultFromLocationInBooking.resultsAirportTo.map(
+                                                        (place, idx) => (
+                                                            <li
+                                                                key={idx}
+                                                                style={{
+                                                                    padding:
+                                                                        "8px",
+                                                                    borderBottom:
+                                                                        "1px solid #eee",
+                                                                    cursor: "pointer",
+                                                                }}
+                                                                onClick={() => {
+                                                                    setFormFromLocationInBooking(
+                                                                        {
+                                                                            ...formFromLocationInBooking,
+                                                                            airportTo:
+                                                                                {
+                                                                                    lat: place.lat, // lat
+                                                                                    lng: place.lng, // lng
+                                                                                    name: place.name,
+                                                                                },
+                                                                        }
+                                                                    );
+                                                                    setPopoverFromLocationInBooking(
+                                                                        {
+                                                                            ...popoverFromLocationInBooking,
+                                                                            airportTo: false,
+                                                                        }
+                                                                    );
+                                                                }}
+                                                            >
+                                                                {place.name}
+                                                            </li>
+                                                        )
+                                                    )}
+                                                </div>
+                                            }
+                                            title="Sân bay đến"
+                                            trigger="click"
+                                            open={
+                                                popoverFromLocationInBooking.airportTo
+                                            }
+                                            onOpenChange={(val) =>
+                                                setPopoverFromLocationInBooking(
+                                                    {
+                                                        ...popoverFromLocationInBooking,
+                                                        airportTo: val,
+                                                    }
+                                                )
+                                            }
+                                            placement="bottomLeft"
+                                        >
+                                            <Input
+                                                placeholder="Sân bay đến"
+                                                size="large"
+                                                prefix={
+                                                    <IoAirplaneOutline className="text-[22px]" />
+                                                }
+                                                className="mt-[12px]"
+                                                value={
+                                                    formFromLocationInBooking
+                                                        .airportTo.name
+                                                }
+                                                onChange={(e) =>
+                                                    setFormFromLocationInBooking(
+                                                        {
+                                                            ...formFromLocationInBooking,
+                                                            airportTo: {
+                                                                lat: null, // lat
+                                                                lng: null, // lng
+                                                                name: e.target
+                                                                    .value,
+                                                            },
+                                                        }
+                                                    )
+                                                }
+                                            />
+                                        </Popover>
+                                    </>
+                                )}
                             </div>
                             <div className="mt-[12px] grid grid-cols-3 gap-[12px]">
-                                <DatePicker
-                                    showTime
-                                    onChange={(value, dateString) => {
-                                        console.log("Selected Time: ", value);
-                                        console.log(
-                                            "Formatted Selected Time: ",
-                                            dateString
-                                        );
-                                    }}
-                                    onOk={(val) => {
-                                        console.log(val);
-                                    }}
-                                />
-                                <InputNumber
-                                    addonBefore={<span>Người lớn</span>}
-                                    prefix={
-                                        <HiOutlineUsers className="text-[22px]" />
-                                    }
-                                    style={{ width: "100%", height: "100%" }}
-                                />
+                                {optionBooking === "from-airport" ? (
+                                    <>
+                                        <DatePicker
+                                            showTime
+                                            onChange={(value, dateString) => {
+                                                console.log(
+                                                    "Selected Time: ",
+                                                    value
+                                                );
+                                                console.log(
+                                                    "Formatted Selected Time: ",
+                                                    dateString
+                                                );
+                                                setFormFromAirportInBooking({
+                                                    ...formFromAirportInBooking,
+                                                    timeStart: value,
+                                                });
+                                            }}
+                                            value={
+                                                formFromAirportInBooking.timeStart
+                                            }
+                                            onOk={(val) => {
+                                                console.log(val);
+                                            }}
+                                        />
+                                        <InputNumber
+                                            addonBefore={<span>Người lớn</span>}
+                                            prefix={
+                                                <HiOutlineUsers className="text-[22px]" />
+                                            }
+                                            style={{
+                                                width: "100%",
+                                                height: "100%",
+                                            }}
+                                            value={
+                                                formFromAirportInBooking.capacity
+                                            }
+                                            onChange={(val) =>
+                                                setFormFromAirportInBooking({
+                                                    ...formFromAirportInBooking,
+                                                    capacity: val,
+                                                })
+                                            }
+                                        />
+                                    </>
+                                ) : (
+                                    <>
+                                        <DatePicker
+                                            showTime
+                                            onChange={(value, dateString) => {
+                                                console.log(
+                                                    "Selected Time: ",
+                                                    value
+                                                );
+                                                console.log(
+                                                    "Formatted Selected Time: ",
+                                                    dateString
+                                                );
+                                                setFormFromLocationInBooking({
+                                                    ...formFromLocationInBooking,
+                                                    timeStart: value,
+                                                });
+                                            }}
+                                            value={
+                                                formFromLocationInBooking.timeStart
+                                            }
+                                            onOk={(val) => {
+                                                console.log(val);
+                                            }}
+                                        />
+                                        <InputNumber
+                                            addonBefore={<span>Người lớn</span>}
+                                            prefix={
+                                                <HiOutlineUsers className="text-[22px]" />
+                                            }
+                                            style={{
+                                                width: "100%",
+                                                height: "100%",
+                                            }}
+                                            value={
+                                                formFromLocationInBooking.capacity
+                                            }
+                                            onChange={(val) =>
+                                                setFormFromLocationInBooking({
+                                                    ...formFromLocationInBooking,
+                                                    capacity: val,
+                                                })
+                                            }
+                                        />
+                                    </>
+                                )}
+
                                 <div className="text-center text-white bg-[#5392f9] text-[20px] rounded-[8px] cursor-pointer">
                                     Tìm
                                 </div>
@@ -449,113 +918,124 @@ export default function BookingVehicles() {
 
                         {/* Vehicle List */}
                         <div className="space-y-4">
-                            {vehicleData.map((vehicle) => (
-                                <Card
-                                    key={vehicle.id}
-                                    onClick={() => setSelectedItem(vehicle)}
-                                    className={`hover:shadow-md transition-shadow cursor-pointer ${
-                                        selectedItem.id === vehicle.id
-                                            ? "border-blue-500 border-2"
-                                            : ""
-                                    }`}
-                                >
-                                    <div className="flex items-center justify-between">
-                                        <div className="flex items-center space-x-4">
-                                            <div className="w-24 h-16 relative">
-                                                <img
-                                                    src={vehicle.image}
-                                                    alt={vehicle.name}
-                                                    fill
-                                                    className="object-cover w-full"
-                                                />
-                                            </div>
-                                            <div className="flex-1">
-                                                <div className="flex items-center space-x-2 mb-1">
-                                                    <h3 className="font-medium text-lg">
-                                                        {vehicle.name}
-                                                    </h3>
-                                                    {vehicle.highlighted && (
-                                                        <Badge
-                                                            count="Được đề xuất"
-                                                            className="bg-blue-500"
-                                                        />
-                                                    )}
+                            {vehicleData.length > 0 &&
+                                vehicleData.map((vehicle) => (
+                                    <Card
+                                        key={vehicle.id}
+                                        onClick={() => setSelectedItem(vehicle)}
+                                        className={`hover:shadow-md transition-shadow cursor-pointer ${
+                                            selectedItem?.id === vehicle.id
+                                                ? "border-blue-500 border-2"
+                                                : ""
+                                        }`}
+                                    >
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex items-center space-x-4">
+                                                <div className="w-24 h-16 relative">
+                                                    <img
+                                                        src={`${process.env.REACT_APP_BE_URL}/${vehicle.image}`}
+                                                        alt={vehicle.name}
+                                                        fill
+                                                        className="object-cover w-full"
+                                                    />
                                                 </div>
-                                                <p className="text-sm text-gray-600 mb-2">
-                                                    {vehicle.description}
-                                                </p>
-                                                <div className="flex items-center space-x-4 text-sm">
-                                                    <Tag
-                                                        color={getCategoryColor(
-                                                            vehicle.category
+                                                <div className="flex-1">
+                                                    <div className="flex items-center space-x-2 mb-1">
+                                                        <h3 className="font-medium text-lg">
+                                                            {vehicle.name}
+                                                        </h3>
+                                                        {vehicle.highlighted && (
+                                                            <Badge
+                                                                count="Được đề xuất"
+                                                                className="bg-blue-500"
+                                                            />
                                                         )}
-                                                    >
-                                                        {vehicle.category}
-                                                    </Tag>
-                                                    <div className="flex items-center space-x-1">
-                                                        <Rate
-                                                            disabled
-                                                            defaultValue={
-                                                                vehicle.rating
-                                                            }
-                                                            size="small"
-                                                        />
-                                                        <span>
-                                                            {vehicle.rating}
-                                                        </span>
                                                     </div>
-                                                    <div className="flex items-center space-x-2">
+                                                    <p className="text-sm text-gray-600 mb-2">
+                                                        {vehicle.description}
+                                                    </p>
+                                                    <div className="flex items-center space-x-4 text-sm">
+                                                        <Tag
+                                                            color={getCategoryColor(
+                                                                vehicle.category
+                                                            )}
+                                                        >
+                                                            {vehicle.category}
+                                                        </Tag>
                                                         <div className="flex items-center space-x-1">
-                                                            <UserOutlined />
+                                                            <Rate
+                                                                disabled
+                                                                defaultValue={
+                                                                    vehicle.avg_star
+                                                                }
+                                                                size="small"
+                                                            />
                                                             <span>
-                                                                Tối đa{" "}
                                                                 {
-                                                                    vehicle.passengers
+                                                                    vehicle.avg_star
                                                                 }
                                                             </span>
                                                         </div>
-                                                        <div className="flex items-center space-x-1">
-                                                            <CarOutlined />
-                                                            <span>
-                                                                Tối đa{" "}
-                                                                {
-                                                                    vehicle.luggage
-                                                                }
-                                                            </span>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <div className="mt-2 space-y-1">
-                                                    {vehicle.features.map(
-                                                        (feature, index) => (
-                                                            <div
-                                                                key={index}
-                                                                className="flex items-center space-x-1 text-sm text-green-600"
-                                                            >
-                                                                <CheckCircleOutlined />
+                                                        <div className="flex items-center space-x-2">
+                                                            <div className="flex items-center space-x-1">
+                                                                <UserOutlined />
                                                                 <span>
-                                                                    {feature}
+                                                                    Tối đa{" "}
+                                                                    {
+                                                                        vehicle.capacity
+                                                                    }
                                                                 </span>
                                                             </div>
-                                                        )
-                                                    )}
+                                                            <div className="flex items-center space-x-1">
+                                                                <CarOutlined />
+                                                                <span>
+                                                                    Tối đa{" "}
+                                                                    {
+                                                                        vehicle.luggage
+                                                                    }
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div className="mt-2 space-y-1">
+                                                        <div className="flex items-center space-x-1 text-sm text-green-600">
+                                                            <CheckCircleOutlined />
+                                                            <span>
+                                                                Ăn phụ thu miễn
+                                                                phí
+                                                            </span>
+                                                        </div>
+                                                        <div className="flex items-center space-x-1 text-sm text-green-600">
+                                                            <CheckCircleOutlined />
+                                                            <span>
+                                                                Đã bao gồm Gặp
+                                                                gỡ & Chào hỏi
+                                                                miễn phí
+                                                            </span>
+                                                        </div>
+                                                    </div>
                                                 </div>
                                             </div>
-                                        </div>
-                                        <div className="text-right">
-                                            <div className="text-2xl font-bold w-max">
-                                                {vehicle.price} ₫
-                                            </div>
-                                            {/* <Button
+                                            <div className="text-right">
+                                                <div className="text-2xl font-bold w-max">
+                                                    {formatCurrency(
+                                                        Math.round(
+                                                            vehicle.price_per_km *
+                                                                distance
+                                                        )
+                                                    )}{" "}
+                                                    ₫
+                                                </div>
+                                                {/* <Button
                                                 type="primary"
                                                 className="mt-2 bg-blue-500"
                                             >
                                                 Chọn
                                             </Button> */}
+                                            </div>
                                         </div>
-                                    </div>
-                                </Card>
-                            ))}
+                                    </Card>
+                                ))}
                         </div>
 
                         {/* Extra Services */}
@@ -776,7 +1256,7 @@ export default function BookingVehicles() {
 
                         {/* Continue Button */}
                         <div className="mt-6 text-right">
-                            <Link to={"/booking-contact-information"}>
+                            <div onClick={handleSubmit}>
                                 <Button
                                     type="primary"
                                     size="large"
@@ -784,7 +1264,7 @@ export default function BookingVehicles() {
                                 >
                                     Continue →
                                 </Button>
-                            </Link>
+                            </div>
                         </div>
                     </div>
                 </div>

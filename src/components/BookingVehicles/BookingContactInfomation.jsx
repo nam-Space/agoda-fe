@@ -27,15 +27,22 @@ import { MapContainer, Marker, Popup, TileLayer } from "react-leaflet";
 import MarkerClusterGroup from "react-leaflet-cluster";
 import { Icon } from "leaflet";
 import { MdOutlineFreeCancellation } from "react-icons/md";
+import { useLocation } from "react-router-dom";
+import { formatCurrency } from "utils/formatCurrency";
+import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 
 const { Option } = Select;
 
 export default function BookingConfirmation() {
+    const { state } = useLocation();
+    const { option, formFromAirportIn, formFromLocationIn, car } = state;
+    const user = useAppSelector((state) => state.account.user);
+
     const [contactInfo, setContactInfo] = useState({
-        firstName: "",
-        lastName: "",
-        email: "",
-        phone: "",
+        firstName: user?.first_name || "",
+        lastName: user?.last_name || "",
+        email: user?.email || "",
+        phone: user?.phone_number || "",
     });
 
     const [flightInfo, setFlightInfo] = useState({
@@ -45,11 +52,23 @@ export default function BookingConfirmation() {
 
     const [agreedToTerms, setAgreedToTerms] = useState(false);
 
-    const lat1 = 21.211; // Tọa độ của Noi Bai Airport (Hà Nội)
-    const long1 = 105.797;
+    const lat1 =
+        option === "from-airport"
+            ? formFromAirportIn.airportIn.lat
+            : formFromLocationIn.locationIn.lat; // Tọa độ của Noi Bai Airport (Hà Nội)
+    const long1 =
+        option === "from-airport"
+            ? formFromAirportIn.airportIn.lng
+            : formFromLocationIn.locationIn.lng;
 
-    const lat2 = 21.019; // Tọa độ của Mỹ Đình
-    const long2 = 105.7583;
+    const lat2 =
+        option === "from-airport"
+            ? formFromAirportIn.locationTo.lat
+            : formFromLocationIn.airportTo.lat; // Tọa độ của Mỹ Đình
+    const long2 =
+        option === "from-airport"
+            ? formFromAirportIn.locationTo.lng
+            : formFromLocationIn.airportTo.lng;
 
     // Tính toán trung tâm của hai địa điểm
     const center = [(lat1 + lat2) / 2, (long1 + long2) / 2];
@@ -219,21 +238,30 @@ export default function BookingConfirmation() {
                             <div className="space-y-3">
                                 <div>
                                     <div className="font-medium">
-                                        📍 Noi Bai International Airport (HAN)
+                                        {option === "from-airport"
+                                            ? formFromAirportIn.airportIn.name
+                                            : formFromLocationIn.locationIn
+                                                  .name}
                                     </div>
                                     <div className="text-sm text-gray-500">
-                                        thứ tư, 30 tháng 7 năm 2025 13:00
+                                        {option === "from-airport"
+                                            ? formFromAirportIn.timeStart
+                                            : formFromLocationIn.timeStart}
                                     </div>
                                     <div className="text-xs text-gray-400">
-                                        Khoảng cách: 3118.6 km
+                                        Khoảng cách: {distance.toFixed(2)} km
                                     </div>
                                     <div className="text-xs text-gray-400">
-                                        Thời gian đi lấy: 35 giờ 57 phút
+                                        Thời gian đi lấy:{" "}
+                                        {(distance / car.avg_speed).toFixed(1)}{" "}
+                                        giờ
                                     </div>
                                 </div>
 
                                 <div className="text-sm">
-                                    🏠 Mỹ Đình Suha Apartment
+                                    {option === "from-airport"
+                                        ? formFromAirportIn.locationTo.name
+                                        : formFromLocationIn.airportTo.name}
                                 </div>
 
                                 <Divider className="my-2" />
@@ -241,17 +269,22 @@ export default function BookingConfirmation() {
                                 <div className="flex items-center space-x-4 text-sm">
                                     <div className="flex items-center space-x-1">
                                         <UserOutlined />
-                                        <span>2 Hành khách</span>
+                                        <span>
+                                            {option === "from-airport"
+                                                ? formFromAirportIn.capacity
+                                                : formFromLocationIn.capacity}{" "}
+                                            Hành khách
+                                        </span>
                                     </div>
                                     <div className="flex items-center space-x-1">
                                         <CarOutlined />
-                                        <span>2 Vali</span>
+                                        <span>Tối đa {car.luggage} vali</span>
                                     </div>
                                 </div>
 
                                 <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded">
                                     <img
-                                        src="https://agoda.transferz.com/transferz/vehicles/SEDAN.jpg"
+                                        src={`${process.env.REACT_APP_BE_URL}/${car.image}`}
                                         alt="Economy sedan"
                                         width={60}
                                         height={40}
@@ -259,10 +292,10 @@ export default function BookingConfirmation() {
                                     />
                                     <div>
                                         <div className="font-medium text-sm">
-                                            Economy sedan
+                                            {car.name}
                                         </div>
                                         <div className="text-xs text-gray-500">
-                                            Buick GL8 hoặc tương tự
+                                            {car.description}
                                         </div>
                                     </div>
                                 </div>
@@ -291,7 +324,14 @@ export default function BookingConfirmation() {
                             <div className="space-y-2">
                                 <div className="flex justify-between text-sm">
                                     <span>Giá chuyến đi cơ bản</span>
-                                    <span>403.176 ₫</span>
+                                    <span>
+                                        {formatCurrency(
+                                            Math.round(
+                                                car.price_per_km * distance
+                                            )
+                                        )}{" "}
+                                        ₫
+                                    </span>
                                 </div>
                                 <div className="flex justify-between text-sm">
                                     <span>Chào đón và đưa đón</span>
@@ -302,7 +342,14 @@ export default function BookingConfirmation() {
                                 <Divider className="my-2" />
                                 <div className="flex justify-between font-semibold">
                                     <span>TỔNG GIÁ TIỀN</span>
-                                    <span>403.176 ₫</span>
+                                    <span>
+                                        {formatCurrency(
+                                            Math.round(
+                                                car.price_per_km * distance
+                                            )
+                                        )}{" "}
+                                        ₫
+                                    </span>
                                 </div>
                                 <div className="text-xs text-gray-500">
                                     All taxes included
