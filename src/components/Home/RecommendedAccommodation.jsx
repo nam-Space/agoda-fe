@@ -1,20 +1,75 @@
 import { Navigation } from "swiper/modules";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Link } from "react-router-dom";
 import { Tabs } from "antd";
 import { FaStar } from "react-icons/fa";
 import { FaLocationDot } from "react-icons/fa6";
-
+import { getCities, callFetchHotel } from "../../config/api";
 const RecommendedAccommodation = () => {
+    const [cities, setCities] = useState([]);
+    const [hotelsByCity, setHotelsByCity] = useState({});
+    const [loading, setLoading] = useState(true);
+
     const onChange = (key) => {
         console.log(key);
     };
+    // lấy cities
+    useEffect(() => {
+        const fetchCities = async () => {
+            try {
+                const res = await getCities({ current: 1, pageSize: 6 });
+                console.log("Fetched cities:", res.data);
+                setCities(res.data);
+            } catch (error) {
+                console.error("Failed to load cities:", error);
+            }
+        };
+        fetchCities();
+    }, []);
 
-    const items = [
+    // lấy hotels cho từng city
+    useEffect(() => {
+        const fetchHotels = async () => {
+            if (cities?.length === 0) return;
+            setLoading(true);
+
+            const promises = cities?.map(async (city) => {
+                try {
+                    const res = await callFetchHotel({ cityId: city.id });
+                    return { cityId: city.id, hotels: res.data || [] };
+                } catch (error) {
+                    console.error(`Failed to load hotels for city ${city.name}:`, error);
+                    return { cityId: city.id, hotels: [] };
+                }
+            });
+
+            const results = await Promise.all(promises);
+            const hotelsMap = {};
+            results.forEach((item) => {
+                hotelsMap[item.cityId] = item.hotels;
+            });
+
+            setHotelsByCity(hotelsMap);
+            setLoading(false);
+        };
+
+        fetchHotels();
+    }, [cities]);
+
+    if (loading) {
+        return (
+            <div className="flex justify-center py-10">
+                {/* <Spin size="large" /> */}
+                Loading...
+            </div>
+        );
+    }
+
+    const items = cities.map((city) => (
         {
-            key: "1",
-            label: "Hồ Chí Minh",
+            key: city.id.toString(),
+            label: city.name,
             children: (
                 <Swiper
                     slidesPerView={4}
@@ -23,241 +78,45 @@ const RecommendedAccommodation = () => {
                     modules={[Navigation]}
                     className="mt-[24px]"
                 >
-                    {new Array(15).fill(0).map((item, index) => (
-                        <SwiperSlide key={index}>
+                    {hotelsByCity[city.id]?.map((hotel)  => (
+                        <SwiperSlide key={hotel.id}>
                             <Link className="relative">
                                 <img
-                                    src="https://pix8.agoda.net/hotelImages/73279272/0/1680b34a33244e7ad492d6402071da7f.jpg?ce=2&s=375x"
+                                    src={
+                                        hotel?.images? `http://localhost:8000${hotel.images[0].image}` : "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSYR83krjU8bD9NkDRlV3iGwsdCsAmyzAPSdg&s"
+                                    }
                                     className="w-full h-[154px] rounded-[16px]"
                                 />
                                 <div className="absolute top-[12px] right-[12px] p-[4px] bg-[#2067da] text-white font-bold rounded-[4px]">
-                                    8.9
+                                    {hotel.rating || "8.5"}
                                 </div>
                                 <p className="font-bold mt-[12px]">
-                                    Cozrum Homes Charming Corner
+                                    {hotel.name}
                                 </p>
                                 <div className="flex items-center gap-[4px]">
                                     <div className="flex items-center">
-                                        <FaStar className="text-[#c42c65]" />
-                                        <FaStar className="text-[#c42c65]" />
-                                        <FaStar className="text-[#c42c65]" />
-                                        <FaStar className="text-[#c42c65]" />
-                                        <FaStar className="text-[#c42c65]" />
+                                        {Array.from({ length: hotel.stars || 5 }).map((_, i) => (
+                                            <FaStar key={i} className="text-[#c42c65]" />
+                                        ))}
                                     </div>
                                     <div className="font-semibold flex items-center gap-[4px] text-[#2067da]">
                                         <FaLocationDot />
-                                        Quận 9, Hồ Chí Minh
+                                        {hotel.address || city.name}
                                     </div>
                                 </div>
                                 <p className="text-[12px] text-[#5e6b82]">
                                     Giá mỗi đêm chưa gồm thuế và phí
                                 </p>
                                 <p className="text-[#c53829] text-[16px] font-bold">
-                                    VND 1.437.037
+                                    VND {hotel.price?.toLocaleString("vi-VN") || "0"}
                                 </p>
                             </Link>
                         </SwiperSlide>
                     ))}
                 </Swiper>
             ),
-        },
-        {
-            key: "2",
-            label: "Đà Nẵng",
-            children: (
-                <Swiper
-                    slidesPerView={4}
-                    spaceBetween={30}
-                    navigation={true}
-                    modules={[Navigation]}
-                    className="mt-[24px]"
-                >
-                    {new Array(15).fill(0).map((item, index) => (
-                        <SwiperSlide key={index}>
-                            <Link className="relative">
-                                <img
-                                    src="https://pix8.agoda.net/hotelImages/5481632/0/da09338cef146914309f07bc1bc7f655.jpg?ce=0&s=375x"
-                                    className="w-full h-[154px] rounded-[16px]"
-                                />
-                                <div className="absolute top-[12px] right-[12px] p-[4px] bg-[#2067da] text-white font-bold rounded-[4px]">
-                                    8.9
-                                </div>
-                                <p className="font-bold mt-[12px]">
-                                    Cozrum Homes Charming Corner
-                                </p>
-                                <div className="flex items-center gap-[4px]">
-                                    <div className="flex items-center">
-                                        <FaStar className="text-[#c42c65]" />
-                                        <FaStar className="text-[#c42c65]" />
-                                        <FaStar className="text-[#c42c65]" />
-                                        <FaStar className="text-[#c42c65]" />
-                                        <FaStar className="text-[#c42c65]" />
-                                    </div>
-                                    <div className="font-semibold flex items-center gap-[4px] text-[#2067da]">
-                                        <FaLocationDot />
-                                        Quận 9, Hồ Chí Minh
-                                    </div>
-                                </div>
-                                <p className="text-[12px] text-[#5e6b82]">
-                                    Giá mỗi đêm chưa gồm thuế và phí
-                                </p>
-                                <p className="text-[#c53829] text-[16px] font-bold">
-                                    VND 1.437.037
-                                </p>
-                            </Link>
-                        </SwiperSlide>
-                    ))}
-                </Swiper>
-            ),
-        },
-        {
-            key: "3",
-            label: "Vũng Tàu",
-            children: (
-                <Swiper
-                    slidesPerView={4}
-                    spaceBetween={30}
-                    navigation={true}
-                    modules={[Navigation]}
-                    className="mt-[24px]"
-                >
-                    {new Array(15).fill(0).map((item, index) => (
-                        <SwiperSlide key={index}>
-                            <Link className="relative">
-                                <img
-                                    src="https://pix8.agoda.net/hotelImages/64197808/0/ab1f583eeca03d56ad34565b00bd06bd.jpg?ce=0&s=375x"
-                                    className="w-full h-[154px] rounded-[16px]"
-                                />
-                                <div className="absolute top-[12px] right-[12px] p-[4px] bg-[#2067da] text-white font-bold rounded-[4px]">
-                                    8.9
-                                </div>
-                                <p className="font-bold mt-[12px]">
-                                    Cozrum Homes Charming Corner
-                                </p>
-                                <div className="flex items-center gap-[4px]">
-                                    <div className="flex items-center">
-                                        <FaStar className="text-[#c42c65]" />
-                                        <FaStar className="text-[#c42c65]" />
-                                        <FaStar className="text-[#c42c65]" />
-                                        <FaStar className="text-[#c42c65]" />
-                                        <FaStar className="text-[#c42c65]" />
-                                    </div>
-                                    <div className="font-semibold flex items-center gap-[4px] text-[#2067da]">
-                                        <FaLocationDot />
-                                        Quận 9, Hồ Chí Minh
-                                    </div>
-                                </div>
-                                <p className="text-[12px] text-[#5e6b82]">
-                                    Giá mỗi đêm chưa gồm thuế và phí
-                                </p>
-                                <p className="text-[#c53829] text-[16px] font-bold">
-                                    VND 1.437.037
-                                </p>
-                            </Link>
-                        </SwiperSlide>
-                    ))}
-                </Swiper>
-            ),
-        },
-        {
-            key: "4",
-            label: "Hà Nội",
-            children: (
-                <Swiper
-                    slidesPerView={4}
-                    spaceBetween={30}
-                    navigation={true}
-                    modules={[Navigation]}
-                    className="mt-[24px]"
-                >
-                    {new Array(15).fill(0).map((item, index) => (
-                        <SwiperSlide key={index}>
-                            <Link className="relative">
-                                <img
-                                    src="https://q-xx.bstatic.com/xdata/images/hotel/max500/542517411.jpg?k=a5955e84c2dea6de2b8f5fc02cfe69794c1f78814f45c7e484c00acb9c71c18a&o=&s=375x"
-                                    className="w-full h-[154px] rounded-[16px]"
-                                />
-                                <div className="absolute top-[12px] right-[12px] p-[4px] bg-[#2067da] text-white font-bold rounded-[4px]">
-                                    8.9
-                                </div>
-                                <p className="font-bold mt-[12px]">
-                                    Cozrum Homes Charming Corner
-                                </p>
-                                <div className="flex items-center gap-[4px]">
-                                    <div className="flex items-center">
-                                        <FaStar className="text-[#c42c65]" />
-                                        <FaStar className="text-[#c42c65]" />
-                                        <FaStar className="text-[#c42c65]" />
-                                        <FaStar className="text-[#c42c65]" />
-                                        <FaStar className="text-[#c42c65]" />
-                                    </div>
-                                    <div className="font-semibold flex items-center gap-[4px] text-[#2067da]">
-                                        <FaLocationDot />
-                                        Quận 9, Hồ Chí Minh
-                                    </div>
-                                </div>
-                                <p className="text-[12px] text-[#5e6b82]">
-                                    Giá mỗi đêm chưa gồm thuế và phí
-                                </p>
-                                <p className="text-[#c53829] text-[16px] font-bold">
-                                    VND 1.437.037
-                                </p>
-                            </Link>
-                        </SwiperSlide>
-                    ))}
-                </Swiper>
-            ),
-        },
-        {
-            key: "5",
-            label: "Nha Trang",
-            children: (
-                <Swiper
-                    slidesPerView={4}
-                    spaceBetween={30}
-                    navigation={true}
-                    modules={[Navigation]}
-                    className="mt-[24px]"
-                >
-                    {new Array(15).fill(0).map((item, index) => (
-                        <SwiperSlide key={index}>
-                            <Link className="relative">
-                                <img
-                                    src="https://pix8.agoda.net/hotelImages/51142820/0/8756551a38d6ea123b0e70e01620e4c9.jpg?ce=2&s=375x"
-                                    className="w-full h-[154px] rounded-[16px]"
-                                />
-                                <div className="absolute top-[12px] right-[12px] p-[4px] bg-[#2067da] text-white font-bold rounded-[4px]">
-                                    8.9
-                                </div>
-                                <p className="font-bold mt-[12px]">
-                                    Cozrum Homes Charming Corner
-                                </p>
-                                <div className="flex items-center gap-[4px]">
-                                    <div className="flex items-center">
-                                        <FaStar className="text-[#c42c65]" />
-                                        <FaStar className="text-[#c42c65]" />
-                                        <FaStar className="text-[#c42c65]" />
-                                        <FaStar className="text-[#c42c65]" />
-                                        <FaStar className="text-[#c42c65]" />
-                                    </div>
-                                    <div className="font-semibold flex items-center gap-[4px] text-[#2067da]">
-                                        <FaLocationDot />
-                                        Quận 9, Hồ Chí Minh
-                                    </div>
-                                </div>
-                                <p className="text-[12px] text-[#5e6b82]">
-                                    Giá mỗi đêm chưa gồm thuế và phí
-                                </p>
-                                <p className="text-[#c53829] text-[16px] font-bold">
-                                    VND 1.437.037
-                                </p>
-                            </Link>
-                        </SwiperSlide>
-                    ))}
-                </Swiper>
-            ),
-        },
-    ];
+        }
+    ));
 
     return (
         <div>

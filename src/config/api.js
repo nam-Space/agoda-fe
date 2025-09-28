@@ -28,12 +28,20 @@ export const callLogout = (data) => {
 };
 
 // Hotel
-export const callFetchHotel = (query) => {
-    return axios.get(`/api/hotels/hotels/?${query}`);
+export const callFetchHotel = (params) => {
+    return axios.get("/api/hotels/hotels/", { params });
 };
 
 export const callCreateHotel = (data) => {
     return axios.post("/api/hotels/hotels/create/", { ...data });
+};
+
+export const getTopVietNamHotel = (params) => {
+    return axios.get("/api/cities/cities/top-vietnam", { params });
+};
+
+export const getTopAbroadHotel = (params) => {
+    return axios.get("/api/cities/cities/top-abroad", { params });
 };
 
 export const callUpdateHotel = (id, data) => {
@@ -85,4 +93,14 @@ export const callDeleteCar = (id) => {
 /* Get location Map in all world */
 export const callFetchLocationMapInAllWorld = (query) => {
     return axiosBase.get(`https://photon.komoot.io/api/?q=${query}`);
+};
+
+// Promotion
+export const getPromotions = (params) => {
+    return axios.get("/api/promotions/", { params });
+};
+
+// City
+export const getCities = (params) => {
+    return axios.get("/api/cities/cities/", { params });
 };

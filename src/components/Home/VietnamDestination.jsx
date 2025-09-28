@@ -1,9 +1,26 @@
 import { Navigation } from "swiper/modules";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Link } from "react-router-dom";
+import { getTopVietNamHotel } from "../../config/api";
 
 const VietnamDestination = () => {
+    const [cities, setCities] = useState([]);
+
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const res = await getTopVietNamHotel({ limit: 10 });
+                if (res.isSuccess) {
+                    setCities(res.data|| []);
+                }
+            } catch (error) {
+                console.error("Failed to fetch top VN cities:", error);
+            }
+        };
+        fetchData();
+    }, []);
+
     return (
         <div>
             <div className="w-[1124px] mx-auto mt-[160px]">
@@ -17,18 +34,19 @@ const VietnamDestination = () => {
                     modules={[Navigation]}
                     className="mt-[24px]"
                 >
-                    {new Array(15).fill(0).map((item, index) => (
-                        <SwiperSlide key={index}>
-                            <Link>
+                    {cities.map((city) => (
+                        <SwiperSlide key={city.id}>
+                            <Link to={`/city/${city.id}`}>
                                 <img
-                                    src="https://pix6.agoda.net/geo/city/17190/1_17190_02.jpg?ca=6&ce=1&s=1024x&ar=1x1"
+                                    src={city?.image? `http://localhost:8000${city.image}` : "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSYR83krjU8bD9NkDRlV3iGwsdCsAmyzAPSdg&s"}
+                                    alt={city.name}
                                     className="w-full h-[200px] rounded-[16px]"
                                 />
                                 <p className="font-bold text-center">
-                                    Hồ Chí Minh
+                                    {city?.name}
                                 </p>
                                 <p className="text-center text-[12px]">
-                                    15.546 chỗ ở
+                                    {city.hotelCount} chỗ ở
                                 </p>
                             </Link>
                         </SwiperSlide>
