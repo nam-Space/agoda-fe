@@ -33,7 +33,6 @@ function App() {
   const dispatch = useAppDispatch();
   const isLoading = useAppSelector(state => state.account.isLoading);
 
-
   useEffect(() => {
     dispatch(fetchAccount())
   }, [])

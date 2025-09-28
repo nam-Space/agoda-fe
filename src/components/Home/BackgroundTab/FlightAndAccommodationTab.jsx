@@ -1,111 +1,152 @@
-import { PlusOutlined, SearchOutlined } from "@ant-design/icons";
-import { DatePicker, Input, Radio, Select } from "antd";
+import { PlusOutlined, SwapOutlined } from "@ant-design/icons";
+import { DatePicker, Input, InputNumber, Radio, Select } from "antd";
 import React, { useState } from "react";
+import { HiOutlineUsers } from "react-icons/hi2";
 import { IoAirplaneOutline } from "react-icons/io5";
+import { MdOutlineMeetingRoom } from "react-icons/md"
+import { LiaChildSolid } from "react-icons/lia";
 
+const { Option } = Select;
 const { RangePicker } = DatePicker;
 
 const FlightAndAccommodationTab = () => {
-    const [option, setOption] = useState("night");
-    const [additionFlight, setAdditionFlight] = useState(false);
+    const [formData, setFormData] = useState({
+        tripType: "oneway", 
+        seatClass: "economy", 
+        from: "",
+        to: "",
+        dates: [], 
+        room: 1,
+        adult: 1,
+        child: 0,
+    });
 
-    const onChange = (value) => {
-        console.log(`selected ${value}`);
+    const handleChangeValue = (key, value) => {
+        setFormData((prev) => ({ ...prev, [key]: value }));
     };
 
-    const onSearch = (value) => {
-        console.log("search:", value);
+    const handleSwap = () => {
+        setFormData((prev) => ({
+        ...prev,
+        from: prev.to,
+        to: prev.from,
+        }));
+    };
+
+    const handleSearch = () => {
+        console.log("Search with data:", formData);
+        const { tripType, seatClass, from, to, dates, room, adult, child, airport } = formData;
+
+        if (dates.length < 2) {
+            alert("Vui lòng nhập đầy đủ thông tin!");
+            return;
+        }
+
+        const startDate = dates[0].format("YYYY-MM-DD");
+        const endDate = dates[1].format("YYYY-MM-DD");
+        const query = new URLSearchParams({
+                        from: from.trim(),
+                        to: to.trim(),
+                        startDate,
+                        endDate,
+                        room,
+                        adult,
+                        child,
+                        tripType,
+                        seatClass,
+                    }).toString();
+        const url = `/search?${query}`;
+        window.open(url, "_blank");
     };
 
     return (
         <div className="relative">
-            {additionFlight ? (
-                <p className="font-bold">Chuyến bay</p>
-            ) : (
-                <Radio.Group
-                    className="flex gap-[8px]"
-                    value={option}
-                    onChange={(e) => setOption(e.target.value)}
+            <div className="flex gap-[12px]">
+                <Select
+                    defaultValue="oneway"
+                    className="w-[150px] [&_.ant-select-selector]:rounded-full"
+                    onChange={(value) => handleChangeValue("tripType", value)}
                 >
-                    <Radio.Button
-                        value="night"
-                        className="first:rounded-l-[50px] first:rounded-r-[50px]"
+                    <Option value="oneway">Một chiều</Option>
+                    <Option value="roundtrip">Khứ hồi</Option>
+                </Select>
+
+                <Select
+                    defaultValue="economy"
+                    className="w-[150px] [&_.ant-select-selector]:rounded-full"
+                    onChange={(value) => handleChangeValue("seatClass", value)}
+                >
+                    <Option value="economy">Phổ thông</Option>
+                    <Option value="business">Thương gia</Option>
+                    <Option value="first">Hạng nhất</Option>
+                </Select>
+            </div>
+            <div className="mt-[12px] grid grid-cols-2 gap-[12px]">
+                <div className="flex items-center">
+                    <Input
+                        placeholder="Tên thành phố hoặc sân bay"
+                        prefix={<i className="fa fa-plane-departure" />}
+                        className="rounded-l-2xl rounded-r-none border-r-0 h-[40px] text-base"
+                        onChange={(e) => handleChangeValue("from", e.target.value)}
+                        value={formData.from}
+                    />
+
+                    <button
+                        className="z-10 -mx-2 flex items-center justify-center w-10 h-10 rounded-full border bg-white shadow"
+                        onClick={handleSwap}
                     >
-                        Chỗ ở qua đêm
-                    </Radio.Button>
-                    <Radio.Button
-                        value="day"
-                        className="last:rounded-l-[50px] last:rounded-r-[50px] before:!hidden"
-                    >
-                        Chỗ ở trong ngày
-                    </Radio.Button>
-                </Radio.Group>
-            )}
-            <div>
-                <Input
-                    placeholder="Tìm kiếm"
-                    size="large"
-                    prefix={<SearchOutlined />}
-                    className="mt-[12px]"
-                />
-                <div className="mt-[12px] grid grid-cols-2 gap-[12px]">
-                    <RangePicker />
-                    <Select
-                        showSearch
-                        placeholder="Select a person"
-                        optionFilterProp="label"
-                        onChange={onChange}
-                        onSearch={onSearch}
-                        options={[
-                            {
-                                value: "jack",
-                                label: "Jack",
-                            },
-                            {
-                                value: "lucy",
-                                label: "Lucy",
-                            },
-                            {
-                                value: "tom",
-                                label: "Tom",
-                            },
-                        ]}
+                        <SwapOutlined />
+                    </button>
+
+                    <Input
+                        placeholder="Tên thành phố hoặc sân bay"
+                        prefix={<i className="fa fa-map-marker-alt" />}
+                        className="rounded-r-2xl rounded-l-none border-l-0 h-[40px] text-base"
+                        onChange={(e) => handleChangeValue("to", e.target.value)}
+                        value={formData.to}
                     />
                 </div>
-                <div>
-                    {additionFlight ? (
-                        <div>
-                            <div className="flex items-center gap-[16px]">
-                                <p className="font-bold">Chuyến bay</p>
-                                <div
-                                    onClick={() => setAdditionFlight(false)}
-                                    className="w-fit gap-[3px] text-[#2067da] font-semibold relative h-[36px] flex justify-center items-center px-[16px] rounded-[50px] border-[1px] border-[#f8f7f9] after:bg-[#2067da] after:absolute after:top-0 after:left-0 after:right-0 after:bottom-0 after:opacity-0 hover:after:opacity-10 after:transition-all after:duration-300 after:rounded-[50px]"
-                                >
-                                    Loại bỏ
-                                </div>
-                            </div>
-                            <Input
-                                placeholder="Tên thành phố hoặc sân bay"
-                                size="large"
-                                prefix={
-                                    <IoAirplaneOutline className="text-[20px]" />
-                                }
-                                className="mt-[12px]"
-                            />
-                        </div>
-                    ) : (
-                        <div
-                            onClick={() => setAdditionFlight(true)}
-                            className="mt-[24px] w-fit gap-[3px] text-[#2067da] font-semibold relative h-[44px] flex justify-center items-center px-[16px] rounded-[50px] border-[1px] border-[#f8f7f9] after:bg-[#2067da] after:absolute after:top-0 after:left-0 after:right-0 after:bottom-0 after:opacity-0 hover:after:opacity-10 after:transition-all after:duration-300 after:rounded-[50px]"
-                        >
-                            <PlusOutlined className="text-[20px]" /> Bổ sung
-                            chuyến bay
-                        </div>
-                    )}
+                <div >
+                    <RangePicker 
+                    className="w-full h-full rounded-2xl text-base"
+                    onChange={(dates) => handleChangeValue("dates", dates)}
+                    value={formData.dates}
+                    />
                 </div>
-                <div className="absolute left-[50%] translate-x-[-50%] w-[466px] mt-[20px] text-center py-[12px] text-white bg-[#5392f9] border-[1px] border-[#5392f9] text-[20px] rounded-[8px] cursor-pointer">
-                    Tìm
-                </div>
+            </div>
+            <div className="mt-4 grid grid-cols-3 gap-[12px] h-[40px]">
+                <InputNumber
+                    addonBefore={<span>Phòng</span>}
+                    prefix={
+                        <MdOutlineMeetingRoom className="text-[22px]" />
+                    }
+                    size="large"
+                    className="w-full rounded-2xl"
+                    onChange={(value) => handleChangeValue("room", value)}
+                    value={formData.room}
+                />
+                <InputNumber
+                    addonBefore={<span>Người lớn</span>}
+                    prefix={<HiOutlineUsers className="text-[22px]" />}
+                    size="large"
+                    className="w-full rounded-2xl"
+                    onChange={(value) => handleChangeValue("adult", value)}
+                    value={formData.adult}
+                />
+                <InputNumber
+                    addonBefore={<span>Trẻ em</span>}
+                    prefix={<LiaChildSolid className="text-[22px]" />}
+                    size="large"
+                    className="w-full rounded-2xl"
+                    onChange={(value) => handleChangeValue("child", value)}
+                    value={formData.child}
+                />
+            </div>
+            <div 
+            className="absolute left-[50%] translate-x-[-50%] w-[466px] mt-[20px] text-center py-[12px] text-white bg-[#5392f9] border-[1px] border-[#5392f9] text-[20px] rounded-[8px] cursor-pointer"
+            onClick={handleSearch}
+            >
+                Tìm
             </div>
         </div>
     );
