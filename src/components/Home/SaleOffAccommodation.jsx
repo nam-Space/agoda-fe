@@ -1,9 +1,24 @@
 import { Navigation } from "swiper/modules";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Link } from "react-router-dom";
+import { getPromotions } from "../../config/api";
 
 const SaleOffAccommodation = () => {
+    const [promotions, setPromotions] = useState([]);
+
+    useEffect(() => {
+        const fetchPromotions = async () => {
+            try {
+                const res = await getPromotions({ promotion_type: 1 }); 
+                setPromotions(res.results || []);
+            } catch (error) {
+                console.error("Lỗi khi load promotions:", error);
+            }
+        };
+        fetchPromotions();
+    }, []);
+
     return (
         <div>
             <div className="w-[1124px] mx-auto mt-[64px]">
@@ -17,12 +32,13 @@ const SaleOffAccommodation = () => {
                     modules={[Navigation]}
                     className="mt-[24px]"
                 >
-                    {new Array(15).fill(0).map((item, index) => (
-                        <SwiperSlide key={index}>
-                            <Link>
+                    {promotions.map((promo) => (
+                        <SwiperSlide key={promo.id}>
+                            <Link to={`/promotions/${promo.id}`}>
                                 <img
-                                    src="https://cdn6.agoda.net/images/WebCampaign/dealspagebanner_hp_web/vi-vn.png"
-                                    className="w-full h-[154px] rounded-[16px]"
+                                    src={promo.image || "/default-promo.jpg"} 
+                                    alt={promo.title}
+                                    className="w-full h-[154px] rounded-[16px] object-cover"
                                 />
                             </Link>
                         </SwiperSlide>

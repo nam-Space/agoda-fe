@@ -1,45 +1,56 @@
 import { PlusOutlined, SearchOutlined } from "@ant-design/icons";
-import { DatePicker, Input, Radio, Select } from "antd";
+import { DatePicker, Input, InputNumber, Radio, Select } from "antd";
 import React, { useState } from "react";
+import { HiOutlineUsers } from "react-icons/hi2";
 import { IoAirplaneOutline } from "react-icons/io5";
-
+import { MdOutlineMeetingRoom } from "react-icons/md";
+import { LiaChildSolid } from "react-icons/lia";
 const { RangePicker } = DatePicker;
 
 const HomestayTab = () => {
-    const [option, setOption] = useState("night");
     const [additionFlight, setAdditionFlight] = useState(false);
-
-    const onChange = (value) => {
-        console.log(`selected ${value}`);
+    const [formData, setFormData] = useState({
+        option: "night",
+        search: "",
+        dates: [], 
+        room: 1,
+        adult: 1,
+        child: 0,
+        airport: "",
+    });
+    const handleChangeValue = (key, value) => {
+        setFormData((prev) => ({ ...prev, [key]: value }));
     };
 
-    const onSearch = (value) => {
-        console.log("search:", value);
-    };
+    const onSearch = (formValue) => {
+        console.log("search:", formValue);
+        const { option, search, dates, room, adult, child, airport } = formData;
 
+        if (!search || dates.length < 2) {
+            alert("Vui lòng nhập đầy đủ thông tin!");
+            return;
+        }
+
+        const startDate = dates[0].format("YYYY-MM-DD");
+        const endDate = dates[1].format("YYYY-MM-DD");
+        const params = new URLSearchParams({
+            searchValue: search.trim(),
+            startDate,
+            endDate,
+            room,
+            adult,
+            child,
+            airport: airport.trim(),
+            option,
+        });
+
+        const url = `/search?${params.toString()}`;
+        window.open(url, "_blank");
+    };
     return (
         <div className="relative">
-            {additionFlight ? (
-                <p className="font-bold">Chuyến bay</p>
-            ) : (
-                <Radio.Group
-                    className="flex gap-[8px]"
-                    value={option}
-                    onChange={(e) => setOption(e.target.value)}
-                >
-                    <Radio.Button
-                        value="night"
-                        className="first:rounded-l-[50px] first:rounded-r-[50px]"
-                    >
-                        Chỗ ở qua đêm
-                    </Radio.Button>
-                    <Radio.Button
-                        value="day"
-                        className="last:rounded-l-[50px] last:rounded-r-[50px] before:!hidden"
-                    >
-                        Chỗ ở trong ngày
-                    </Radio.Button>
-                </Radio.Group>
+            {additionFlight && (
+                <p className="font-bold">Khách sạn</p>
             )}
             <div>
                 <Input
@@ -47,30 +58,38 @@ const HomestayTab = () => {
                     size="large"
                     prefix={<SearchOutlined />}
                     className="mt-[12px]"
+                    onChange={(e) => handleChangeValue("search", e.target.value)}
+                    value={formData.search}
                 />
                 <div className="mt-[12px] grid grid-cols-2 gap-[12px]">
-                    <RangePicker />
-                    <Select
-                        showSearch
-                        placeholder="Select a person"
-                        optionFilterProp="label"
-                        onChange={onChange}
-                        onSearch={onSearch}
-                        options={[
-                            {
-                                value: "jack",
-                                label: "Jack",
-                            },
-                            {
-                                value: "lucy",
-                                label: "Lucy",
-                            },
-                            {
-                                value: "tom",
-                                label: "Tom",
-                            },
-                        ]}
+                    <RangePicker
+                        onChange={(dates) => handleChangeValue("dates", dates)}
                     />
+                    <div className="grid grid-cols-3 gap-[12px]">
+                        <InputNumber
+                            addonBefore={<span>Phòng</span>}
+                            prefix={
+                                <MdOutlineMeetingRoom className="text-[22px]" />
+                            }
+                            style={{ width: "100%" }}
+                            value={formData.room}
+                            onChange={(value) => handleChangeValue("room", value)}
+                        />
+                        <InputNumber
+                            addonBefore={<span>Người lớn</span>}
+                            prefix={<HiOutlineUsers className="text-[22px]" />}
+                            style={{ width: "100%" }}
+                            value={formData.adult}
+                            onChange={(value) => handleChangeValue("adult", value)}
+                        />
+                        <InputNumber
+                            addonBefore={<span>Trẻ em</span>}
+                            prefix={<LiaChildSolid className="text-[22px]" />}
+                            style={{ width: "100%" }}
+                            value={formData.child}
+                            onChange={(value) => handleChangeValue("child", value)}
+                        />
+                    </div>
                 </div>
                 <div>
                     {additionFlight ? (
@@ -91,6 +110,8 @@ const HomestayTab = () => {
                                     <IoAirplaneOutline className="text-[20px]" />
                                 }
                                 className="mt-[12px]"
+                                value={formData.airport}
+                                onChange={(e) => handleChangeValue("airport", e.target.value)}
                             />
                         </div>
                     ) : (
@@ -103,7 +124,10 @@ const HomestayTab = () => {
                         </div>
                     )}
                 </div>
-                <div className="absolute left-[50%] translate-x-[-50%] w-[466px] mt-[20px] text-center py-[12px] text-white bg-[#5392f9] border-[1px] border-[#5392f9] text-[20px] rounded-[8px] cursor-pointer">
+                <div
+                    className="absolute left-[50%] translate-x-[-50%] w-[466px] mt-[20px] text-center py-[12px] text-white bg-[#5392f9] border-[1px] border-[#5392f9] text-[20px] rounded-[8px] cursor-pointer"
+                    onClick={() => onSearch(formData)}
+                >
                     Tìm
                 </div>
             </div>
