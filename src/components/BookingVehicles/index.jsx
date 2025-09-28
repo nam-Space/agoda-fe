@@ -1021,7 +1021,8 @@ export default function BookingVehicles() {
                                                     {formatCurrency(
                                                         Math.round(
                                                             vehicle.price_per_km *
-                                                                distance
+                                                                distance *
+                                                                vehicle.capacity
                                                         )
                                                     )}{" "}
                                                     ₫

@@ -327,7 +327,9 @@ export default function BookingConfirmation() {
                                     <span>
                                         {formatCurrency(
                                             Math.round(
-                                                car.price_per_km * distance
+                                                car.price_per_km *
+                                                    distance *
+                                                    car.capacity
                                             )
                                         )}{" "}
                                         ₫
@@ -345,7 +347,9 @@ export default function BookingConfirmation() {
                                     <span>
                                         {formatCurrency(
                                             Math.round(
-                                                car.price_per_km * distance
+                                                car.price_per_km *
+                                                    distance *
+                                                    car.capacity
                                             )
                                         )}{" "}
                                         ₫
