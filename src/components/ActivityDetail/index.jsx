@@ -1,15 +1,9 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
-    Input,
     Button,
     Card,
-    Select,
-    Rate,
     Badge,
     Breadcrumb,
-    Avatar,
-    Dropdown,
-    Menu,
     Divider,
     Calendar,
     Collapse,
@@ -17,108 +11,121 @@ import {
     Tag,
 } from "antd";
 import {
-    SearchOutlined,
-    ShoppingCartOutlined,
-    BellOutlined,
     DownOutlined,
-    CalendarOutlined,
     EnvironmentOutlined,
     PlusOutlined,
     MinusOutlined,
-    HeartOutlined,
     UpOutlined,
 } from "@ant-design/icons";
-import {
-    FaMapMarkerAlt,
-    FaClock,
-    FaTicketAlt,
-    FaChevronLeft,
-    FaChevronRight,
-} from "react-icons/fa";
+import { FaClock, FaTicketAlt } from "react-icons/fa";
 import dayjs from "dayjs";
 import { MdOutlineKeyboardArrowRight } from "react-icons/md";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation } from "swiper/modules";
 import { IoIosStar } from "react-icons/io";
 import { BsLightningChargeFill } from "react-icons/bs";
-
-const { Option } = Select;
-const { TextArea } = Input;
+import { Link, useParams } from "react-router-dom";
+import { callFetchDetailActivity } from "config/api";
+import { ACTIVITY_TYPE } from "constants/activity";
+import { callFetchActivity } from "config/api";
+import { formatCurrency } from "utils/formatCurrency";
+import { callFetchActivityPackageByActivityIdAndDateLaunch } from "config/api";
+import _ from "lodash";
+import { INF } from "constants/activity";
 const { Panel } = Collapse;
-const { Text, Link } = Typography;
+const { Text } = Typography;
 
 export default function ActivityDetail() {
-    const ticketOptions = [
-        {
-            id: 1,
-            name: "Vé Công Viên Rồng",
-            originalPrice: "316.080",
-            salePrice: "316.080",
-            discount: "339.142,00",
-        },
-        {
-            id: 2,
-            name: "Vé Cáp Treo Nữ Hoàng",
-            originalPrice: "344.665",
-            salePrice: "344.665",
-            discount: "339.142,00",
-        },
-        {
-            id: 3,
-            name: "Combo Vé Công Viên Nước + Công Viên Rồng",
-            originalPrice: "456.243",
-            salePrice: "456.243",
-            discount: "339.142,00",
-        },
-        {
-            id: 4,
-            name: "Combo Vé Cáp Treo + Công Viên Nước + Công Viên Rồng",
-            originalPrice: "548.922",
-            salePrice: "548.922",
-            discount: "339.142,00",
-        },
-    ];
+    const { activityId } = useParams();
+    const bigCalendarWrapperRef = useRef(null);
+    const activityPackageWrapperRef = useRef(null);
 
-    const [selectedDate, setSelectedDate] = useState(dayjs());
-    const [adultTickets, setAdultTickets] = useState(1);
-    const [childTickets, setChildTickets] = useState(0);
-    const [currentMonth, setCurrentMonth] = useState(dayjs());
-    const [selectedTickerOption, setSelectedTickerOption] = useState(
-        ticketOptions[0]
-    );
-
-    const relatedActivities = [
-        {
-            id: 1,
-            name: "Sun World Halong Admission Ticket",
-            rating: 4.5,
-            reviews: 1263,
-            originalPrice: "298.013",
-            salePrice: "298.013",
-            image: "https://image.kkday.com/v2/image/get/w_960,c_fit,q_55,wm_auto/s1.kkday.com/product_100416/20250725101629_Z4sWB/png",
-            badge: "Bán chạy nhất",
-        },
-        {
-            id: 2,
-            name: "Yoko Onsen Quang Hanh Mineral Bath Ticket",
-            rating: 5.0,
-            reviews: 1263,
-            originalPrice: "501.409",
-            salePrice: "501.409",
-            image: "https://image.kkday.com/v2/image/get/w_960,c_fit,q_55,wm_auto/s1.kkday.com/product_100416/20250725101629_Z4sWB/png",
-            badge: "Giảm 15%",
-        },
-        {
-            id: 3,
-            name: "Vé Ngày Tham Quan Vịnh Hạ Long, Sông Sốt & Ti...",
-            originalPrice: "497.971",
-            salePrice: "497.971",
-            image: "https://image.kkday.com/v2/image/get/w_960,c_fit,q_55,wm_auto/s1.kkday.com/product_100416/20250725101629_Z4sWB/png",
-            badge: "Giảm 5%",
-        },
-    ];
-
+    const [activities, setActivities] = useState([]);
+    const [activity, setActivity] = useState({});
+    const [activityPackages, setActivityPackages] = useState([]);
+    const [minPrice, setMinPrice] = useState(INF);
     const [activeKey, setActiveKey] = useState(["1"]);
+
+    const handleGetListActivities = async (query) => {
+        const res = await callFetchActivity(query);
+        if (res.isSuccess) {
+            setActivities(res.data);
+        }
+    };
+
+    const handleGetActivity = async (id) => {
+        const res = await callFetchDetailActivity(id);
+        if (res.isSuccess) {
+            setActivity(res.data);
+            if (res.data.city.id) {
+                await handleGetListActivities(
+                    `current=1&pageSize=10&cityId=${res.data.city.id}`
+                );
+            }
+        }
+    };
+
+    const handleGetActivityPackageByActivityIdAndDateLaunch = async (query) => {
+        const res = await callFetchActivityPackageByActivityIdAndDateLaunch(
+            query
+        );
+        if (res.isSuccess) {
+            setActivityPackages(res.data);
+        }
+    };
+
+    const groupById = (data) => {
+        return _(data)
+            .groupBy((x) => x.id)
+            .map((value, key) => {
+                return { id: key, activity_package: value[0] };
+            })
+            .value();
+    };
+
+    const [dateSelectedGeneral, setDateSelectedGeneral] = useState(
+        dayjs(new Date()).format("YYYY-MM-DD")
+    );
+    const [adultTickets, setAdultTickets] = useState(
+        groupById(activityPackages).map((item) => 1)
+    );
+    const [childTickets, setChildTickets] = useState(
+        groupById(activityPackages).map((item) => 0)
+    );
+    const [dateTickets, setDateTickets] = useState(
+        groupById(activityPackages).map((item) => dateSelectedGeneral)
+    );
+    const [selectedTickerOption, setSelectedTickerOption] = useState({
+        id: -1,
+        name: "",
+        originalPrice: "",
+        salePrice: "",
+        discount: "",
+    });
+    const [selectedIndexTicket, setSelectedIndexTicket] = useState(-1);
+
+    useEffect(() => {
+        window.scrollTo(0, 0);
+        if (activityId) {
+            handleGetActivity(activityId);
+        }
+    }, [activityId]);
+
+    useEffect(() => {
+        if (activityId) {
+            handleGetActivityPackageByActivityIdAndDateLaunch(
+                `activity_id=${activityId}&date_launch=${dateSelectedGeneral}`
+            );
+        }
+    }, [activityId, dateSelectedGeneral]);
+
+    useEffect(() => {
+        setAdultTickets(groupById(activityPackages).map((item) => 1));
+        setChildTickets(groupById(activityPackages).map((item) => 0));
+        setDateTickets(
+            groupById(activityPackages).map((item) => dateSelectedGeneral)
+        );
+    }, [activityPackages]);
 
     const handleChange = (key) => {
         setActiveKey(key);
@@ -134,17 +141,75 @@ export default function ActivityDetail() {
         </div>
     );
 
+    const getPrice = (item, index) => {
+        const activity_date = item.activity_package.activities_dates.find(
+            (activities_date) =>
+                activities_date.date_launch.substring(0, 10) ===
+                dateTickets[index]
+        );
+
+        const price =
+            (activity_date?.price_adult || 0) * adultTickets[index] +
+            (activity_date?.price_child || 0) * childTickets[index];
+
+        if (price < minPrice) {
+            setMinPrice(price);
+        }
+
+        return price;
+    };
+
+    const getSinglePriceAdult = (item, index) => {
+        const activity_date = item.activity_package.activities_dates.find(
+            (activities_date) =>
+                activities_date.date_launch.substring(0, 10) ===
+                dateTickets[index]
+        );
+
+        const price = activity_date?.price_adult || 0;
+
+        return price;
+    };
+
+    const getSinglePriceChild = (item, index) => {
+        const activity_date = item.activity_package.activities_dates.find(
+            (activities_date) =>
+                activities_date.date_launch.substring(0, 10) ===
+                dateTickets[index]
+        );
+
+        const price = activity_date?.price_child || 0;
+
+        return price;
+    };
+
+    const handleScrollToChoose = () => {
+        if (minPrice < INF) {
+            activityPackageWrapperRef.current.scrollIntoView({
+                behavior: "smooth", // Optional: for a smooth scrolling animation
+                block: "start", // Optional: aligns the top of the element with the top of the viewport
+                inline: "nearest", // Optional: aligns the element horizontally if needed
+            });
+        } else {
+            bigCalendarWrapperRef.current.scrollIntoView({
+                behavior: "smooth", // Optional: for a smooth scrolling animation
+                block: "start", // Optional: aligns the top of the element with the top of the viewport
+                inline: "nearest", // Optional: aligns the element horizontally if needed
+            });
+        }
+    };
+
     return (
         <div className="min-h-screen bg-gray-50">
             {/* Breadcrumb */}
             <div className="max-w-7xl mx-auto px-4 py-3">
                 <Breadcrumb>
                     <Breadcrumb.Item>Trang chủ Hoạt động</Breadcrumb.Item>
-                    <Breadcrumb.Item>Hạ Long</Breadcrumb.Item>
-                    <Breadcrumb.Item>Điểm tham quan</Breadcrumb.Item>
+                    <Breadcrumb.Item>{activity?.city?.name}</Breadcrumb.Item>
                     <Breadcrumb.Item>
-                        Vé Sun World Hạ Long Quảng Ninh
+                        {ACTIVITY_TYPE[activity?.category || ""] || ""}
                     </Breadcrumb.Item>
+                    <Breadcrumb.Item>{activity?.name}</Breadcrumb.Item>
                 </Breadcrumb>
             </div>
 
@@ -169,20 +234,32 @@ export default function ActivityDetail() {
                                 />
                             </div>
                             <h1 className="text-2xl font-bold mb-2">
-                                Vé Sun World Hạ Long Quảng Ninh
+                                {activity?.name}
                             </h1>
                             <p className="text-gray-600">1001 người đã đặt</p>
                         </div>
 
                         {/* Main Image */}
                         <div className="mb-6">
-                            <div className="relative h-96 rounded-lg overflow-hidden">
-                                <img
-                                    src="https://r-xx.bstatic.com/xdata/images/xphoto/800x800/186620062.jpg?k=20fdd96841afb43a88ed84ec3dec0114aa5ef4b07dddb7f60d3fdb4675dee789&o="
-                                    alt="Sun World Ha Long"
-                                    fill
-                                    className="object-cover"
-                                />
+                            <div className="relative h-[450px] rounded-lg overflow-hidden">
+                                <Swiper
+                                    className="h-full"
+                                    slidesPerView={1}
+                                    spaceBetween={8}
+                                    navigation={true}
+                                    modules={[Navigation]}
+                                >
+                                    {activity?.images?.map((image, index) => (
+                                        <SwiperSlide key={index}>
+                                            <img
+                                                src={`${process.env.REACT_APP_BE_URL}/${image.image}`}
+                                                alt={image.image}
+                                                fill
+                                                className="object-cover w-full"
+                                            />
+                                        </SwiperSlide>
+                                    ))}
+                                </Swiper>
                             </div>
                         </div>
 
@@ -192,22 +269,11 @@ export default function ActivityDetail() {
                                 <EnvironmentOutlined className="mr-2" />
                                 Thông tin nhanh
                             </h3>
-                            <div className="flex items-center space-x-2 mb-2">
-                                <FaMapMarkerAlt className="text-gray-500" />
-                                <span className="text-sm">Không hoàn tiền</span>
-                            </div>
-                            <ul className="text-sm space-y-1 mb-4">
-                                <li>
-                                    • Buổi vào thể giới của những chuyến đi đầy
-                                    vui tâm nghiệm miễn vui tại Khu Vui Chơi Sun
-                                    World Hạ Long
-                                </li>
-                                <li>
-                                    • Ngắm nhìn toàn cảnh vịnh Hạ Long và Vịnh
-                                    Hạ Long từ trên cao với hệ thống Cáp treo
-                                    hiện đại nhất tại Việt Nam
-                                </li>
-                            </ul>
+                            <div
+                                dangerouslySetInnerHTML={{
+                                    __html: activity.short_description || "",
+                                }}
+                            ></div>
                             <Button type="link" className="p-0">
                                 Đọc thêm
                             </Button>
@@ -234,37 +300,45 @@ export default function ActivityDetail() {
                             </div>
 
                             {/* Date Selection */}
-                            <div className="mb-6">
+                            <div className="mb-6" ref={bigCalendarWrapperRef}>
                                 <h4 className="font-medium mb-3">
                                     Các lựa chọn gói
                                 </h4>
                                 <Calendar
-                                    onPanelChange={(val, mode) => {
-                                        console.log(val, mode);
-                                    }}
+                                    onSelect={(val) =>
+                                        setDateSelectedGeneral(
+                                            dayjs(
+                                                new Date(val.toString())
+                                            ).format("YYYY-MM-DD")
+                                        )
+                                    }
                                 />
                             </div>
                         </div>
 
                         {/* Ticket Options */}
-                        <div className="space-y-4">
-                            {ticketOptions.map((ticket) => (
+                        <div
+                            className="space-y-4"
+                            ref={activityPackageWrapperRef}
+                        >
+                            {groupById(activityPackages).map((item, index) => (
                                 <Card
-                                    key={ticket.id}
+                                    key={item.id}
                                     className={`hover:shadow-md cursor-pointer ${
-                                        selectedTickerOption.id === ticket.id
+                                        selectedTickerOption.id === item.id
                                             ? "border border-[2px] border-blue-500"
                                             : ""
                                     }`}
-                                    onClick={() =>
-                                        setSelectedTickerOption(ticket)
-                                    }
+                                    onClick={() => {
+                                        setSelectedTickerOption(item);
+                                        setSelectedIndexTicket(index);
+                                    }}
                                 >
                                     <div className="flex justify-between items-start">
                                         <div className="flex-1">
                                             <div className="flex justify-between items-center">
                                                 <h4 className="font-medium mb-1 text-[24px]">
-                                                    {ticket.name}
+                                                    {item.activity_package.name}
                                                 </h4>
                                                 <div className="flex items-center gap-1 text-blue-500 font-semibold">
                                                     Xem chi tiết
@@ -273,17 +347,26 @@ export default function ActivityDetail() {
                                             </div>
 
                                             {selectedTickerOption.id !==
-                                                ticket.id && (
+                                                item.id && (
                                                 <div className="flex justify-between items-center">
                                                     <div>
                                                         <p className="text-sm text-gray-500 line-through">
-                                                            {ticket.discount} ₫
+                                                            {formatCurrency(
+                                                                getPrice(
+                                                                    item,
+                                                                    index
+                                                                )
+                                                            )}{" "}
+                                                            ₫
                                                         </p>
                                                         <div className="flex items-center">
                                                             <span className="text-red-600 font-semibold text-[22px]">
-                                                                {
-                                                                    ticket.salePrice
-                                                                }{" "}
+                                                                {formatCurrency(
+                                                                    getPrice(
+                                                                        item,
+                                                                        index
+                                                                    )
+                                                                )}{" "}
                                                                 ₫
                                                             </span>
                                                         </div>
@@ -300,7 +383,7 @@ export default function ActivityDetail() {
                                         </div>
                                     </div>
 
-                                    {selectedTickerOption.id === ticket.id && (
+                                    {selectedTickerOption.id === item.id && (
                                         <div>
                                             <Divider className="my-4" />
 
@@ -310,13 +393,25 @@ export default function ActivityDetail() {
                                                     <span>Chọn ngày</span>
                                                     <Calendar
                                                         fullscreen={false}
-                                                        onPanelChange={(
-                                                            val,
-                                                            mode
-                                                        ) => {
-                                                            console.log(
-                                                                val,
-                                                                mode
+                                                        onSelect={(val) => {
+                                                            setDateTickets(
+                                                                (prev) => {
+                                                                    const newArr =
+                                                                        [
+                                                                            ...prev,
+                                                                        ];
+                                                                    newArr[
+                                                                        index
+                                                                    ] = dayjs(
+                                                                        new Date(
+                                                                            val.toString()
+                                                                        )
+                                                                    ).format(
+                                                                        "YYYY-MM-DD"
+                                                                    );
+
+                                                                    return newArr;
+                                                                }
                                                             );
                                                         }}
                                                     />
@@ -345,30 +440,63 @@ export default function ActivityDetail() {
                                                             <Button
                                                                 size="small"
                                                                 disabled={
-                                                                    adultTickets <=
-                                                                    0
+                                                                    adultTickets[
+                                                                        index
+                                                                    ] <= 0
                                                                 }
                                                                 onClick={() =>
                                                                     setAdultTickets(
-                                                                        Math.max(
-                                                                            0,
-                                                                            adultTickets -
-                                                                                1
-                                                                        )
+                                                                        (
+                                                                            prev
+                                                                        ) => {
+                                                                            const newArr =
+                                                                                [
+                                                                                    ...prev,
+                                                                                ];
+                                                                            newArr[
+                                                                                index
+                                                                            ] =
+                                                                                Math.max(
+                                                                                    0,
+                                                                                    newArr[
+                                                                                        index
+                                                                                    ] -
+                                                                                        1
+                                                                                );
+                                                                            return newArr;
+                                                                        }
                                                                     )
                                                                 }
                                                             >
                                                                 <MinusOutlined />
                                                             </Button>
                                                             <span className="w-8 text-center">
-                                                                {adultTickets}
+                                                                {
+                                                                    adultTickets[
+                                                                        index
+                                                                    ]
+                                                                }
                                                             </span>
                                                             <Button
                                                                 size="small"
                                                                 onClick={() =>
                                                                     setAdultTickets(
-                                                                        adultTickets +
-                                                                            1
+                                                                        (
+                                                                            prev
+                                                                        ) => {
+                                                                            const newArr =
+                                                                                [
+                                                                                    ...prev,
+                                                                                ];
+                                                                            newArr[
+                                                                                index
+                                                                            ] =
+                                                                                newArr[
+                                                                                    index
+                                                                                ] +
+                                                                                1;
+                                                                            return newArr;
+                                                                        }
                                                                     )
                                                                 }
                                                             >
@@ -386,30 +514,63 @@ export default function ActivityDetail() {
                                                             <Button
                                                                 size="small"
                                                                 disabled={
-                                                                    childTickets <=
-                                                                    0
+                                                                    childTickets[
+                                                                        index
+                                                                    ] <= 0
                                                                 }
                                                                 onClick={() =>
                                                                     setChildTickets(
-                                                                        Math.max(
-                                                                            0,
-                                                                            childTickets -
-                                                                                1
-                                                                        )
+                                                                        (
+                                                                            prev
+                                                                        ) => {
+                                                                            const newArr =
+                                                                                [
+                                                                                    ...prev,
+                                                                                ];
+                                                                            newArr[
+                                                                                index
+                                                                            ] =
+                                                                                Math.max(
+                                                                                    0,
+                                                                                    newArr[
+                                                                                        index
+                                                                                    ] -
+                                                                                        1
+                                                                                );
+                                                                            return newArr;
+                                                                        }
                                                                     )
                                                                 }
                                                             >
                                                                 <MinusOutlined />
                                                             </Button>
                                                             <span className="w-8 text-center">
-                                                                {childTickets}
+                                                                {
+                                                                    childTickets[
+                                                                        index
+                                                                    ]
+                                                                }
                                                             </span>
                                                             <Button
                                                                 size="small"
                                                                 onClick={() =>
                                                                     setChildTickets(
-                                                                        childTickets +
-                                                                            1
+                                                                        (
+                                                                            prev
+                                                                        ) => {
+                                                                            const newArr =
+                                                                                [
+                                                                                    ...prev,
+                                                                                ];
+                                                                            newArr[
+                                                                                index
+                                                                            ] =
+                                                                                newArr[
+                                                                                    index
+                                                                                ] +
+                                                                                1;
+                                                                            return newArr;
+                                                                        }
                                                                     )
                                                                 }
                                                             >
@@ -442,11 +603,23 @@ export default function ActivityDetail() {
                                                 </div>
                                                 <div className="flex gap-2 items-center">
                                                     <p className="text-sm text-gray-500 line-through">
-                                                        {ticket.discount} ₫
+                                                        {formatCurrency(
+                                                            getPrice(
+                                                                item,
+                                                                index
+                                                            )
+                                                        )}{" "}
+                                                        ₫
                                                     </p>
                                                     <div className="flex items-center">
                                                         <span className="text-red-600 font-semibold text-[22px]">
-                                                            {ticket.salePrice} ₫
+                                                            {formatCurrency(
+                                                                getPrice(
+                                                                    item,
+                                                                    index
+                                                                )
+                                                            )}{" "}
+                                                            ₫
                                                         </span>
                                                     </div>
                                                 </div>
@@ -485,72 +658,85 @@ export default function ActivityDetail() {
                                 navigation={true}
                                 modules={[Navigation]}
                             >
-                                {new Array(15).fill(0).map((item, index) => (
-                                    <SwiperSlide key={index}>
-                                        <div className="rounded-[16px] overflow-hidden border-[1px] border-[#d5d9e2] hover:shadow-[rgba(4,7,10,0.24)_0px_4px_10px_0px] transition-all duration-200">
-                                            <img
-                                                src="https://q-xx.bstatic.com/xdata/images/xphoto/2500x1600/227832255.jpg?k=386d20ee8736141176d14c1754c924ae102b3b1ce9a6059115f388f1038f2ef8&o="
-                                                className="w-full h-[170px] object-cover"
-                                            />
-                                            <div className="pt-[12px] px-[16px] pb-[16px]">
-                                                <p className="font-semibold text-[20px] leading-[24px] line-clamp-2">
-                                                    Da Nang Airport Transfer to
-                                                    Da Nang Hotel by Private Car
-                                                </p>
-                                                <div className="flex items-center gap-[4px]">
-                                                    <IoIosStar className="text-[#b54c01] text-[12px]" />
-                                                    <p className="font-semibold">
-                                                        5
+                                {[
+                                    ...activities.filter(
+                                        (item) => item.id !== activity.id
+                                    ),
+                                ].map((item, index) => {
+                                    return (
+                                        <SwiperSlide key={index}>
+                                            <a
+                                                href={`/activity/detail/${item.id}`}
+                                                className="rounded-[16px] overflow-hidden border-[1px] border-[#d5d9e2] hover:shadow-[rgba(4,7,10,0.24)_0px_4px_10px_0px] transition-all duration-200"
+                                            >
+                                                <img
+                                                    src={`${process.env.REACT_APP_BE_URL}/${item.images[0].image}`}
+                                                    className="w-full h-[170px] object-cover"
+                                                />
+                                                <div className="pt-[12px] px-[16px] pb-[16px]">
+                                                    <p className="font-semibold text-[20px] leading-[24px] line-clamp-2">
+                                                        {item.name}
                                                     </p>
-                                                    <p className="text-[13px] text-[#5e6b82]">
-                                                        (49)
-                                                    </p>
-                                                    <p className="text-[#5e6b82]">
-                                                        •
-                                                    </p>
-                                                    <p className="text-[13px] text-[#5e6b82]">
-                                                        298 người đã đặt
-                                                    </p>
-                                                </div>
-                                                <div className="flex items-center mt-[4px]">
-                                                    <Tag
-                                                        color="blue"
-                                                        className="p-[4px]"
-                                                    >
-                                                        <BsLightningChargeFill className="text-[14px]" />
-                                                    </Tag>
-                                                    <Tag
-                                                        color="blue"
-                                                        className="p-[4px] text-[13px] leading-[14px]"
-                                                    >
-                                                        Hủy miễn phí
-                                                    </Tag>
-                                                </div>
-                                                <div className="flex justify-end mt-[52px]">
-                                                    <Tag
-                                                        color="#c53829"
-                                                        className="p-[4px] text-[13px] leading-[14px] mr-0"
-                                                    >
-                                                        Giảm 5%
-                                                    </Tag>
-                                                </div>
-                                                <div className="mt-[4px] flex items-center justify-end gap-[4px]">
-                                                    <p className="text-[13px] text-end line-through">
-                                                        678.497 ₫
-                                                    </p>
-                                                    <div className="flex items-center justify-end gap-[8px]">
-                                                        <p className="text-[16px] font-bold text-end text-[#c53829]">
-                                                            540.762
+                                                    <div className="flex items-center gap-[4px]">
+                                                        <IoIosStar className="text-[#b54c01] text-[12px]" />
+                                                        <p className="font-semibold">
+                                                            {item.avg_star}
                                                         </p>
-                                                        <p className="text-[12px] mt-[2px] font-semibold text-end text-[#c53829]">
-                                                            ₫
+                                                        <p className="text-[13px] text-[#5e6b82]">
+                                                            (49)
+                                                        </p>
+                                                        <p className="text-[#5e6b82]">
+                                                            •
+                                                        </p>
+                                                        <p className="text-[13px] text-[#5e6b82]">
+                                                            298 người đã đặt
                                                         </p>
                                                     </div>
+                                                    <div className="flex items-center mt-[4px]">
+                                                        <Tag
+                                                            color="blue"
+                                                            className="p-[4px]"
+                                                        >
+                                                            <BsLightningChargeFill className="text-[14px]" />
+                                                        </Tag>
+                                                        <Tag
+                                                            color="blue"
+                                                            className="p-[4px] text-[13px] leading-[14px]"
+                                                        >
+                                                            Hủy miễn phí
+                                                        </Tag>
+                                                    </div>
+                                                    <div className="flex justify-end mt-[52px]">
+                                                        <Tag
+                                                            color="#c53829"
+                                                            className="p-[4px] text-[13px] leading-[14px] mr-0"
+                                                        >
+                                                            Giảm 0%
+                                                        </Tag>
+                                                    </div>
+                                                    <div className="mt-[4px] flex items-center justify-end gap-[4px]">
+                                                        <p className="text-[13px] text-end line-through">
+                                                            {formatCurrency(
+                                                                item.avg_price
+                                                            )}{" "}
+                                                            ₫
+                                                        </p>
+                                                        <div className="flex items-center justify-end gap-[8px]">
+                                                            <p className="text-[16px] font-bold text-end text-[#c53829]">
+                                                                {formatCurrency(
+                                                                    item.avg_price
+                                                                )}
+                                                            </p>
+                                                            <p className="text-[12px] mt-[2px] font-semibold text-end text-[#c53829]">
+                                                                ₫
+                                                            </p>
+                                                        </div>
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        </div>
-                                    </SwiperSlide>
-                                ))}
+                                            </a>
+                                        </SwiperSlide>
+                                    );
+                                })}
                             </Swiper>
                         </div>
 
@@ -572,46 +758,14 @@ export default function ActivityDetail() {
                                 key="1"
                                 className="border-b border-gray-200"
                             >
-                                <div className="pb-4 space-y-4 px-[36px]">
-                                    {/* Departure Point */}
-                                    <div>
-                                        <Text className="text-blue-600 font-medium block mb-2">
-                                            Điểm xuất phát
-                                        </Text>
-                                        <div className="ml-4">
-                                            <Text strong className="block mb-1">
-                                                Địa chỉ
-                                            </Text>
-                                            <ul className="list-disc list-inside ml-4">
-                                                <li className="text-gray-700">
-                                                    <Link
-                                                        href="#"
-                                                        className="text-blue-600 hover:underline"
-                                                    >
-                                                        Sun World Ha Long
-                                                        Complex
-                                                    </Link>
-                                                </li>
-                                            </ul>
-                                            <Text className="text-gray-600 ml-6 block mt-1">
-                                                Bãi Cháy, Hạ Long, Quảng Ninh
-                                            </Text>
-                                        </div>
-                                    </div>
-
-                                    {/* Return Point */}
-                                    <div>
-                                        <Text className="text-blue-600 font-medium block mb-2">
-                                            Điểm trả khách
-                                        </Text>
-                                        <div className="ml-4">
-                                            <Text className="text-gray-600">
-                                                Xin lỗi, thông tin này không có
-                                                sẵn
-                                            </Text>
-                                        </div>
-                                    </div>
-                                </div>
+                                <div
+                                    className="pb-4 space-y-4 px-[36px]"
+                                    dangerouslySetInnerHTML={{
+                                        __html:
+                                            activity?.departure_information ||
+                                            "",
+                                    }}
+                                ></div>
                             </Panel>
 
                             {/* Additional Information */}
@@ -624,42 +778,12 @@ export default function ActivityDetail() {
                                 key="2"
                                 className="border-b border-gray-200"
                             >
-                                <div className="pb-4 space-y-3 px-[36px]">
-                                    <div>
-                                        <Text strong className="block mb-2">
-                                            Thông tin quan trọng:
-                                        </Text>
-                                        <ul className="space-y-2 text-gray-700">
-                                            <li>
-                                                • Vé có hiệu lực trong ngày được
-                                                chọn
-                                            </li>
-                                            <li>
-                                                • Trẻ em dưới 1m được miễn phí
-                                                vé (cần có người lớn đi cùng)
-                                            </li>
-                                            <li>
-                                                • Trẻ em từ 1m - 1.4m được giảm
-                                                giá vé
-                                            </li>
-                                            <li>
-                                                • Vui lòng mang theo giấy tờ tùy
-                                                thân khi tham quan
-                                            </li>
-                                        </ul>
-                                    </div>
-                                    <div>
-                                        <Text strong className="block mb-2">
-                                            Tiện ích:
-                                        </Text>
-                                        <ul className="space-y-2 text-gray-700">
-                                            <li>• Bãi đỗ xe miễn phí</li>
-                                            <li>• Nhà vệ sinh công cộng</li>
-                                            <li>• Khu vực ăn uống</li>
-                                            <li>• Cửa hàng lưu niệm</li>
-                                        </ul>
-                                    </div>
-                                </div>
+                                <div
+                                    className="pb-4 space-y-3 px-[36px]"
+                                    dangerouslySetInnerHTML={{
+                                        __html: activity.more_information || "",
+                                    }}
+                                ></div>
                             </Panel>
 
                             {/* Cancellation Policy */}
@@ -672,52 +796,13 @@ export default function ActivityDetail() {
                                 key="3"
                                 className="border-b border-gray-200"
                             >
-                                <div className="pb-4 space-y-3 px-[36px]">
-                                    <div>
-                                        <Text
-                                            strong
-                                            className="block mb-2 text-green-600"
-                                        >
-                                            Hủy miễn phí:
-                                        </Text>
-                                        <ul className="space-y-2 text-gray-700">
-                                            <li>
-                                                • Hủy trước 24 giờ: Hoàn tiền
-                                                100%
-                                            </li>
-                                            <li>
-                                                • Hủy trước 12 giờ: Hoàn tiền
-                                                50%
-                                            </li>
-                                            <li>
-                                                • Hủy trong vòng 12 giờ: Không
-                                                hoàn tiền
-                                            </li>
-                                        </ul>
-                                    </div>
-                                    <div>
-                                        <Text
-                                            strong
-                                            className="block mb-2 text-orange-600"
-                                        >
-                                            Lưu ý:
-                                        </Text>
-                                        <ul className="space-y-2 text-gray-700">
-                                            <li>
-                                                • Thời gian tính theo múi giờ
-                                                Việt Nam (GMT+7)
-                                            </li>
-                                            <li>
-                                                • Phí hoàn tiền sẽ được xử lý
-                                                trong 3-5 ngày làm việc
-                                            </li>
-                                            <li>
-                                                • Vé đã sử dụng không thể hủy
-                                                hoặc hoàn tiền
-                                            </li>
-                                        </ul>
-                                    </div>
-                                </div>
+                                <div
+                                    className="pb-4 space-y-3 px-[36px]"
+                                    dangerouslySetInnerHTML={{
+                                        __html:
+                                            activity.cancellation_policy || "",
+                                    }}
+                                ></div>
                             </Panel>
 
                             {/* FAQ */}
@@ -788,80 +873,158 @@ export default function ActivityDetail() {
                     {/* Booking Sidebar */}
                     <div className="lg:col-span-1">
                         <Card className="sticky mt-[108px] top-4">
-                            {/* Header with title and image */}
-                            <div className="flex items-start justify-between mb-4">
-                                <div className="flex-1 pr-4">
-                                    <h2 className="text-lg font-semibold text-gray-900 leading-tight">
-                                        Combo Vé Công Viên Nước + Công Viên Rồng
-                                    </h2>
-                                </div>
-                                <div className="flex-shrink-0">
-                                    <div className="w-16 h-16 rounded-lg overflow-hidden">
-                                        <img
-                                            src={
-                                                "https://r-xx.bstatic.com/xdata/images/xphoto/800x800/186620062.jpg?k=20fdd96841afb43a88ed84ec3dec0114aa5ef4b07dddb7f60d3fdb4675dee789&o="
-                                            }
-                                            alt={
-                                                "Combo Vé Công Viên Nước + Công Viên Rồng"
-                                            }
-                                            width={64}
-                                            height={64}
-                                            className="w-full h-full object-cover"
-                                        />
+                            {selectedTickerOption.id === -1 ? (
+                                <>
+                                    {minPrice < INF && (
+                                        <div className="flex justify-between items-end">
+                                            <h1 className="text-2xl font-bold">
+                                                Từ
+                                            </h1>
+
+                                            <div>
+                                                <p className="text-sm text-gray-500 line-through">
+                                                    {formatCurrency(minPrice)} ₫
+                                                </p>
+                                                <div className="flex items-center">
+                                                    <span className="text-red-600 font-semibold text-[22px]">
+                                                        {formatCurrency(
+                                                            minPrice
+                                                        )}{" "}
+                                                        ₫
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    <Button
+                                        type="primary"
+                                        size="large"
+                                        className="w-full mt-[10px] bg-blue-500 hover:bg-blue-600 border-blue-500 hover:border-blue-600 rounded-full h-12 font-medium"
+                                        onClick={handleScrollToChoose}
+                                    >
+                                        Xem mọi lựa chọn
+                                    </Button>
+                                </>
+                            ) : (
+                                <>
+                                    {/* Header with title and image */}
+                                    <div className="flex items-start justify-between mb-4">
+                                        <div className="flex-1 pr-4">
+                                            <h2 className="text-lg font-semibold text-gray-900 leading-tight">
+                                                {
+                                                    selectedTickerOption
+                                                        ?.activity_package?.name
+                                                }
+                                            </h2>
+                                        </div>
+                                        <div className="flex-shrink-0">
+                                            <div className="w-16 h-16 rounded-lg overflow-hidden">
+                                                <img
+                                                    src={`${process.env.REACT_APP_BE_URL}/${activity?.images?.[0]?.image}`}
+                                                    alt={
+                                                        selectedTickerOption
+                                                            ?.activity_package
+                                                            ?.name
+                                                    }
+                                                    width={64}
+                                                    height={64}
+                                                    className="w-full h-full object-cover"
+                                                />
+                                            </div>
+                                        </div>
                                     </div>
-                                </div>
-                            </div>
 
-                            {/* Date */}
-                            <div className="mb-6">
-                                <span className="text-gray-700">
-                                    <span className="font-medium">Ngày:</span>
-                                    30 tháng 7 năm 2025
-                                </span>
-                            </div>
+                                    {/* Date */}
+                                    <div className="mb-6">
+                                        <span className="text-gray-700">
+                                            <span className="font-medium">
+                                                Ngày:
+                                            </span>{" "}
+                                            {dateTickets[selectedIndexTicket]}
+                                        </span>
+                                    </div>
 
-                            {/* Pricing breakdown */}
-                            <div className="space-y-4 mb-6">
-                                <div className="flex justify-between items-center">
-                                    <span className="text-gray-700">
-                                        Người lớn (độ tuổi 0-99)
-                                    </span>
-                                    <span className="font-medium text-gray-900">
-                                        456.243,00 ₫ X 2
-                                    </span>
-                                </div>
+                                    {/* Pricing breakdown */}
+                                    <div className="space-y-4 mb-6">
+                                        <div className="flex justify-between items-center">
+                                            <span className="text-gray-700">
+                                                Người lớn (độ tuổi 0-99)
+                                            </span>
+                                            <span className="font-medium text-gray-900">
+                                                {adultTickets[
+                                                    selectedIndexTicket
+                                                ] === 0
+                                                    ? 0
+                                                    : `${formatCurrency(
+                                                          getSinglePriceAdult(
+                                                              selectedTickerOption,
+                                                              selectedIndexTicket
+                                                          )
+                                                      )} ₫ X
+                                                
+                                                    ${
+                                                        adultTickets[
+                                                            selectedIndexTicket
+                                                        ]
+                                                    }
+                                                `}
+                                            </span>
+                                        </div>
 
-                                <div className="flex justify-between items-center">
-                                    <span className="text-gray-700">
-                                        Trẻ em (độ tuổi 0-99)
-                                    </span>
-                                    <span className="font-medium text-gray-900">
-                                        2
-                                    </span>
-                                </div>
-                            </div>
+                                        <div className="flex justify-between items-center">
+                                            <span className="text-gray-700">
+                                                Trẻ em (độ tuổi 0-99)
+                                            </span>
+                                            <span className="font-medium text-gray-900">
+                                                {childTickets[
+                                                    selectedIndexTicket
+                                                ] === 0
+                                                    ? 0
+                                                    : `${formatCurrency(
+                                                          getSinglePriceChild(
+                                                              selectedTickerOption,
+                                                              selectedIndexTicket
+                                                          )
+                                                      )} ₫ X
+                                                
+                                                    ${
+                                                        childTickets[
+                                                            selectedIndexTicket
+                                                        ]
+                                                    }
+                                                `}
+                                            </span>
+                                        </div>
+                                    </div>
 
-                            <Divider className="my-4" />
+                                    <Divider className="my-4" />
 
-                            {/* Action buttons */}
-                            <div className="space-y-3">
-                                <Button
-                                    type="primary"
-                                    size="large"
-                                    className="w-full bg-blue-500 hover:bg-blue-600 border-blue-500 hover:border-blue-600 rounded-full h-12 font-medium"
-                                    onClick={() => {}}
-                                >
-                                    Cập nhật giá
-                                </Button>
+                                    {/* Action buttons */}
+                                    {(adultTickets[selectedIndexTicket] >= 1 ||
+                                        childTickets[selectedIndexTicket] >=
+                                            1) && (
+                                        <div className="space-y-3">
+                                            <Button
+                                                type="primary"
+                                                size="large"
+                                                className="w-full bg-blue-500 hover:bg-blue-600 border-blue-500 hover:border-blue-600 rounded-full h-12 font-medium"
+                                                onClick={() => {}}
+                                            >
+                                                Bước tiếp theo
+                                            </Button>
 
-                                <Button
-                                    size="large"
-                                    className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 border-gray-200 hover:border-gray-300 rounded-full h-12 font-medium"
-                                    onClick={() => {}}
-                                >
-                                    Thêm vào xe đẩy hàng
-                                </Button>
-                            </div>
+                                            <Button
+                                                size="large"
+                                                className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 border-gray-200 hover:border-gray-300 rounded-full h-12 font-medium"
+                                                onClick={() => {}}
+                                            >
+                                                Thêm vào xe đẩy hàng
+                                            </Button>
+                                        </div>
+                                    )}
+                                </>
+                            )}
                         </Card>
                     </div>
                 </div>
