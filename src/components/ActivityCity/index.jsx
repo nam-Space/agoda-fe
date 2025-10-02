@@ -1,6 +1,7 @@
 import { SearchOutlined } from "@ant-design/icons";
 import { Checkbox, Collapse, Input, Radio, Slider, Tabs, Tag } from "antd";
-import React, { useState } from "react";
+import { callFetchActivity } from "config/api";
+import React, { useEffect, useState } from "react";
 import { BsLightningChargeFill } from "react-icons/bs";
 import { FaCar, FaStar } from "react-icons/fa";
 import { FaTent } from "react-icons/fa6";
@@ -8,29 +9,108 @@ import { ImSpoonKnife } from "react-icons/im";
 import { IoIosStar, IoMdMusicalNote } from "react-icons/io";
 import { MdTour, MdWindow } from "react-icons/md";
 import { PiListChecksFill } from "react-icons/pi";
-import { Link } from "react-router-dom";
+import { Link, useParams, useSearchParams } from "react-router-dom";
+import { formatCurrency } from "utils/formatCurrency";
 
 const ActivityCity = () => {
-    const [selectedItem, setSelectedItem] = useState(0);
+    const { cityId } = useParams();
+    const [searchParams, setSearchParams] = useSearchParams();
+    const [activities, setActivities] = useState([]);
+    const [pageQuery, setPageQuery] = useState({
+        current: Number(searchParams.get("current")) || 1,
+        pageSize: 2,
+    });
+    const [meta, setMeta] = useState({
+        totalItems: 0,
+        currentPage: 1,
+        itemsPerPage: 0,
+        totalPages: 0,
+    });
+
+    const [selectedItem, setSelectedItem] = useState(
+        searchParams.get("category") || "all"
+    );
 
     const [value, setValue] = useState(1);
     const [valuePrices, setValuePrices] = useState([0, 100]);
+
+    const handleGetActivities = async (query) => {
+        const res = await callFetchActivity(query);
+        if (res.isSuccess) {
+            setActivities(res.data);
+            setMeta(res.meta);
+        }
+    };
+
+    useEffect(() => {
+        if (cityId) {
+            let query = `current=${pageQuery.current}&pageSize=${pageQuery.pageSize}&cityId=${cityId}`;
+            if (selectedItem !== "all") {
+                query += `&category=${selectedItem}`;
+            }
+            handleGetActivities(query);
+        }
+    }, [cityId, pageQuery, selectedItem]);
 
     const onChange = (e) => {
         setValue(e.target.value);
     };
 
-    const items = [
+    const categories = [
         {
-            key: "1",
+            value: "all",
+            label: "Tất cả",
+            icon: <MdWindow className="text-[20px]" />,
+        },
+        {
+            value: "journey",
+            label: "Chuyến tham quan",
+            icon: <MdTour className="text-[20px]" />,
+        },
+        {
+            value: "moving",
+            label: "Di chuyển",
+            icon: <FaCar className="text-[20px]" />,
+        },
+        {
+            value: "experience",
+            label: "Trải nghiệm",
+            icon: <IoMdMusicalNote className="text-[20px]" />,
+        },
+        {
+            value: "food",
+            label: "Ẩm thực",
+            icon: <ImSpoonKnife className="text-[20px]" />,
+        },
+        {
+            value: "tourist_attractions",
+            label: "Điểm tham quan",
+            icon: <FaTent className="text-[20px]" />,
+        },
+        {
+            value: "travel_preparation",
+            label: "Hành trang du lịch",
+            icon: <PiListChecksFill className="text-[20px]" />,
+        },
+    ];
+
+    const items = categories.map((category) => {
+        return {
+            key: category.value,
             label: (
                 <div
                     className="relative flex items-center gap-[8px] cursor-pointer"
-                    onClick={() => setSelectedItem(0)}
+                    onClick={() => {
+                        setSelectedItem(category.value);
+                        setSearchParams({
+                            ...searchParams,
+                            category: category.value,
+                        });
+                    }}
                 >
-                    <MdWindow className="text-[20px]" />
-                    Tất cả
-                    {selectedItem === 0 && (
+                    {category.icon}
+                    {category.label}
+                    {selectedItem === category.value && (
                         <div className="bg-[#2067da] absolute left-0 right-0 bottom-0 h-[2px]"></div>
                     )}
                 </div>
@@ -43,146 +123,8 @@ const ActivityCity = () => {
                     aaa
                 </div>
             ),
-        },
-        {
-            key: "2",
-            label: (
-                <div
-                    className="relative flex items-center gap-[8px] cursor-pointer"
-                    onClick={() => setSelectedItem(1)}
-                >
-                    <MdTour className="text-[20px]" />
-                    Chuyến tham quan
-                    {selectedItem === 1 && (
-                        <div className="bg-[#2067da] absolute left-0 right-0 bottom-0 h-[2px]"></div>
-                    )}
-                </div>
-            ),
-            children: (
-                <div>
-                    <Checkbox onChange={(val) => console.log(val)}>
-                        Checkbox
-                    </Checkbox>
-                    bbb
-                </div>
-            ),
-        },
-        {
-            key: "3",
-            label: (
-                <div
-                    className="relative flex items-center gap-[8px] cursor-pointer"
-                    onClick={() => setSelectedItem(2)}
-                >
-                    <IoMdMusicalNote className="text-[20px]" />
-                    Trải nghiệm
-                    {selectedItem === 2 && (
-                        <div className="bg-[#2067da] absolute left-0 right-0 bottom-0 h-[2px]"></div>
-                    )}
-                </div>
-            ),
-            children: (
-                <div>
-                    <Checkbox onChange={(val) => console.log(val)}>
-                        Checkbox
-                    </Checkbox>
-                    ccc
-                </div>
-            ),
-        },
-        {
-            key: "4",
-            label: (
-                <div
-                    className="relative flex items-center gap-[8px] cursor-pointer"
-                    onClick={() => setSelectedItem(3)}
-                >
-                    <FaCar className="text-[20px]" />
-                    Di chuyển
-                    {selectedItem === 3 && (
-                        <div className="bg-[#2067da] absolute left-0 right-0 bottom-0 h-[2px]"></div>
-                    )}
-                </div>
-            ),
-            children: (
-                <div>
-                    <Checkbox onChange={(val) => console.log(val)}>
-                        Checkbox
-                    </Checkbox>
-                    ddd
-                </div>
-            ),
-        },
-        {
-            key: "5",
-            label: (
-                <div
-                    className="relative flex items-center gap-[8px] cursor-pointer"
-                    onClick={() => setSelectedItem(4)}
-                >
-                    <ImSpoonKnife className="text-[20px]" />
-                    Ẩm thực
-                    {selectedItem === 4 && (
-                        <div className="bg-[#2067da] absolute left-0 right-0 bottom-0 h-[2px]"></div>
-                    )}
-                </div>
-            ),
-            children: (
-                <div>
-                    <Checkbox onChange={(val) => console.log(val)}>
-                        Checkbox
-                    </Checkbox>
-                    eee
-                </div>
-            ),
-        },
-        {
-            key: "6",
-            label: (
-                <div
-                    className="relative flex items-center gap-[8px] cursor-pointer"
-                    onClick={() => setSelectedItem(5)}
-                >
-                    <FaTent className="text-[20px]" />
-                    Điểm tham quan
-                    {selectedItem === 5 && (
-                        <div className="bg-[#2067da] absolute left-0 right-0 bottom-0 h-[2px]"></div>
-                    )}
-                </div>
-            ),
-            children: (
-                <div>
-                    <Checkbox onChange={(val) => console.log(val)}>
-                        Checkbox
-                    </Checkbox>
-                    fff
-                </div>
-            ),
-        },
-        {
-            key: "7",
-            label: (
-                <div
-                    className="relative flex items-center gap-[8px] cursor-pointer"
-                    onClick={() => setSelectedItem(6)}
-                >
-                    <PiListChecksFill className="text-[20px]" />
-                    Hành trang du lịch
-                    {selectedItem === 6 && (
-                        <div className="bg-[#2067da] absolute left-0 right-0 bottom-0 h-[2px]"></div>
-                    )}
-                </div>
-            ),
-            children: (
-                <div>
-                    <Checkbox onChange={(val) => console.log(val)}>
-                        Checkbox
-                    </Checkbox>
-                    ggg
-                </div>
-            ),
-        },
-    ];
+        };
+    });
 
     const itemTypes = [
         {
@@ -262,6 +204,27 @@ const ActivityCity = () => {
 
     const onChangeItemTypes = (key) => {
         console.log(key);
+    };
+
+    const handleNextPage = () => {
+        const nextPage = pageQuery.current + 1;
+        setPageQuery((prev) => ({ ...prev, current: nextPage }));
+
+        // update url
+        setSearchParams({
+            current: nextPage,
+            category: selectedItem,
+        });
+    };
+
+    const handlePrevPage = () => {
+        const prevPage = pageQuery.current - 1;
+        setPageQuery((prev) => ({ ...prev, current: prevPage }));
+
+        setSearchParams({
+            current: prevPage,
+            category: selectedItem,
+        });
     };
 
     return (
@@ -488,23 +451,25 @@ const ActivityCity = () => {
                     </div>
                     <div className="col-start-2 col-end-7">
                         <div className="grid grid-cols-4 gap-[12px]">
-                            {new Array(30).fill(0).map((item, index) => (
+                            {activities.map((item, index) => (
                                 <Link
-                                    to={"/activity/detail/1"}
+                                    to={`/activity/detail/${item.id}`}
                                     key={index}
                                     className="bg-white rounded-[16px] overflow-hidden border-[1px] border-[#d5d9e2] hover:shadow-[rgba(4,7,10,0.24)_0px_4px_10px_0px] transition-all duration-200"
                                 >
                                     <img
-                                        src="https://q-xx.bstatic.com/xdata/images/xphoto/2500x1600/227832255.jpg?k=386d20ee8736141176d14c1754c924ae102b3b1ce9a6059115f388f1038f2ef8&o="
+                                        src={`${process.env.REACT_APP_BE_URL}/${item.images[0].image}`}
                                         className="w-full h-[170px] object-cover"
                                     />
                                     <div className="pt-[12px] px-[16px] pb-[16px]">
                                         <p className="font-semibold text-[20px] leading-[24px] line-clamp-2">
-                                            Vé Tropicana Park Hồ Tràm
+                                            {item.name}
                                         </p>
                                         <div className="flex items-center gap-[4px]">
                                             <IoIosStar className="text-[#b54c01] text-[12px]" />
-                                            <p className="font-semibold">5</p>
+                                            <p className="font-semibold">
+                                                {item.avg_star}
+                                            </p>
                                             <p className="text-[13px] text-[#5e6b82]">
                                                 (49)
                                             </p>
@@ -532,16 +497,19 @@ const ActivityCity = () => {
                                                 color="#c53829"
                                                 className="p-[4px] text-[13px] leading-[14px] mr-0"
                                             >
-                                                Giảm 5%
+                                                Giảm 0%
                                             </Tag>
                                         </div>
                                         <div className="mt-[4px] flex items-center justify-end gap-[4px]">
                                             <p className="text-[13px] text-end line-through">
-                                                678.497 ₫
+                                                {formatCurrency(item.avg_price)}{" "}
+                                                ₫
                                             </p>
                                             <div className="flex items-center justify-end gap-[8px]">
                                                 <p className="text-[16px] font-bold text-end text-[#c53829]">
-                                                    540.762
+                                                    {formatCurrency(
+                                                        item.avg_price
+                                                    )}
                                                 </p>
                                                 <p className="text-[12px] mt-[2px] font-semibold text-end text-[#c53829]">
                                                     ₫
@@ -553,13 +521,30 @@ const ActivityCity = () => {
                             ))}
                         </div>
                         <div className="mt-[16px] flex items-center justify-between">
-                            <div className="opacity-0 w-fit bg-white text-[#2067da] font-semibold relative h-[44px] flex justify-center items-center px-[24px] rounded-[50px] border-[1px] border-[#050a0f69] after:bg-[#2067da] after:absolute after:top-0 after:left-0 after:right-0 after:bottom-0 after:opacity-0 hover:after:opacity-10 after:transition-all after:duration-300 after:rounded-[50px]">
-                                Tiếp theo
-                            </div>
-                            <p>Trang 1 trên 29</p>
-                            <div className="w-fit bg-white text-[#2067da] font-semibold relative h-[44px] flex justify-center items-center px-[24px] rounded-[50px] border-[1px] border-[#050a0f69] after:bg-[#2067da] after:absolute after:top-0 after:left-0 after:right-0 after:bottom-0 after:opacity-0 hover:after:opacity-10 after:transition-all after:duration-300 after:rounded-[50px]">
-                                Tiếp theo
-                            </div>
+                            {meta.currentPage > 1 ? (
+                                <div
+                                    onClick={handlePrevPage}
+                                    className="w-fit bg-white text-[#2067da] font-semibold relative h-[44px] flex justify-center items-center px-[24px] rounded-[50px] border-[1px] border-[#050a0f69] after:bg-[#2067da] after:absolute after:top-0 after:left-0 after:right-0 after:bottom-0 after:opacity-0 hover:after:opacity-10 after:transition-all after:duration-300 after:rounded-[50px]"
+                                >
+                                    Quay lại
+                                </div>
+                            ) : (
+                                <div></div>
+                            )}
+
+                            <p>
+                                Trang {meta.currentPage} trên {meta.totalPages}
+                            </p>
+                            {meta.currentPage < meta.totalPages ? (
+                                <div
+                                    onClick={handleNextPage}
+                                    className="w-fit bg-white text-[#2067da] font-semibold relative h-[44px] flex justify-center items-center px-[24px] rounded-[50px] border-[1px] border-[#050a0f69] after:bg-[#2067da] after:absolute after:top-0 after:left-0 after:right-0 after:bottom-0 after:opacity-0 hover:after:opacity-10 after:transition-all after:duration-300 after:rounded-[50px]"
+                                >
+                                    Tiếp theo
+                                </div>
+                            ) : (
+                                <div></div>
+                            )}
                         </div>
                     </div>
                 </div>

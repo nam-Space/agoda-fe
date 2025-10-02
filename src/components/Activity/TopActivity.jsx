@@ -1,12 +1,22 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation } from "swiper/modules";
 import { IoIosStar } from "react-icons/io";
 import { Tag } from "antd";
 import { BsLightningChargeFill } from "react-icons/bs";
 import { Link } from "react-router-dom";
+import { useAppSelector, useAppDispatch } from "../../redux/hooks";
+import { fetchActivity } from "../../redux/slice/activitySlide";
+import { formatCurrency } from "utils/formatCurrency";
 
 const TopActivity = () => {
+    const dispatch = useAppDispatch();
+    const activities = useAppSelector((state) => state.activity.data);
+
+    useEffect(() => {
+        dispatch(fetchActivity({ query: "current=1&pageSize=10" }));
+    }, []);
+
     return (
         <div>
             <div className="mt-[32px] max-w-[83.33333%] mx-auto">
@@ -20,24 +30,25 @@ const TopActivity = () => {
                         navigation={true}
                         modules={[Navigation]}
                     >
-                        {new Array(15).fill(0).map((item, index) => (
+                        {activities.map((item, index) => (
                             <SwiperSlide key={index}>
                                 <Link
-                                    to={"/activity/detail/1"}
-                                    className="rounded-[16px] overflow-hidden border-[1px] border-[#d5d9e2] hover:shadow-[rgba(4,7,10,0.24)_0px_4px_10px_0px] transition-all duration-200"
+                                    to={`/activity/detail/${item.id}`}
+                                    className="rounded-[16px] overflow-hidden hover:shadow-[rgba(4,7,10,0.24)_0px_4px_10px_0px] transition-all duration-200"
                                 >
                                     <img
-                                        src="https://media-cdn.tripadvisor.com/media/attractions-splice-spp-720x480/13/e5/1b/2f.jpg"
+                                        src={`${process.env.REACT_APP_BE_URL}/${item.images[0].image}`}
                                         className="w-full h-[170px] object-cover"
                                     />
                                     <div className="pt-[12px] px-[16px] pb-[16px]">
                                         <p className="font-semibold text-[20px] leading-[24px] line-clamp-2">
-                                            Da Nang Airport Transfer to Da Nang
-                                            Hotel by Private Car
+                                            {item.name}
                                         </p>
                                         <div className="flex items-center gap-[4px]">
                                             <IoIosStar className="text-[#b54c01] text-[12px]" />
-                                            <p className="font-semibold">5</p>
+                                            <p className="font-semibold">
+                                                {item.avg_star}
+                                            </p>
                                             <p className="text-[13px] text-[#5e6b82]">
                                                 (49)
                                             </p>
@@ -65,16 +76,19 @@ const TopActivity = () => {
                                                 color="#c53829"
                                                 className="p-[4px] text-[13px] leading-[14px] mr-0"
                                             >
-                                                Giảm 5%
+                                                Giảm 0%
                                             </Tag>
                                         </div>
                                         <div className="mt-[4px] flex items-center justify-end gap-[4px]">
                                             <p className="text-[13px] text-end line-through">
-                                                678.497 ₫
+                                                {formatCurrency(item.avg_price)}{" "}
+                                                ₫
                                             </p>
                                             <div className="flex items-center justify-end gap-[8px]">
                                                 <p className="text-[16px] font-bold text-end text-[#c53829]">
-                                                    540.762
+                                                    {formatCurrency(
+                                                        item.avg_price
+                                                    )}
                                                 </p>
                                                 <p className="text-[12px] mt-[2px] font-semibold text-end text-[#c53829]">
                                                     ₫
