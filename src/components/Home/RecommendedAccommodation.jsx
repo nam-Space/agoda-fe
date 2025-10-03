@@ -19,7 +19,6 @@ const RecommendedAccommodation = () => {
         const fetchCities = async () => {
             try {
                 const res = await getCities({ current: 1, pageSize: 6 });
-                console.log("Fetched cities:", res.data);
                 setCities(res.data);
             } catch (error) {
                 console.error("Failed to load cities:", error);
@@ -39,7 +38,10 @@ const RecommendedAccommodation = () => {
                     const res = await callFetchHotel({ cityId: city.id });
                     return { cityId: city.id, hotels: res.data || [] };
                 } catch (error) {
-                    console.error(`Failed to load hotels for city ${city.name}:`, error);
+                    console.error(
+                        `Failed to load hotels for city ${city.name}:`,
+                        error
+                    );
                     return { cityId: city.id, hotels: [] };
                 }
             });
@@ -66,57 +68,61 @@ const RecommendedAccommodation = () => {
         );
     }
 
-    const items = cities.map((city) => (
-        {
-            key: city.id.toString(),
-            label: city.name,
-            children: (
-                <Swiper
-                    slidesPerView={4}
-                    spaceBetween={30}
-                    navigation={true}
-                    modules={[Navigation]}
-                    className="mt-[24px]"
-                >
-                    {hotelsByCity[city.id]?.map((hotel)  => (
-                        <SwiperSlide key={hotel.id}>
-                            <Link className="relative">
-                                <img
-                                    src={
-                                        hotel?.images? `http://localhost:8000${hotel.images[0].image}` : "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSYR83krjU8bD9NkDRlV3iGwsdCsAmyzAPSdg&s"
-                                    }
-                                    className="w-full h-[154px] rounded-[16px]"
-                                />
-                                <div className="absolute top-[12px] right-[12px] p-[4px] bg-[#2067da] text-white font-bold rounded-[4px]">
-                                    {hotel.rating || "8.5"}
+    const items = cities.map((city) => ({
+        key: city.id.toString(),
+        label: city.name,
+        children: (
+            <Swiper
+                slidesPerView={4}
+                spaceBetween={30}
+                navigation={true}
+                modules={[Navigation]}
+                className="mt-[24px]"
+            >
+                {hotelsByCity[city.id]?.map((hotel) => (
+                    <SwiperSlide key={hotel.id}>
+                        <Link className="relative">
+                            <img
+                                src={
+                                    hotel?.images
+                                        ? `http://localhost:8000${hotel.images[0].image}`
+                                        : "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSYR83krjU8bD9NkDRlV3iGwsdCsAmyzAPSdg&s"
+                                }
+                                className="w-full h-[154px] rounded-[16px]"
+                            />
+                            <div className="absolute top-[12px] right-[12px] p-[4px] bg-[#2067da] text-white font-bold rounded-[4px]">
+                                {hotel.rating || "8.5"}
+                            </div>
+                            <p className="font-bold mt-[12px]">{hotel.name}</p>
+                            <div className="flex items-center gap-[4px]">
+                                <div className="flex items-center">
+                                    {Array.from({
+                                        length: hotel.stars || 5,
+                                    }).map((_, i) => (
+                                        <FaStar
+                                            key={i}
+                                            className="text-[#c42c65]"
+                                        />
+                                    ))}
                                 </div>
-                                <p className="font-bold mt-[12px]">
-                                    {hotel.name}
-                                </p>
-                                <div className="flex items-center gap-[4px]">
-                                    <div className="flex items-center">
-                                        {Array.from({ length: hotel.stars || 5 }).map((_, i) => (
-                                            <FaStar key={i} className="text-[#c42c65]" />
-                                        ))}
-                                    </div>
-                                    <div className="font-semibold flex items-center gap-[4px] text-[#2067da]">
-                                        <FaLocationDot />
-                                        {hotel.address || city.name}
-                                    </div>
+                                <div className="font-semibold flex items-center gap-[4px] text-[#2067da]">
+                                    <FaLocationDot />
+                                    {hotel.address || city.name}
                                 </div>
-                                <p className="text-[12px] text-[#5e6b82]">
-                                    Giá mỗi đêm chưa gồm thuế và phí
-                                </p>
-                                <p className="text-[#c53829] text-[16px] font-bold">
-                                    VND {hotel.price?.toLocaleString("vi-VN") || "0"}
-                                </p>
-                            </Link>
-                        </SwiperSlide>
-                    ))}
-                </Swiper>
-            ),
-        }
-    ));
+                            </div>
+                            <p className="text-[12px] text-[#5e6b82]">
+                                Giá mỗi đêm chưa gồm thuế và phí
+                            </p>
+                            <p className="text-[#c53829] text-[16px] font-bold">
+                                VND{" "}
+                                {hotel.price?.toLocaleString("vi-VN") || "0"}
+                            </p>
+                        </Link>
+                    </SwiperSlide>
+                ))}
+            </Swiper>
+        ),
+    }));
 
     return (
         <div>

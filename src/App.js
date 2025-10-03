@@ -28,6 +28,9 @@ import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import './App.css';
 import { useAppDispatch, useAppSelector } from './redux/hooks';
 import { fetchAccount } from './redux/slice/accountSlide';
+import BookingContactActivityPage from 'pages/BookingContactActivityPage';
+import BookingContactActivityStep2Page from 'pages/BookingContactActivityStep2Page';
+import BookingContactActivityStep3Page from 'pages/BookingContactActivityStep3Page';
 
 function App() {
   const dispatch = useAppDispatch();
@@ -90,6 +93,21 @@ function App() {
           path: "activity/detail/:activityId",
           element:
             <ActivityDetailPage />
+        },
+        {
+          path: "booking-contact-activity",
+          element:
+            <BookingContactActivityPage />
+        },
+        {
+          path: "booking-contact-activity-step-2",
+          element:
+            <BookingContactActivityStep2Page />
+        },
+        {
+          path: "booking-contact-activity-step-3",
+          element:
+            <BookingContactActivityStep3Page />
         },
         {
           path: "hotel",

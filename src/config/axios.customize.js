@@ -35,7 +35,6 @@ instance.interceptors.response.use(
         return response;
     },
     async function (error) {
-
         if (error.response.status === 401 && error.config.url !== "/api/accounts/login/") {
             const refresh_token_agoda = Cookies.get("refresh_token_agoda");
             const res = await callRefreshToken({

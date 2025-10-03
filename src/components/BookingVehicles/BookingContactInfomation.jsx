@@ -29,7 +29,7 @@ import { Icon } from "leaflet";
 import { MdOutlineFreeCancellation } from "react-icons/md";
 import { useLocation } from "react-router-dom";
 import { formatCurrency } from "utils/formatCurrency";
-import { useAppDispatch, useAppSelector } from "../../redux/hooks";
+import { useAppSelector } from "../../redux/hooks";
 
 const { Option } = Select;
 

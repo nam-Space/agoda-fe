@@ -57,6 +57,10 @@ export const callFetchHotel = (params) => {
     return axios.get("/api/hotels/hotels/", { params });
 };
 
+export const callFetchHotelQuery = (query) => {
+    return axios.get(`/api/hotels/hotels/?${query}`);
+};
+
 export const callCreateHotel = (data) => {
     return axios.post("/api/hotels/hotels/create/", { ...data });
 };

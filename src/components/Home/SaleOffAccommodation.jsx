@@ -10,7 +10,7 @@ const SaleOffAccommodation = () => {
     useEffect(() => {
         const fetchPromotions = async () => {
             try {
-                const res = await getPromotions({ promotion_type: 1 }); 
+                const res = await getPromotions({ promotion_type: 1 });
                 setPromotions(res.results || []);
             } catch (error) {
                 console.error("Lỗi khi load promotions:", error);
@@ -36,7 +36,7 @@ const SaleOffAccommodation = () => {
                         <SwiperSlide key={promo.id}>
                             <Link to={`/promotions/${promo.id}`}>
                                 <img
-                                    src={promo.image || "/default-promo.jpg"} 
+                                    src={promo.image || "/default-promo.jpg"}
                                     alt={promo.title}
                                     className="w-full h-[154px] rounded-[16px] object-cover"
                                 />

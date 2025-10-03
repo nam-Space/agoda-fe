@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import {
     Button,
     Card,
@@ -24,7 +24,7 @@ import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation } from "swiper/modules";
 import { IoIosStar } from "react-icons/io";
 import { BsLightningChargeFill } from "react-icons/bs";
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { callFetchDetailActivity } from "config/api";
 import { ACTIVITY_TYPE } from "constants/activity";
 import { callFetchActivity } from "config/api";
@@ -32,11 +32,14 @@ import { formatCurrency } from "utils/formatCurrency";
 import { callFetchActivityPackageByActivityIdAndDateLaunch } from "config/api";
 import _ from "lodash";
 import { INF } from "constants/activity";
+import { useAppSelector } from "../../redux/hooks";
 const { Panel } = Collapse;
 const { Text } = Typography;
 
 export default function ActivityDetail() {
     const { activityId } = useParams();
+    const navigate = useNavigate();
+    const user = useAppSelector((state) => state.account.user);
     const bigCalendarWrapperRef = useRef(null);
     const activityPackageWrapperRef = useRef(null);
 
@@ -97,10 +100,7 @@ export default function ActivityDetail() {
     );
     const [selectedTickerOption, setSelectedTickerOption] = useState({
         id: -1,
-        name: "",
-        originalPrice: "",
-        salePrice: "",
-        discount: "",
+        activity_package: {},
     });
     const [selectedIndexTicket, setSelectedIndexTicket] = useState(-1);
 
@@ -183,6 +183,15 @@ export default function ActivityDetail() {
         return price;
     };
 
+    const handleDisableDate = (currentDate, item) => {
+        const activity_date = item.activity_package.activities_dates.some(
+            (activities_date) =>
+                activities_date.date_launch.substring(0, 10) ===
+                dayjs(new Date(currentDate)).format("YYYY-MM-DD")
+        );
+        return !activity_date;
+    };
+
     const handleScrollToChoose = () => {
         if (minPrice < INF) {
             activityPackageWrapperRef.current.scrollIntoView({
@@ -196,6 +205,24 @@ export default function ActivityDetail() {
                 block: "start", // Optional: aligns the top of the element with the top of the viewport
                 inline: "nearest", // Optional: aligns the element horizontally if needed
             });
+        }
+    };
+
+    const handleGoToBooking = () => {
+        if (user?.id) {
+            navigate(`/booking-contact-activity`, {
+                state: {
+                    activity,
+                    activity_date: {
+                        ...selectedTickerOption,
+                    },
+                    adult_quantity_booking: adultTickets[selectedIndexTicket],
+                    child_quantity_booking: childTickets[selectedIndexTicket],
+                    date_launch: dateTickets[selectedIndexTicket],
+                },
+            });
+        } else {
+            navigate(`/login?next=/booking-contact-activity`);
         }
     };
 
@@ -255,7 +282,7 @@ export default function ActivityDetail() {
                                                 src={`${process.env.REACT_APP_BE_URL}/${image.image}`}
                                                 alt={image.image}
                                                 fill
-                                                className="object-cover w-full"
+                                                className="object-cover w-full h-full"
                                             />
                                         </SwiperSlide>
                                     ))}
@@ -341,7 +368,9 @@ export default function ActivityDetail() {
                                                     {item.activity_package.name}
                                                 </h4>
                                                 <div className="flex items-center gap-1 text-blue-500 font-semibold">
-                                                    Xem chi tiết
+                                                    <p className="w-max">
+                                                        Xem chi tiết
+                                                    </p>
                                                     <MdOutlineKeyboardArrowRight className="text-[22px]" />
                                                 </div>
                                             </div>
@@ -414,6 +443,14 @@ export default function ActivityDetail() {
                                                                 }
                                                             );
                                                         }}
+                                                        disabledDate={(
+                                                            currentDate
+                                                        ) =>
+                                                            handleDisableDate(
+                                                                currentDate,
+                                                                item
+                                                            )
+                                                        }
                                                     />
                                                 </div>
 
@@ -625,20 +662,20 @@ export default function ActivityDetail() {
                                                 </div>
                                             </div>
                                             <div className="mt-4 flex justify-end items-center gap-3">
-                                                <Button
+                                                {/* <Button
                                                     size="large"
                                                     className="bg-white text-[#2067da] border-[#050a0f69] rounded-full h-12 font-medium"
                                                     onClick={() => {}}
                                                 >
                                                     Thêm vào xe đẩy hàng
-                                                </Button>
+                                                </Button> */}
                                                 <Button
                                                     type="primary"
                                                     size="large"
                                                     className="bg-blue-500 hover:bg-blue-600 border-blue-500 hover:border-blue-600 rounded-full h-12 font-medium"
-                                                    onClick={() => {}}
+                                                    onClick={handleGoToBooking}
                                                 >
-                                                    Cập nhật giá
+                                                    Bước tiếp theo
                                                 </Button>
                                             </div>
                                         </div>
@@ -1009,18 +1046,18 @@ export default function ActivityDetail() {
                                                 type="primary"
                                                 size="large"
                                                 className="w-full bg-blue-500 hover:bg-blue-600 border-blue-500 hover:border-blue-600 rounded-full h-12 font-medium"
-                                                onClick={() => {}}
+                                                onClick={handleGoToBooking}
                                             >
                                                 Bước tiếp theo
                                             </Button>
 
-                                            <Button
+                                            {/* <Button
                                                 size="large"
                                                 className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 border-gray-200 hover:border-gray-300 rounded-full h-12 font-medium"
                                                 onClick={() => {}}
                                             >
                                                 Thêm vào xe đẩy hàng
-                                            </Button>
+                                            </Button> */}
                                         </div>
                                     )}
                                 </>
