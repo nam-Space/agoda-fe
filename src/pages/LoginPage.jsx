@@ -12,7 +12,7 @@ import {
     UserOutlined,
 } from "@ant-design/icons";
 import { FaApple } from "react-icons/fa";
-import { Link, Navigate, useNavigate } from "react-router-dom";
+import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { callLogin } from "config/api";
 import { useAppDispatch, useAppSelector } from "../redux/hooks";
 import { setUserLoginInfo } from "../redux/slice/accountSlide";
@@ -21,7 +21,11 @@ import { useCookies } from "react-cookie";
 import { toast } from "react-toastify";
 
 export default function LoginPage() {
+    const location = useLocation();
     const user = useAppSelector((state) => state.account.user);
+
+    const params = new URLSearchParams(location.search);
+    const nextUrl = params.get("next") || "/";
 
     const [cookies, setCookie] = useCookies(["refresh_token_agoda"]);
     const navigate = useNavigate();
@@ -36,7 +40,7 @@ export default function LoginPage() {
     // }, [user]);
 
     if (user?.id) {
-        return <Navigate to="/" replace />;
+        return <Navigate to={nextUrl} replace />;
     }
 
     const handleSubmit = async (values) => {
@@ -54,7 +58,7 @@ export default function LoginPage() {
                     toast.success("Đăng nhập thành công!", {
                         position: "bottom-right",
                     });
-                    navigate("/");
+                    navigate(nextUrl, { replace: true });
                 }
             } else {
                 toast.error(res.message, {

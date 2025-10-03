@@ -8,6 +8,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import {
     callFetchAirport,
     callFetchHotel,
+    callFetchHotelQuery,
     callFetchLocationMapInAllWorld,
 } from "../../../config/api";
 import { toast } from "react-toastify";
@@ -77,7 +78,7 @@ const AirportTab = () => {
                     });
                 }
             } else {
-                const res = await callFetchHotel(
+                const res = await callFetchHotelQuery(
                     `current=1&pageSize=10&name=${formFromAirportIn.locationTo.name}`
                 );
                 if (res.isSuccess) {

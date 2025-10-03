@@ -1,5 +1,5 @@
 import { SearchOutlined } from "@ant-design/icons";
-import { Checkbox, Collapse, Input, Radio, Slider, Tabs, Tag } from "antd";
+import { Checkbox, Collapse, Input, Radio, Slider, Tag } from "antd";
 import { callFetchActivity } from "config/api";
 import React, { useEffect, useState } from "react";
 import { BsLightningChargeFill } from "react-icons/bs";
@@ -9,16 +9,23 @@ import { ImSpoonKnife } from "react-icons/im";
 import { IoIosStar, IoMdMusicalNote } from "react-icons/io";
 import { MdTour, MdWindow } from "react-icons/md";
 import { PiListChecksFill } from "react-icons/pi";
-import { Link, useParams, useSearchParams } from "react-router-dom";
+import {
+    Link,
+    useLocation,
+    useParams,
+    useSearchParams,
+} from "react-router-dom";
 import { formatCurrency } from "utils/formatCurrency";
 
 const ActivityCity = () => {
+    const { state } = useLocation();
     const { cityId } = useParams();
+    const [keyword, setKeyword] = useState(state?.keyword || "");
     const [searchParams, setSearchParams] = useSearchParams();
     const [activities, setActivities] = useState([]);
     const [pageQuery, setPageQuery] = useState({
         current: Number(searchParams.get("current")) || 1,
-        pageSize: 2,
+        pageSize: 30,
     });
     const [meta, setMeta] = useState({
         totalItems: 0,
@@ -43,14 +50,18 @@ const ActivityCity = () => {
     };
 
     useEffect(() => {
+        window.scrollTo(0, 0);
         if (cityId) {
-            let query = `current=${pageQuery.current}&pageSize=${pageQuery.pageSize}&cityId=${cityId}`;
+            let query = `current=${pageQuery.current}&pageSize=${pageQuery.pageSize}&city_id=${cityId}`;
             if (selectedItem !== "all") {
                 query += `&category=${selectedItem}`;
             }
+            if (keyword) {
+                query += `&name=${keyword}`;
+            }
             handleGetActivities(query);
         }
-    }, [cityId, pageQuery, selectedItem]);
+    }, [cityId, pageQuery, selectedItem, keyword]);
 
     const onChange = (e) => {
         setValue(e.target.value);
@@ -234,6 +245,8 @@ const ActivityCity = () => {
                     <Input
                         placeholder="Tìm kiếm"
                         size="large"
+                        value={keyword}
+                        onChange={(e) => setKeyword(e.target.value)}
                         prefix={<SearchOutlined />}
                         className="rounded-[40px] w-[744px] bg-[#edf0f9]"
                     />
