@@ -115,12 +115,16 @@ function App() {
             <HotelPage /> // Add HotelPage route
         },
         {
+          path: "hotel/:hotelSlug", // Hotel detail - same component
+          element: <HotelPage />
+        },
+        {
           path: "hotel-booking",
           element:
             <HotelPageBooking /> // Add HotelPage route
         },
         {
-          path: "city/:cityName",
+          path: "city/:cityId",
           element:
             <CityPage />
         },
