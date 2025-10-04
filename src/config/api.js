@@ -175,3 +175,22 @@ export const callUpdateActivityPackage = (id, data) => {
 export const callDeleteActivityPackage = (id) => {
     return axios.delete(`/api/activities/activities-packages/${id}/delete/`);
 };
+
+// Hotels API
+export const callGetHotels = ({ cityId, currentPage = 1, pageSize = 10, filters = {} }) => {
+    const params = new URLSearchParams({
+        current: currentPage,
+        pageSize: pageSize,
+        ...filters
+    });
+    
+    if (cityId) {
+        params.append('cityId', cityId);
+    }
+    
+    return axios.get(`/api/hotels/hotels/?${params.toString()}`);
+};
+
+export const callGetHotelDetail = (hotelId) => {
+    return axios.get(`/api/hotels/hotels/${hotelId}/`);
+};

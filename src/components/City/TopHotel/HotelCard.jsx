@@ -1,21 +1,22 @@
 import React, { useState } from "react";
 import { FaStar } from "react-icons/fa";
 import { EnvironmentOutlined } from "@ant-design/icons";
+import { Link } from "react-router-dom";
 
 const HotelCard = ({ hotel }) => {
   const [showFullReview, setShowFullReview] = useState(false);
 
   return (
-    <div className="flex bg-white rounded-xl shadow p-4 mb-4">
+    <div className="flex bg-white rounded-xl shadow p-4 mb-4 hover:shadow-lg transition-shadow cursor-pointer">
       {/* Cột trái: Ảnh + gallery */}
       <div className="w-1/3 flex flex-col items-center">
-        <div className="w-full h-48 rounded-lg overflow-hidden">
+        <Link to={`/hotel/${hotel.slug}`} className="w-full h-48 rounded-lg overflow-hidden">
           <img
             src={hotel.image}
             alt={hotel.name}
-            className="w-full h-full object-cover"
+            className="w-full h-full object-cover hover:scale-105 transition-transform"
           />
-        </div>
+        </Link>
         {/* Gallery thumbnails */}
         {hotel.thumbnails && hotel.thumbnails.length > 0 && (
           <div className="flex gap-1 mt-2 w-full">
@@ -24,7 +25,7 @@ const HotelCard = ({ hotel }) => {
                 key={idx}
                 src={thumb}
                 alt={`thumb-${idx}`}
-                className="w-1/6 h-12 object-cover rounded"
+                className="w-1/6 h-12 object-cover rounded hover:opacity-80 cursor-pointer"
               />
             ))}
             {hotel.thumbnails.length > 5 && (
@@ -38,14 +39,17 @@ const HotelCard = ({ hotel }) => {
 
       {/* Cột giữa: Thông tin khách sạn */}
       <div className="w-2/3 px-6 flex flex-col justify-between">
-        {/* Tên khách sạn */}
+        {/* Tên khách sạn - Clickable */}
         <div>
-          <div className="text-2xl font-bold">{hotel.name}</div>
-          {hotel.englishName && (
-            <div className="text-lg text-gray-600 font-medium">
-              ({hotel.englishName})
-            </div>
-          )}
+          <Link to={`/hotel/${hotel.slug}`} className="hover:text-blue-600 transition-colors">
+            <div className="text-2xl font-bold">{hotel.name}</div>
+            {hotel.englishName && (
+              <div className="text-lg text-gray-600 font-medium">
+                ({hotel.englishName})
+              </div>
+            )}
+          </Link>
+          
           {/* Sao, vị trí, bản đồ */}
           <div className="flex items-center gap-2 mt-1 mb-2">
             <span className="flex">
@@ -53,21 +57,33 @@ const HotelCard = ({ hotel }) => {
                 <FaStar key={i} className="text-yellow-400 text-base" />
               ))}
             </span>
-            <span className="text-blue-600 text-sm font-semibold">
-              {hotel.area}
-            </span>
+            {hotel.cityName ? (
+              <Link 
+                to={`/city/${hotel.cityName.toLowerCase().replace(/\s+/g, '-')}`}
+                className="text-blue-600 text-sm font-semibold hover:underline cursor-pointer"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {hotel.area}
+              </Link>
+            ) : (
+              <span className="text-blue-600 text-sm font-semibold">
+                {hotel.area}
+              </span>
+            )}
             {hotel.mapUrl && (
               <a
                 href={hotel.mapUrl}
                 className="text-blue-500 text-xs underline ml-2 flex items-center gap-1"
                 target="_blank"
                 rel="noopener noreferrer"
+                onClick={(e) => e.stopPropagation()} // Prevent card click when clicking map
               >
                 <EnvironmentOutlined />
                 Xem trên bản đồ
               </a>
             )}
           </div>
+          
           {/* Tiện ích */}
           <div className="flex flex-wrap gap-2 mb-2">
             {hotel.facilities.map((f, idx) => (
@@ -79,18 +95,22 @@ const HotelCard = ({ hotel }) => {
               </span>
             ))}
           </div>
+          
           {/* Review nổi bật */}
           {hotel.review && (
             <div className="text-gray-700 text-sm mb-2">
-              “
+              "
               {showFullReview || hotel.review.length < 180
                 ? hotel.review
                 : hotel.review.slice(0, 180) + "..."}
-              ”
+              "
               {hotel.review.length > 180 && (
                 <button
                   className="text-blue-500 ml-2 text-xs"
-                  onClick={() => setShowFullReview((v) => !v)}
+                  onClick={(e) => {
+                    e.stopPropagation(); // Prevent card click
+                    setShowFullReview((v) => !v);
+                  }}
                 >
                   {showFullReview ? "Ẩn ▲" : "Xem thêm ▼"}
                 </button>
@@ -117,18 +137,20 @@ const HotelCard = ({ hotel }) => {
             </span>
           </div>
         </div>
+        
         <div className="mt-4 text-right">
           <div className="text-xs text-gray-500">Giá trung bình mỗi đêm</div>
           <div className="font-bold text-red-600 text-2xl">{hotel.price}</div>
         </div>
-        <a
-          href={hotel.url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="mt-4 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 text-base font-semibold"
+        
+        {/* Thay đổi thành Link thay vì external link */}
+        <Link
+          to={`/hotel/${hotel.slug}`}
+          className="mt-4 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 text-base font-semibold text-center"
+          onClick={(e) => e.stopPropagation()} // Prevent double navigation
         >
-          Kiểm tra lượng phòng trống
-        </a>
+          Xem chi tiết
+        </Link>
       </div>
     </div>
   );
