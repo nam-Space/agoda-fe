@@ -1,70 +1,81 @@
+import { useEffect, useState } from 'react';
+import { callFetchRoomQuery } from '../../config/api';
 
-// Component con để hiển thị thẻ phòng
 const RoomCard = ({ room }) => {
-    // Hiển thị thẻ phòng với thông tin chi tiết
     return (
         <div className="border rounded-lg overflow-hidden shadow-md bg-white mb-4">
-            <img src={room.image} alt={room.title} className="w-full h-48 object-cover" />
+            <img
+                src="https://pistachiohotel.com/UploadFile/Gallery/Overview/a2.jpg"
+                alt={room.room_type}
+                className="w-full h-48 object-cover"
+            />
             <div className="p-4">
-                <h3 className="text-lg font-bold text-gray-800">{room.title}</h3>
+                <h3 className="text-lg font-bold text-gray-800">{room.room_type}</h3>
                 <div className="flex items-center mt-1">
                     <span className="text-green-600">@</span>
-                    <span className="text-gray-500 ml-1">{room.platform}</span>
+                    <span className="text-gray-500 ml-1">agodaHomes</span>
                 </div>
                 <div className="flex items-center mt-1">
                     <span className="text-pink-600">★</span>
-                    <span className="text-gray-700 ml-1">{room.location}</span>
+                    <span className="text-gray-700 ml-1">{room.description}</span>
                 </div>
-                <p className="text-gray-700 mt-1">{room.rating} · {room.reviews} reviews</p>
+                <p className="text-gray-700 mt-1">
+                    Giá: {parseFloat(room.price_per_night).toLocaleString('vi-VN')} VND · {room.capacity} người
+                </p>
             </div>
         </div>
     );
 };
 
-// Component chính để hiển thị danh sách phòng
-const RoomListForHost = () => {
-    // Danh sách các phòng với dữ liệu mẫu
-    const rooms = [
-        {
-            image: 'https://pistachiohotel.com/UploadFile/Gallery/Overview/a2.jpg',
-            title: 'DREAM HOUSE',
-            platform: 'agodaHomes',
-            location: 'Tân Bình, Ho Chi Minh City',
-            rating: '8.8 Excellent',
-            reviews: '17',
-        },
-        {
-            image: 'https://pistachiohotel.com/UploadFile/Gallery/Overview/a2.jpg',
-            title: 'May Studio',
-            platform: 'agodaHomes',
-            location: 'Dalat City Center, Dalat',
-            rating: '8.1 Excellent',
-            reviews: '91',
-        },
-        {
-            image: 'https://pistachiohotel.com/UploadFile/Gallery/Overview/a2.jpg',
-            title: 'DREAM HOUSE',
-            platform: 'agodaHomes',
-            location: 'Tây Hồ, Hà Nội',
-            rating: '8.8 Excellent',
-            reviews: '17',
-        },
-        {
-            image: 'https://pistachiohotel.com/UploadFile/Gallery/Overview/a2.jpg',
-            title: 'DREAM HOUSE',
-            platform: 'agodaHomes',
-            location: 'Quận 1, Ho Chi Minh City',
-            rating: '8.8 Excellent',
-            reviews: '17',
-        },
-    ];
+const RoomListForHost = ({ hotelId, capacity, startDate, endDate }) => {
+    const [rooms, setRooms] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+
+    useEffect(() => {
+            const fetchRooms = async () => {
+                try {
+                    // Khởi tạo object params
+                    const params = {};
+
+                    if (hotelId) params.hotel_id = hotelId;
+                    if (capacity) params.capacity = capacity;
+                    if (startDate) params.start_date = startDate;
+                    if (endDate) params.end_date = endDate;
+
+                    // Chuyển object params thành query string
+                    const query = new URLSearchParams(params).toString();
+
+                    const response = await callFetchRoomQuery(query);
+                    console.log('Search response:', response.data);
+
+                    if (response.data!=null && response.data.length > 0) {
+                        setRooms(response.data);
+                    } else {
+                        setRooms([]);
+                    }
+
+                } catch (err) {
+                    setError('An error occurred while fetching rooms');
+                } finally {
+                    setLoading(false);
+                }
+            };
+
+
+        fetchRooms();
+    }, [hotelId, capacity, startDate, endDate]);
+
+    if (loading) return <div>Loading...</div>;
+    if (error) return <div>{error}</div>;
+    if (!rooms.length) return <div>No rooms available</div>;
 
     return (
         <div className="mt-6">
             <h2 className="text-2xl font-bold text-gray-800 mb-4">Phòng còn trống</h2>
             <div className="space-y-4">
-                {rooms.map((room, index) => (
-                    <RoomCard key={index} room={room} />
+                {rooms.map((room) => (
+                    <RoomCard key={room.id} room={room} />
                 ))}
             </div>
         </div>

@@ -1,11 +1,11 @@
-import React, { useEffect } from "react";
-import { useParams } from "react-router-dom";
 import { Spin, message } from "antd";
+import { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
-import { 
-    fetchHotelDetail, 
-    clearHotelDetail, 
-    fetchHotelsByCity 
+import {
+    clearHotelDetail,
+    fetchHotelDetail,
+    fetchHotelsByCity
 } from "../../redux/slice/hotelSlice";
 
 import BreadcrumbSection from "components/BreadcrumbSection";
@@ -26,27 +26,24 @@ import ReviewTabView from "components/Hotel/ReviewTabView";
 import RoomOptionsSection from "components/Hotel/RoomOptionsSection";
 import SearchBar from "components/Hotel/SearchBarSection";
 
-// Import icons
 import icLike from "../../images/hotel/ic_like.png";
 import icNotice from "../../images/hotel/ic_notice.png";
-import icPublicCar from "../../images/hotel/ic_public_car.png";
 import icSea from "../../images/hotel/ic_sea.png";
 import icTable from "../../images/hotel/ic_table.png";
 
 const HotelPage = () => {
-    const { hotelSlug } = useParams(); // Lấy hotelSlug từ URL thay vì hotelId
+    const { hotelSlug } = useParams();
     const dispatch = useAppDispatch();
-    
-    // Get hotel detail from Redux
     const { hotelDetail, isLoadingHotelDetail, error } = useAppSelector(state => state.hotel);
-    
-    // Get hotels list from Redux for general page
     const { hotels, isLoadingHotels } = useAppSelector(state => state.hotel);
+    const [searchParams, setSearchParams] = useState({
+        capacity: null,
+        startDate: null,
+        endDate: null,
+    });
 
-    // Determine if this is detail page or general page
     const isDetailPage = !!hotelSlug;
     
-    // Extract hotel ID from slug
     const extractHotelIdFromSlug = (slug) => {
         if (!slug) return null;
         const parts = slug.split('-');
@@ -54,10 +51,8 @@ const HotelPage = () => {
         return isNaN(lastPart) ? null : parseInt(lastPart);
     };
     
-    // Create hotel slug from name and ID
     const createHotelSlug = (hotelName, hotelId) => {
         if (!hotelName) return hotelId;
-        
         return hotelName
             .toLowerCase()
             .replace(/à|á|ạ|ả|ã|â|ầ|ấ|ậ|ẩ|ẫ|ă|ằ|ắ|ặ|ẳ|ẵ/g, "a")
@@ -76,30 +71,26 @@ const HotelPage = () => {
 
     const hotelId = extractHotelIdFromSlug(hotelSlug);
 
-    // Helper function to get full image URL
     const getImageUrl = (imagePath) => {
         if (!imagePath) return "https://via.placeholder.com/400x300";
         if (imagePath.startsWith('http')) return imagePath;
         return `${process.env.REACT_APP_BE_URL}${imagePath}`;
     };
 
-    // Helper function to extract text from HTML
     const stripHtml = (html) => {
         if (!html) return "";
         return html.replace(/<[^>]*>/g, '').trim();
     };
 
-    // Helper function to extract facilities from HTML table
     const extractFacilities = (htmlTable) => {
         if (!htmlTable) return [];
         const matches = htmlTable.match(/>([^<]+)</g);
         return matches ? matches
             .map(match => match.replace(/[><]/g, '').trim())
             .filter(text => text && text !== '' && text.length > 1)
-            .slice(0, 8) : []; // Limit to 8 facilities
+            .slice(0, 8) : [];
     };
 
-    // Helper function to transform first hotel from list to hotel data format
     const transformHotelListToHotelData = (firstHotel) => {
         return {
             name: firstHotel.name || "Khách sạn",
@@ -122,21 +113,17 @@ const HotelPage = () => {
         };
     };
 
-    // Fetch hotel detail when hotelId exists, or fetch hotels list for general page
     useEffect(() => {
         if (isDetailPage && hotelId) {
             dispatch(fetchHotelDetail(hotelId));
         } else if (!isDetailPage) {
-            // Fetch hotels list for general hotel page
             dispatch(fetchHotelsByCity({
-                cityId: null, // No city filter for general page
+                cityId: null,
                 currentPage: 1,
                 pageSize: 10,
                 filters: {}
             }));
         }
-        
-        // Cleanup when component unmounts or hotelId changes
         return () => {
             if (isDetailPage) {
                 dispatch(clearHotelDetail());
@@ -144,14 +131,16 @@ const HotelPage = () => {
         };
     }, [dispatch, hotelId, isDetailPage]);
 
-    // Show error message
     useEffect(() => {
         if (error) {
             message.error(error);
         }
     }, [error]);
 
-    // Loading state for detail page or general page when fetching hotels
+    const handleSearch = ({ hotelId, capacity, startDate, endDate, rooms }) => {
+        setSearchParams({ capacity, startDate, endDate });
+    };
+
     if (isDetailPage && isLoadingHotelDetail) {
         return (
             <div className="min-h-screen flex items-center justify-center">
@@ -160,7 +149,6 @@ const HotelPage = () => {
         );
     }
 
-    // Loading state for general page when fetching hotels list
     if (!isDetailPage && isLoadingHotels) {
         return (
             <div className="min-h-screen flex items-center justify-center">
@@ -169,7 +157,6 @@ const HotelPage = () => {
         );
     }
 
-    // No hotel found for detail page
     if (isDetailPage && !hotelDetail && !isLoadingHotelDetail) {
         return (
             <div className="min-h-screen flex items-center justify-center">
@@ -185,7 +172,6 @@ const HotelPage = () => {
         );
     }
 
-    // Transform hotel data for detail page
     const transformedHotel = isDetailPage && hotelDetail ? {
         name: hotelDetail.name || "Tên khách sạn",
         address: hotelDetail.location || "Địa chỉ không có",
@@ -206,7 +192,6 @@ const HotelPage = () => {
         cityName: hotelDetail.city?.name || ""
     } : null;
 
-    // Default data for general hotel page - now use Redux data
     const defaultHotelData = !isDetailPage && hotels.length > 0 ? 
         transformHotelListToHotelData(hotels[0]) : {
             name: "The Song House Vung Tau",
@@ -235,10 +220,8 @@ const HotelPage = () => {
             regulation: "Không hút thuốc trong phòng"
         };
 
-    // Use transformed data if detail page, otherwise use default
     const hotelData = isDetailPage ? transformedHotel : defaultHotelData;
 
-    // Generate dynamic breadcrumbs with city info
     const breadcrumbs = isDetailPage ? [
         { text: "Trang chủ", link: "/", isActive: true },
         { text: "Khách sạn", link: "/hotel", isActive: false },
@@ -292,7 +275,6 @@ const HotelPage = () => {
         }
     };
 
-    // Generate highlights with real data
     const highlights = [
         ...(hotelData?.withUs ? [{
             icon: icLike,
@@ -317,7 +299,6 @@ const HotelPage = () => {
         }])
     ];
 
-    // Parse facilities for promotion categories with real data
     const promotionCategories = [
         {
             title: "Tiện ích chính",
@@ -341,27 +322,17 @@ const HotelPage = () => {
 
     return (
         <div className="hotel-page">
-            {/* Header */}
             <HeaderClient />
-
-            {/* Search Bar */}
             <div className="search-bar bg-white shadow-md rounded-lg mx-auto my-8">
-                <SearchBar />
+                <SearchBar onSearch={handleSearch} />
                 <BreadcrumbSection
                     breadcrumbs={breadcrumbs}
                     viewAllLink={viewAllLink}
                 />
             </div>
-
-            {/* Gallery Section */}
             <GallerySection images={hotelData?.images} />
-
-            {/* Navigation Bar */}
             <NavigationBar scrollToSection={scrollToSection} />
-
-            {/* Main Content */}
             <div className="w-full max-w-6xl mx-auto px-4">
-                {/* Overview Section with MapCard */}
                 <div
                     id="overview"
                     className="section flex flex-col lg:flex-row items-start"
@@ -426,8 +397,6 @@ const HotelPage = () => {
                                 "8 du khách đã đặt hôm nay."}
                         />
                     </div>
-                    
-                    {/* Layout for Map and Profile */}
                     <div className="lg:w-1/3 lg:pl-4 mt-4 lg:mt-0">
                         <div className="w-full mb-4">
                             <MapCard 
@@ -441,17 +410,11 @@ const HotelPage = () => {
                         </div>
                     </div>
                 </div>
-
-                {/* Rooms Section */}
                 <div id="rooms" className="section">
                     <FilterSection />
                     <RoomOptionsSection
-                        title={isDetailPage ? 
-                            `Phòng tại ${hotelData?.name}` : 
-                            "Studio Có Giường Cỡ King Và Giường Sofa (King Studio with Sofa Bed)"}
-                        roomImage={isDetailPage ? 
-                            getImageUrl(hotelData?.images?.[0]?.image) : 
-                            "https://pistachiohotel.com/UploadFile/Gallery/Overview/a2.jpg"}
+                        title={isDetailPage ? `Phòng tại ${hotelData?.name}` : "Studio Có Giường Cỡ King Và Giường Sofa (King Studio with Sofa Bed)"}
+                        roomImage={isDetailPage ? getImageUrl(hotelData?.images?.[0]?.image) : "https://pistachiohotel.com/UploadFile/Gallery/Overview/a2.jpg"}
                         roomDetails={isDetailPage ? [
                             "Phòng tiện nghi đầy đủ",
                             hotelData?.mostFeature || "Tiện ích cơ bản", 
@@ -467,9 +430,7 @@ const HotelPage = () => {
                             "Bể bơi riêng",
                             "Bếp nhỏ",
                         ]}
-                        cancellationPolicy={isDetailPage ? 
-                            "Chính sách hủy theo quy định của khách sạn" : 
-                            "Miễn phí hủy trước 25 tháng 7 2025"}
+                        cancellationPolicy={isDetailPage ? "Chính sách hủy theo quy định của khách sạn" : "Miễn phí hủy trước 25 tháng 7 2025"}
                         perks={["Bãi đậu xe", "WiFi miễn phí"]}
                         price={isDetailPage ? "Liên hệ" : "513.747 đ"}
                         bookingInfo={isDetailPage ? "Đặt phòng ngay" : "Không thanh toán hôm nay"}
@@ -480,39 +441,31 @@ const HotelPage = () => {
                             { text: "SCUBA DIVING SALE", highlight: true },
                             { text: "Giảm 120000 VND!", highlight: false },
                         ]}
+                        hotelId={hotelId}
+                        capacity={searchParams.capacity}
+                        startDate={searchParams.startDate}
+                        endDate={searchParams.endDate}
                     />
                 </div>
-
-                {/* Activities Section */}
                 <div id="activities" className="section">
                     <ActivitySlider />
                 </div>
-
-                {/* Host Section */}
                 <div id="host" className="section">
                     <HostAndAmenitiesSection />
                 </div>
-
-                {/* Facilities Section */}
                 <div id="facilities" className="section">
                     <ExperienceSection />
                 </div>
-
                 <div id="location" className="section">
                     <PlanYourTripSection />
                 </div>
-
                 <div id="policy" className="section">
                     <FlightBookingSection />
                 </div>
-
-                {/* Reviews Section */}
                 <div id="reviews" className="section">
                     <ReviewTabView hotelId={isDetailPage ? hotelId : null} />
                 </div>
             </div>
-
-            {/* Footer */}
             <FooterClient />
         </div>
     );

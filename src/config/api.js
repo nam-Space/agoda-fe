@@ -1,4 +1,4 @@
-import axiosBase from 'axios'
+import axiosBase from 'axios';
 import axios from "config/axios.customize";
 
 // user
@@ -193,4 +193,11 @@ export const callGetHotels = ({ cityId, currentPage = 1, pageSize = 10, filters 
 
 export const callGetHotelDetail = (hotelId) => {
     return axios.get(`/api/hotels/hotels/${hotelId}/`);
+};
+export const callFetchRoomQuery = (query) => {
+    return axios.get(`/api/rooms/rooms/?${query}`);
+};
+
+export const callGetRoomDetail = (roomId) => {
+    return axios.get(`/api/rooms/rooms/${roomId}/`);
 };
