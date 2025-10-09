@@ -27,6 +27,35 @@ export const callLogout = (data) => {
     return axios.post(`/api/accounts/logout/`, { ...data });
 };
 
+export const callFetchUser = (query) => {
+    return axios.get(`/api/accounts/users?${query}`);
+};
+
+export const callCreateUser = (user) => {
+    return axios.post("/api/accounts/users/create/", { ...user });
+};
+
+export const callUpdateUser = (id, user) => {
+    return axios.put(`/api/accounts/users/${id}/update/`, { ...user });
+};
+
+export const callDeleteUser = (id) => {
+    return axios.delete(`/api/accounts/users/${id}/delete/`);
+};
+
+export const callUploadSingleImage = ({ file, type }) => {
+    const bodyFormData = new FormData();
+    bodyFormData.append("image", file);
+    return axios({
+        method: "post",
+        url: `/api/images/upload-image/?type=${type}`,
+        data: bodyFormData,
+        headers: {
+            "Content-Type": "multipart/form-data",
+        },
+    });
+};
+
 // City
 export const callFetchCity = (query) => {
     return axios.get(`/api/cities/cities/?${query}`);
@@ -183,14 +212,27 @@ export const callGetHotels = ({ cityId, currentPage = 1, pageSize = 10, filters 
         pageSize: pageSize,
         ...filters
     });
-    
+
     if (cityId) {
         params.append('cityId', cityId);
     }
-    
+
     return axios.get(`/api/hotels/hotels/?${params.toString()}`);
 };
 
 export const callGetHotelDetail = (hotelId) => {
     return axios.get(`/api/hotels/hotels/${hotelId}/`);
+};
+
+// Chat
+export const callFetchConversation = (query) => {
+    return axios.get(`/api/chats/conversations/?${query}`);
+};
+
+export const callGetOrCreateConversation = (data) => {
+    return axios.post(`/api/chats/conversations/get_or_create/`, { ...data });
+};
+
+export const callFetchMessage = (conversationId) => {
+    return axios.get(`/api/chats/messages/${conversationId}/`);
 };
