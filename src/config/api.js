@@ -1,4 +1,4 @@
-import axiosBase from 'axios'
+import axiosBase from 'axios';
 import axios from "config/axios.customize";
 
 // user
@@ -224,6 +224,7 @@ export const callGetHotelDetail = (hotelId) => {
     return axios.get(`/api/hotels/hotels/${hotelId}/`);
 };
 
+
 // Chat
 export const callFetchConversation = (query) => {
     return axios.get(`/api/chats/conversations/?${query}`);
@@ -235,4 +236,12 @@ export const callGetOrCreateConversation = (data) => {
 
 export const callFetchMessage = (conversationId) => {
     return axios.get(`/api/chats/messages/${conversationId}/`);
+}
+
+export const callFetchRoomQuery = (query) => {
+    return axios.get(`/api/rooms/rooms/?${query}`);
+};
+
+export const callGetRoomDetail = (roomId) => {
+    return axios.get(`/api/rooms/rooms/${roomId}/`);
 };
