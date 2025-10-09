@@ -1,99 +1,234 @@
-import React from "react";
-import FilterGroup from './FilterGroup';
-import SortBar from './SortBar';
-import HotelCard from './HotelCard';
-
+import { Empty, Pagination, Spin, message } from "antd";
+import { useEffect } from "react";
+import { useParams } from "react-router-dom";
+import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
+import {
+    fetchHotelsByCity,
+    setCurrentPage,
+    setFilters,
+    setSortBy,
+} from "../../../redux/slice/hotelSlide";
+import FilterGroup from "./FilterGroup";
+import HotelCard from "./HotelCard";
+import SortBar from "./SortBar";
 // HotelList component
-const HotelList = ({ hotels }) => (
-  <div>
-    {hotels.map((hotel, idx) => (
-      <HotelCard key={idx} hotel={hotel} />
-    ))}
-  </div>
-);
+const HotelList = ({ hotels, loading }) => {
+    if (loading)
+        return (
+            <div className="flex justify-center py-8">
+                <Spin size="large" />
+            </div>
+        );
+    if (!hotels || hotels.length === 0)
+        return (
+            <div className="py-8">
+                <Empty
+                    description="Không tìm thấy khách sạn nào"
+                    image={Empty.PRESENTED_IMAGE_SIMPLE}
+                />
+            </div>
+        );
+    return (
+        <div>
+            {hotels.map((hotel, idx) => (
+                <HotelCard key={hotel.id || idx} hotel={hotel} />
+            ))}
+        </div>
+    );
+};
 
-// SeeAllButton component
-const SeeAllButton = ({ total }) => (
-  <div className="flex justify-center mt-6">
-    <button className="bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 shadow">
-      Xem tất cả {total} khách sạn ở Đà Nẵng
-    </button>
-  </div>
-);
+// Transform API data
+const transformHotelData = (apiHotel) => {
+    const stripHtml = (html) =>
+        html ? html.replace(/<[^>]*>/g, "").trim() : "";
+    const extractFacilities = (htmlTable) => {
+        if (!htmlTable) return [];
+        const matches = htmlTable.match(/>([^<]+)</g);
+        return matches
+            ? matches
+                  .map((m) => m.replace(/[><]/g, "").trim())
+                  .filter((t) => t.length > 1)
+                  .slice(0, 4)
+            : [];
+    };
+    const getImageUrl = (imagePath) => {
+        if (!imagePath) return "/default-hotel.jpg";
+        if (imagePath.startsWith("http")) return imagePath;
+        const base = process.env.REACT_APP_BE_URL?.endsWith("/")
+            ? process.env.REACT_APP_BE_URL
+            : process.env.REACT_APP_BE_URL + "/";
+        return `${base}${imagePath.replace(/^\/+/, "")}`;
+    };
 
-// Dummy data
-const filterOptions = [
-  { title: "Đánh giá sao", options: ["5 sao", "4 sao", "3 sao", "2 sao", "1 sao"] },
-  { title: "Điểm đánh giá", options: ["Trên cả tuyệt vời 9+", "Rất tốt 8+", "Tốt 7+", "Dễ chịu 6+"] },
-];
+    // Hàm slug giữ chữ tiếng Việt có dấu nhưng chuyển sang không dấu
+    const createHotelSlug = (name, id) => {
+        if (!name) return id;
+        const removeVietnameseTones = (str) => {
+            str = str.replace(/à|á|ạ|ả|ã|â|ầ|ấ|ậ|ẩ|ẫ|ă|ằ|ắ|ặ|ẳ|ẵ/g, "a");
+            str = str.replace(/è|é|ẹ|ẻ|ẽ|ê|ề|ế|ệ|ể|ễ/g, "e");
+            str = str.replace(/ì|í|ị|ỉ|ĩ/g, "i");
+            str = str.replace(/ò|ó|ọ|ỏ|õ|ô|ồ|ố|ộ|ổ|ỗ|ơ|ờ|ớ|ợ|ở|ỡ/g, "o");
+            str = str.replace(/ù|ú|ụ|ủ|ũ|ư|ừ|ứ|ự|ử|ữ/g, "u");
+            str = str.replace(/ỳ|ý|ỵ|ỷ|ỹ/g, "y");
+            str = str.replace(/đ/g, "d");
+            str = str.replace(/\s+/g, "-");
+            str = str.replace(/[^a-zA-Z0-9-]/g, "");
+            str = str.replace(/-+/g, "-");
+            return str;
+        };
+        return removeVietnameseTones(name.toLowerCase()) + `-${id}`;
+    };
 
-const sortOptions = [
-  "Lựa chọn hàng đầu của chúng tôi",
-  "Giá thấp nhất trước",
-  "Gần nhất với",
-  "Được đánh giá tốt nhất",
-];
+    return {
+        id: apiHotel.id,
+        name: apiHotel.name || "Khách sạn",
+        image: getImageUrl(apiHotel.images?.[0]?.image),
+        thumbnails: apiHotel.images?.map((img) => getImageUrl(img.image)) || [],
+        stars: Math.floor(apiHotel.avg_star || 0),
+        area: apiHotel.location || "N/A",
+        mapUrl:
+            apiHotel.lat && apiHotel.lng
+                ? `https://maps.google.com/?q=${apiHotel.lat},${apiHotel.lng}`
+                : null,
+        facilities: extractFacilities(apiHotel.facilities),
+        review: stripHtml(apiHotel.description) || "",
+        rating: apiHotel.avg_star?.toFixed(1) || "N/A",
+        ratingText: getRatingText(apiHotel.avg_star || 0),
+        ratingCount: Math.floor(Math.random() * 1000) + 100,
+        price: "Liên hệ",
+        url: `/hotel/${createHotelSlug(apiHotel.name, apiHotel.id)}`,
+        cityName: apiHotel.city?.name || "",
+        point: apiHotel.point || 0,
+        withUs: stripHtml(apiHotel.withUs) || "",
+        slug: createHotelSlug(apiHotel.name, apiHotel.id),
+    };
+};
 
-const link = "//pix8.agoda.net/hotelImages/72310894/0/3eaecfdabe912246481db6a0f7030332.png?ce=2&s=450x450"
-// Dummy hotel data (bạn thay bằng API hoặc props)
-const hotels = [
-  {
-    image: "//pix8.agoda.net/hotelImages/72310894/0/3eaecfdabe912246481db6a0f7030332.png?ce=2&s=450x450",
-    thumbnails: [link, link],
-    name: "Khách sạn Moonlight Đà Nẵng",
-    englishName: "Moonlight Hotel Da Nang",
-    stars: 3,
-    area: "Hải Châu, Đà Nẵng",
-    mapUrl: "https://maps.google.com/...",
-    facilities: ["Miễn phí Wi-Fi", "Đỗ xe miễn phí", "Spa", "+5"],
-    review: "Rất hài lòng, phòng rất sạch sẽ, gấp nhiều lần khách sạn 4 sao ở Huế và Hội An mình đã đi qua đợt này. Nhân viên thân thiện, mình không nghĩ đây là khách sạn 3 sao nữa, ngoài ra phòng 1402 của mình view ra sông hàn rất đẹp. Hi vọng khách sạn luôn giữ đc phong cách phục vụ tận tình và sạch sẽ như này, lần sao vào mình chắc chắn sẽ quay lại. :)",
-    rating: "7.8",
-    ratingText: "Rất tốt",
-    ratingCount: 1130,
-    price: "768.305 ₫",
-    url: "/vi-vn/moonlight-hotel-da-nang/hotel/da-nang-vn.html"
-  },
-  {
-    image: "//pix8.agoda.net/hotelImages/72310894/0/3eaecfdabe912246481db6a0f7030332.png?ce=2&s=450x450",
-    thumbnails: [link, link],
-    name: "Khách sạn Moonlight Đà Nẵng",
-    englishName: "Moonlight Hotel Da Nang",
-    stars: 3,
-    area: "Hải Châu, Đà Nẵng",
-    mapUrl: "https://maps.google.com/...",
-    facilities: ["Miễn phí Wi-Fi", "Đỗ xe miễn phí", "Spa", "+5"],
-    review: "Rất hài lòng, phòng rất sạch sẽ, gấp nhiều lần khách sạn 4 sao ở Huế và Hội An mình đã đi qua đợt này. Nhân viên thân thiện, mình không nghĩ đây là khách sạn 3 sao nữa, ngoài ra phòng 1402 của mình view ra sông hàn rất đẹp. Hi vọng khách sạn luôn giữ đc phong cách phục vụ tận tình và sạch sẽ như này, lần sao vào mình chắc chắn sẽ quay lại. :)",
-    rating: "7.8",
-    ratingText: "Rất tốt",
-    ratingCount: 1130,
-    price: "768.305 ₫",
-    url: "/vi-vn/moonlight-hotel-da-nang/hotel/da-nang-vn.html"
-  },
-  // ...thêm các khách sạn khác
-];
+const getRatingText = (rating) =>
+    rating >= 9
+        ? "Tuyệt hảo"
+        : rating >= 8
+        ? "Rất tốt"
+        : rating >= 7
+        ? "Tốt"
+        : rating >= 6
+        ? "Ổn"
+        : "Trung bình";
 
 const TopHotel = () => {
-  const [activeSort, setActiveSort] = React.useState(0);
+    const { cityId } = useParams(); // string
+    const dispatch = useAppDispatch();
+    const {
+        hotels,
+        isLoadingHotels,
+        totalHotels,
+        currentPage,
+        pageSize,
+        totalPages,
+        sortBy,
+        filters,
+        error,
+    } = useAppSelector((state) => state.hotel || {});
 
-  return (
-    <div className="bg-white rounded-xl shadow p-6 mt-8">
-      <h2 className="text-2xl font-bold mb-6">10 khách sạn tốt nhất ở Đà Nẵng</h2>
-      <div className="flex flex-col md:flex-row gap-8">
-        {/* Filter Panel */}
-        <div className="md:w-1/6">
-          {filterOptions.map((group, idx) => (
-            <FilterGroup key={idx} title={group.title} options={group.options} />
-          ))}
+    const filterOptions = [
+        {
+            title: "Đánh giá sao",
+            key: "avg_star",
+            options: [
+                { label: "5 sao", value: "5" },
+                { label: "4 sao", value: "4" },
+                { label: "3 sao", value: "3" },
+                { label: "2 sao", value: "2" },
+                { label: "1 sao", value: "1" },
+            ],
+        },
+        {
+            title: "Điểm đánh giá",
+            key: "rating_range",
+            options: [
+                { label: "Trên 9+", value: "9+" },
+                { label: "Rất tốt 8+", value: "8+" },
+                { label: "Tốt 7+", value: "7+" },
+                { label: "Dễ chịu 6+", value: "6+" },
+            ],
+        },
+    ];
+
+    const sortOptions = [
+        "Lựa chọn hàng đầu",
+        "Giá thấp nhất trước",
+        "Gần nhất với",
+        "Được đánh giá tốt nhất",
+    ];
+
+    useEffect(() => {
+        if (cityId) {
+            dispatch(
+                fetchHotelsByCity({ cityId, currentPage, pageSize, filters })
+            );
+        }
+    }, [dispatch, cityId, currentPage, pageSize, filters]);
+
+    const handleSortChange = (idx) => dispatch(setSortBy(idx));
+    const handlePageChange = (page) => dispatch(setCurrentPage(page));
+    const handleFilterChange = (key, values) =>
+        dispatch(setFilters({ [key]: values }));
+
+    const transformedHotels = hotels.map(transformHotelData);
+
+    useEffect(() => {
+        if (error) message.error(error);
+    }, [error]);
+
+    return (
+        <div className="bg-white rounded-xl shadow p-6 mt-8">
+            <h2 className="text-2xl font-bold mb-6">
+                {totalHotels > 0
+                    ? `${totalHotels} khách sạn tốt nhất`
+                    : "Khách sạn"}
+            </h2>
+            <div className="flex flex-col md:flex-row gap-8">
+                <div className="md:w-1/6">
+                    {filterOptions.map((group, idx) => (
+                        <FilterGroup
+                            key={idx}
+                            title={group.title}
+                            options={group.options.map((o) => o.label)}
+                            onFilterChange={(vals) =>
+                                handleFilterChange(group.key, vals)
+                            }
+                        />
+                    ))}
+                </div>
+                <div className="md:w-3/4">
+                    <SortBar
+                        sorts={sortOptions}
+                        activeSort={sortBy}
+                        onSort={handleSortChange}
+                    />
+                    <HotelList
+                        hotels={transformedHotels}
+                        loading={isLoadingHotels}
+                    />
+                    {totalPages > 1 && (
+                        <div className="flex justify-center mt-6">
+                            <Pagination
+                                current={currentPage}
+                                total={totalHotels}
+                                pageSize={pageSize}
+                                showSizeChanger={false}
+                                showQuickJumper
+                                showTotal={(total, range) =>
+                                    `${range[0]}-${range[1]} của ${total} khách sạn`
+                                }
+                                onChange={handlePageChange}
+                            />
+                        </div>
+                    )}
+                </div>
+            </div>
         </div>
-        {/* Main Panel */}
-        <div className="md:w-3/4">
-          <SortBar sorts={sortOptions} activeSort={activeSort} onSort={setActiveSort} />
-          <HotelList hotels={hotels} />
-          <SeeAllButton total={5101} />
-        </div>
-      </div>
-    </div>
-  );
+    );
 };
 
 export default TopHotel;

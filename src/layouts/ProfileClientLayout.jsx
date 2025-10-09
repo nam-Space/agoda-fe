@@ -11,8 +11,6 @@ import { Link, useLocation, useParams } from "react-router-dom";
 const ProfileClientLayout = ({ children }) => {
     const location = useLocation();
 
-    console.log("location", location);
-
     const menus = [
         {
             link: "/profile/hotel",

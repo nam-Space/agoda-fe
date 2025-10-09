@@ -209,21 +209,17 @@ export default function ActivityDetail() {
     };
 
     const handleGoToBooking = () => {
-        if (user?.id) {
-            navigate(`/booking-contact-activity`, {
-                state: {
-                    activity,
-                    activity_date: {
-                        ...selectedTickerOption,
-                    },
-                    adult_quantity_booking: adultTickets[selectedIndexTicket],
-                    child_quantity_booking: childTickets[selectedIndexTicket],
-                    date_launch: dateTickets[selectedIndexTicket],
+        navigate(`/booking-contact-activity`, {
+            state: {
+                activity,
+                activity_date: {
+                    ...selectedTickerOption,
                 },
-            });
-        } else {
-            navigate(`/login?next=/booking-contact-activity`);
-        }
+                adult_quantity_booking: adultTickets[selectedIndexTicket],
+                child_quantity_booking: childTickets[selectedIndexTicket],
+                date_launch: dateTickets[selectedIndexTicket],
+            },
+        });
     };
 
     return (

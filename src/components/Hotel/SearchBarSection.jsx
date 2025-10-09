@@ -1,116 +1,129 @@
 import { CalendarToday, People, Search } from '@mui/icons-material';
 import { useState } from 'react';
+import { callFetchRoomQuery } from '../../config/api';
 
-const SearchBar = () => {
-    const [isDatePickerOpen, setIsDatePickerOpen] = useState(false); // State to track date picker visibility
-    const [activeTab, setActiveTab] = useState('overnight'); // State to track active tab
-    const [selectedDate1, setSelectedDate1] = useState('22 tháng 8 2025'); // State for the first button
-    const [selectedDate2, setSelectedDate2] = useState('24 tháng 8 2025'); // State for the second button
-    const [currentMonth, setCurrentMonth] = useState(7); // State to track the current month
-    const currentYear = 2025; // Fixed year for this example
-    const [activeButton, setActiveButton] = useState(null); // Track which button is active
-    const [isDropdownOpen, setIsDropdownOpen] = useState(false); // State for dropdown visibility
-    const [rooms, setRooms] = useState(1); // State for number of rooms
-    const [adults, setAdults] = useState(2); // State for number of adults
+const SearchBar = ({ onSearch = () => console.log('onSearch not provided') }) => {
+    const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
+    const [activeTab, setActiveTab] = useState('overnight');
+    const [selectedDate1, setSelectedDate1] = useState('2025-10-10');
+    const [selectedDate2, setSelectedDate2] = useState('2025-10-12');
+    const [currentMonth, setCurrentMonth] = useState(10);
+    const currentYear = 2025;
+    const [activeButton, setActiveButton] = useState(null);
+    const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+    const [rooms, setRooms] = useState(1);
+    const [adults, setAdults] = useState(2);
     const [children, setChildren] = useState(0);
+    const [searchQuery, setSearchQuery] = useState('The Song House Vung Tau');
 
     const toggleDatePicker = (button) => {
-        setActiveButton(button); // Set the active button
-        setIsDatePickerOpen(!isDatePickerOpen); // Toggle date picker visibility
+        setActiveButton(button);
+        setIsDatePickerOpen(!isDatePickerOpen);
     };
 
-    // Function to toggle the dropdown visibility
     const toggleDropdown = () => {
-        setIsDropdownOpen(!isDropdownOpen); // Toggle dropdown visibility
+        setIsDropdownOpen(!isDropdownOpen);
     };
 
-    const incrementRooms = () => setRooms((prev) => prev + 1); // Increment rooms
-    const decrementRooms = () => setRooms((prev) => (prev > 1 ? prev - 1 : 1)); // Decrement rooms
-
-    const incrementAdults = () => setAdults((prev) => prev + 1); // Increment adults
-    const decrementAdults = () => setAdults((prev) => (prev > 1 ? prev - 1 : 1)); // Decrement adults
-
-    const incrementChildren = () => setChildren((prev) => prev + 1); // Increment children
-    const decrementChildren = () => setChildren((prev) => (prev > 0 ? prev - 1 : 0)); // Decrement children
+    const incrementRooms = () => setRooms((prev) => prev + 1);
+    const decrementRooms = () => setRooms((prev) => (prev > 1 ? prev - 1 : 1));
+    const incrementAdults = () => setAdults((prev) => prev + 1);
+    const decrementAdults = () => setAdults((prev) => (prev > 1 ? prev - 1 : 1));
+    const incrementChildren = () => setChildren((prev) => prev + 1);
+    const decrementChildren = () => setChildren((prev) => (prev > 0 ? prev - 1 : 0));
 
     const handleTabChange = (tab) => {
-        setActiveTab(tab); // Change the active tab
+        setActiveTab(tab);
     };
 
     const handleDateSelect = (day) => {
-        const newDate = `${day} tháng ${currentMonth} ${currentYear}`;
-        if (activeButton === 'button1') {
-            setSelectedDate1(newDate); // Update the first button's date
-        } else if (activeButton === 'button2') {
-            setSelectedDate2(newDate); // Update the second button's date
-        }
-        setIsDatePickerOpen(false); // Close the date picker
+        const newDate = `${currentYear}-${String(currentMonth).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        if (activeButton === 'button1') setSelectedDate1(newDate);
+        else if (activeButton === 'button2') setSelectedDate2(newDate);
+        setIsDatePickerOpen(false);
     };
 
     const handleNextMonth = () => {
-        setCurrentMonth((prevMonth) => (prevMonth < 12 ? prevMonth + 1 : 1)); // Navigate to the next month
+        setCurrentMonth((prevMonth) => (prevMonth < 12 ? prevMonth + 1 : 1));
     };
 
     const handlePrevMonth = () => {
-        setCurrentMonth((prevMonth) => (prevMonth > 1 ? prevMonth - 1 : 12)); // Navigate to the previous month
+        setCurrentMonth((prevMonth) => (prevMonth > 1 ? prevMonth - 1 : 12));
     };
 
-    const getDaysInMonth = (month, year) => {
-        return new Date(year, month, 0).getDate(); // Calculate the number of days in the given month and year
-    };
+    const getDaysInMonth = (month, year) => new Date(year, month, 0).getDate();
 
     const isDateDisabled = (day) => {
         if (activeButton === 'button2') {
-            const [selectedDay1, , selectedMonth1] = selectedDate1.split(' '); // Extract the day and month from selectedDate1
-            const month1 = parseInt(selectedMonth1); // Convert the month to an integer
-
-            // If the current month is greater than the month of button1, no need to disable
-            if (currentMonth > month1) {
-                return false;
-            }
-
-            // Otherwise, disable dates earlier than or equal to the selected day in button1
-            return day <= parseInt(selectedDay1);
+            const [year1, month1, day1] = selectedDate1.split('-').map(Number);
+            const date1 = new Date(year1, month1 - 1, day1);
+            const date2 = new Date(currentYear, currentMonth - 1, day);
+            return date2 <= date1;
         }
         return false;
     };
 
+    const handleSearch = async () => {
+        try {
+            const capacity = adults + children;
+            const query = `hotel_name=${encodeURIComponent(searchQuery)}&capacity=${capacity}&start_date=${selectedDate1}&end_date=${selectedDate2}`;
+            const response = await callFetchRoomQuery(query);
+
+            const roomsData = response.data || [];
+            const hotelNameSlug = searchQuery.toLowerCase().replace(/\s+/g, '-');
+            const hotelId = roomsData.length > 0 ? roomsData[0].hotel_id : 'default-id';
+            const formattedHotelId = `${hotelNameSlug}-${hotelId}`;
+
+            onSearch({
+                hotelId: formattedHotelId,
+                capacity,
+                startDate: selectedDate1,
+                endDate: selectedDate2,
+                rooms: roomsData,
+            });
+        } catch (err) {
+            console.error('Search failed:', err);
+            const hotelNameSlug = searchQuery.toLowerCase().replace(/\s+/g, '-');
+            onSearch({
+                hotelId: `${hotelNameSlug}-default-id`,
+                capacity: adults + children,
+                startDate: selectedDate1,
+                endDate: selectedDate2,
+                rooms: [],
+            });
+        }
+    };
+
     return (
         <div className="search-bar bg-blue-900 shadow p-4 flex justify-center items-center text-white relative">
-            {/* Search Input */}
             <div className="flex items-center bg-white text-black rounded px-4 py-2 w-full max-w-md">
                 <Search className="text-gray-600 mr-2" />
                 <input
                     type="text"
                     placeholder="The Song House Vung Tau"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
                     className="border-none outline-none w-full"
                 />
             </div>
-
-            {/* Filters */}
             <div className="filters flex space-x-4 items-center px-4 py-2">
-                {/* Button for 28/7/2025 */}
                 <button
-                    onClick={() => toggleDatePicker('button1')} // Open date picker for the first button
+                    onClick={() => toggleDatePicker('button1')}
                     className="flex items-center bg-white text-black rounded px-4 py-2"
                 >
                     <CalendarToday className="mr-2 text-gray-600" />
-                    <span>{selectedDate1}</span> {/* Display the first button's date */}
+                    <span>{selectedDate1}</span>
                 </button>
-
-                {/* Button for 29/7/2025 */}
                 <button
-                    onClick={() => toggleDatePicker('button2')} // Open date picker for the second button
+                    onClick={() => toggleDatePicker('button2')}
                     className="flex items-center bg-white text-black rounded px-4 py-2"
                 >
                     <CalendarToday className="mr-2 text-gray-600" />
-                    <span>{selectedDate2}</span> {/* Display the second button's date */}
+                    <span>{selectedDate2}</span>
                 </button>
-
-                {/* People Filter */}
                 <div className="relative">
                     <button
-                        onClick={toggleDropdown} // Toggle dropdown visibility
+                        onClick={toggleDropdown}
                         className="flex items-center bg-white text-black rounded px-4 py-2 relative"
                     >
                         <People className="mr-2 text-gray-600" />
@@ -118,41 +131,34 @@ const SearchBar = () => {
                     </button>
                 </div>
             </div>
-
-            {/* Update Button */}
-            <button className="bg-blue-700 text-white px-4 py-2 rounded">
+            <button
+                onClick={handleSearch}
+                className="bg-blue-700 text-white px-4 py-2 rounded"
+            >
                 Cập nhật
             </button>
-
-            {/* Date Picker Modal */}
             {isDatePickerOpen && (
                 <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white rounded-lg shadow-lg p-4 w-full max-w-md z-50">
-                    {/* Tab Navigation */}
                     <div className="flex justify-between border-b mb-4">
                         <button
                             onClick={() => handleTabChange('overnight')}
-                            className={`text-sm font-bold px-4 py-2 ${activeTab === 'overnight' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-600'
-                                }`}
+                            className={`text-sm font-bold px-4 py-2 ${activeTab === 'overnight' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-600'}`}
                         >
                             Chỗ Ở Qua Đêm
                         </button>
                         <button
                             onClick={() => handleTabChange('daytime')}
-                            className={`text-sm font-bold px-4 py-2 ${activeTab === 'daytime' ? 'text-red-600 border-b-2 border-red-600' : 'text-gray-600'
-                                }`}
+                            className={`text-sm font-bold px-4 py-2 ${activeTab === 'daytime' ? 'text-red-600 border-b-2 border-red-600' : 'text-gray-600'}`}
                         >
                             Chỗ Ở Trong Ngày <span className="text-red-600 text-xs">Mới!</span>
                         </button>
                         <button
                             onClick={() => handleTabChange('flexible')}
-                            className={`text-sm font-bold px-4 py-2 ${activeTab === 'flexible' ? 'text-gray-600 border-b-2 border-gray-600' : 'text-gray-600'
-                                }`}
+                            className={`text-sm font-bold px-4 py-2 ${activeTab === 'flexible' ? 'text-gray-600 border-b-2 border-gray-600' : 'text-gray-600'}`}
                         >
                             Linh hoạt
                         </button>
                     </div>
-
-                    {/* Tab Content */}
                     {activeTab === 'overnight' && (
                         <div>
                             <div className="flex justify-between items-center mb-4">
@@ -172,21 +178,20 @@ const SearchBar = () => {
                             </div>
                             <div className="grid grid-cols-7 gap-2 text-center">
                                 {Array.from({ length: getDaysInMonth(currentMonth, currentYear) }).map((_, index) => {
-                                    const day = index + 1; // Current day in the loop
+                                    const day = index + 1;
                                     const isSelectedForButton1 =
                                         activeButton === 'button1' &&
-                                        day === parseInt(selectedDate1.split(' ')[0]) &&
-                                        currentMonth === parseInt(selectedDate1.split(' ')[2]);
+                                        day === parseInt(selectedDate1.split('-')[2]) &&
+                                        currentMonth === parseInt(selectedDate1.split('-')[1]);
                                     const isSelectedForButton2 =
                                         activeButton === 'button2' &&
-                                        day === parseInt(selectedDate2.split(' ')[0]) &&
-                                        currentMonth === parseInt(selectedDate2.split(' ')[2]);
-
+                                        day === parseInt(selectedDate2.split('-')[2]) &&
+                                        currentMonth === parseInt(selectedDate2.split('-')[1]);
                                     return (
                                         <button
                                             key={index}
-                                            onClick={() => handleDateSelect(day)} // Handle date selection
-                                            disabled={isDateDisabled(day)} // Disable dates based on logic
+                                            onClick={() => handleDateSelect(day)}
+                                            disabled={isDateDisabled(day)}
                                             className={`py-2 px-4 rounded ${isDateDisabled(day)
                                                 ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                                                 : isSelectedForButton1 || isSelectedForButton2
@@ -203,22 +208,17 @@ const SearchBar = () => {
                     )}
                 </div>
             )}
-
-            {/* Blur Background */}
             {(isDropdownOpen || isDatePickerOpen) && (
                 <div
                     className="fixed inset-0 bg-black bg-opacity-50 z-40"
                     onClick={() => {
-                        setIsDatePickerOpen(false); // Close the date picker
-                        setIsDropdownOpen(false); // Close the dropdown
-                    }} // Close dropdown when clicking outside
+                        setIsDatePickerOpen(false);
+                        setIsDropdownOpen(false);
+                    }}
                 ></div>
             )}
-
-            {/* Dropdown Content */}
             {isDropdownOpen && (
                 <div className="absolute top-full left-1/2 transform -translate-x-1/200 mt-2 bg-white shadow-lg rounded-lg p-4 w-64 z-50 ml-60">
-                    {/* Rooms */}
                     <div className="flex justify-between items-center mb-4">
                         <span className="text-black">Phòng</span>
                         <div className="flex items-center space-x-2">
@@ -237,8 +237,6 @@ const SearchBar = () => {
                             </button>
                         </div>
                     </div>
-
-                    {/* Adults */}
                     <div className="flex justify-between items-center mb-4">
                         <span className="text-black">Người lớn</span>
                         <div className="flex items-center space-x-2">
@@ -257,8 +255,6 @@ const SearchBar = () => {
                             </button>
                         </div>
                     </div>
-
-                    {/* Children */}
                     <div className="flex justify-between items-center">
                         <span className="text-black">Trẻ em</span>
                         <div className="flex items-center space-x-2">

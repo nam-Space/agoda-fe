@@ -1,4 +1,4 @@
-import axiosBase from 'axios'
+import axiosBase from 'axios';
 import axios from "config/axios.customize";
 
 // user
@@ -25,6 +25,35 @@ export const callRefreshToken = (data) => {
 
 export const callLogout = (data) => {
     return axios.post(`/api/accounts/logout/`, { ...data });
+};
+
+export const callFetchUser = (query) => {
+    return axios.get(`/api/accounts/users?${query}`);
+};
+
+export const callCreateUser = (user) => {
+    return axios.post("/api/accounts/users/create/", { ...user });
+};
+
+export const callUpdateUser = (id, user) => {
+    return axios.put(`/api/accounts/users/${id}/update/`, { ...user });
+};
+
+export const callDeleteUser = (id) => {
+    return axios.delete(`/api/accounts/users/${id}/delete/`);
+};
+
+export const callUploadSingleImage = ({ file, type }) => {
+    const bodyFormData = new FormData();
+    bodyFormData.append("image", file);
+    return axios({
+        method: "post",
+        url: `/api/images/upload-image/?type=${type}`,
+        data: bodyFormData,
+        headers: {
+            "Content-Type": "multipart/form-data",
+        },
+    });
 };
 
 // City
@@ -174,4 +203,45 @@ export const callUpdateActivityPackage = (id, data) => {
 
 export const callDeleteActivityPackage = (id) => {
     return axios.delete(`/api/activities/activities-packages/${id}/delete/`);
+};
+
+// Hotels API
+export const callGetHotels = ({ cityId, currentPage = 1, pageSize = 10, filters = {} }) => {
+    const params = new URLSearchParams({
+        current: currentPage,
+        pageSize: pageSize,
+        ...filters
+    });
+
+    if (cityId) {
+        params.append('cityId', cityId);
+    }
+
+    return axios.get(`/api/hotels/hotels/?${params.toString()}`);
+};
+
+export const callGetHotelDetail = (hotelId) => {
+    return axios.get(`/api/hotels/hotels/${hotelId}/`);
+};
+
+
+// Chat
+export const callFetchConversation = (query) => {
+    return axios.get(`/api/chats/conversations/?${query}`);
+};
+
+export const callGetOrCreateConversation = (data) => {
+    return axios.post(`/api/chats/conversations/get_or_create/`, { ...data });
+};
+
+export const callFetchMessage = (conversationId) => {
+    return axios.get(`/api/chats/messages/${conversationId}/`);
+}
+
+export const callFetchRoomQuery = (query) => {
+    return axios.get(`/api/rooms/rooms/?${query}`);
+};
+
+export const callGetRoomDetail = (roomId) => {
+    return axios.get(`/api/rooms/rooms/${roomId}/`);
 };
