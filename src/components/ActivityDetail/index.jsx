@@ -62,7 +62,7 @@ export default function ActivityDetail() {
             setActivity(res.data);
             if (res.data.city.id) {
                 await handleGetListActivities(
-                    `current=1&pageSize=10&cityId=${res.data.city.id}`
+                    `current=1&pageSize=10&city_id=${res.data.city.id}`
                 );
             }
         }
@@ -698,75 +698,76 @@ export default function ActivityDetail() {
                                 ].map((item, index) => {
                                     return (
                                         <SwiperSlide key={index}>
-                                            <a
-                                                href={`/activity/detail/${item.id}`}
-                                                className="rounded-[16px] overflow-hidden border-[1px] border-[#d5d9e2] hover:shadow-[rgba(4,7,10,0.24)_0px_4px_10px_0px] transition-all duration-200"
-                                            >
-                                                <img
-                                                    src={`${process.env.REACT_APP_BE_URL}${item.images[0].image}`}
-                                                    className="w-full h-[170px] object-cover"
-                                                />
-                                                <div className="pt-[12px] px-[16px] pb-[16px]">
-                                                    <p className="font-semibold text-[20px] leading-[24px] line-clamp-2">
-                                                        {item.name}
-                                                    </p>
-                                                    <div className="flex items-center gap-[4px]">
-                                                        <IoIosStar className="text-[#b54c01] text-[12px]" />
-                                                        <p className="font-semibold">
-                                                            {item.avg_star}
+                                            <div className="rounded-[16px] overflow-hidden border-[1px] border-[#d5d9e2]">
+                                                <Link
+                                                    to={`/activity/detail/${item.id}`}
+                                                >
+                                                    <img
+                                                        src={`${process.env.REACT_APP_BE_URL}${item.images[0].image}`}
+                                                        className="w-full h-[170px] object-cover"
+                                                    />
+                                                    <div className="pt-[12px] px-[16px] pb-[16px]">
+                                                        <p className="font-semibold text-[20px] leading-[24px] line-clamp-2 min-h-[48px]">
+                                                            {item.name}
                                                         </p>
-                                                        <p className="text-[13px] text-[#5e6b82]">
-                                                            (49)
-                                                        </p>
-                                                        <p className="text-[#5e6b82]">
-                                                            •
-                                                        </p>
-                                                        <p className="text-[13px] text-[#5e6b82]">
-                                                            298 người đã đặt
-                                                        </p>
-                                                    </div>
-                                                    <div className="flex items-center mt-[4px]">
-                                                        <Tag
-                                                            color="blue"
-                                                            className="p-[4px]"
-                                                        >
-                                                            <BsLightningChargeFill className="text-[14px]" />
-                                                        </Tag>
-                                                        <Tag
-                                                            color="blue"
-                                                            className="p-[4px] text-[13px] leading-[14px]"
-                                                        >
-                                                            Hủy miễn phí
-                                                        </Tag>
-                                                    </div>
-                                                    <div className="flex justify-end mt-[52px]">
-                                                        <Tag
-                                                            color="#c53829"
-                                                            className="p-[4px] text-[13px] leading-[14px] mr-0"
-                                                        >
-                                                            Giảm 0%
-                                                        </Tag>
-                                                    </div>
-                                                    <div className="mt-[4px] flex items-center justify-end gap-[4px]">
-                                                        <p className="text-[13px] text-end line-through">
-                                                            {formatCurrency(
-                                                                item.avg_price
-                                                            )}{" "}
-                                                            ₫
-                                                        </p>
-                                                        <div className="flex items-center justify-end gap-[8px]">
-                                                            <p className="text-[16px] font-bold text-end text-[#c53829]">
-                                                                {formatCurrency(
-                                                                    item.avg_price
-                                                                )}
+                                                        <div className="flex items-center gap-[4px]">
+                                                            <IoIosStar className="text-[#b54c01] text-[12px]" />
+                                                            <p className="font-semibold">
+                                                                {item.avg_star}
                                                             </p>
-                                                            <p className="text-[12px] mt-[2px] font-semibold text-end text-[#c53829]">
-                                                                ₫
+                                                            <p className="text-[13px] text-[#5e6b82]">
+                                                                (49)
+                                                            </p>
+                                                            <p className="text-[#5e6b82]">
+                                                                •
+                                                            </p>
+                                                            <p className="text-[13px] text-[#5e6b82]">
+                                                                298 người đã đặt
                                                             </p>
                                                         </div>
+                                                        <div className="flex items-center mt-[4px]">
+                                                            <Tag
+                                                                color="blue"
+                                                                className="p-[4px]"
+                                                            >
+                                                                <BsLightningChargeFill className="text-[14px]" />
+                                                            </Tag>
+                                                            <Tag
+                                                                color="blue"
+                                                                className="p-[4px] text-[13px] leading-[14px]"
+                                                            >
+                                                                Hủy miễn phí
+                                                            </Tag>
+                                                        </div>
+                                                        <div className="flex justify-end mt-[52px]">
+                                                            <Tag
+                                                                color="#c53829"
+                                                                className="p-[4px] text-[13px] leading-[14px] mr-0"
+                                                            >
+                                                                Giảm 0%
+                                                            </Tag>
+                                                        </div>
+                                                        <div className="mt-[4px] flex items-center justify-end gap-[4px]">
+                                                            <p className="text-[13px] text-end line-through">
+                                                                {formatCurrency(
+                                                                    item.avg_price
+                                                                )}{" "}
+                                                                ₫
+                                                            </p>
+                                                            <div className="flex items-center justify-end gap-[8px]">
+                                                                <p className="text-[16px] font-bold text-end text-[#c53829]">
+                                                                    {formatCurrency(
+                                                                        item.avg_price
+                                                                    )}
+                                                                </p>
+                                                                <p className="text-[12px] mt-[2px] font-semibold text-end text-[#c53829]">
+                                                                    ₫
+                                                                </p>
+                                                            </div>
+                                                        </div>
                                                     </div>
-                                                </div>
-                                            </a>
+                                                </Link>
+                                            </div>
                                         </SwiperSlide>
                                     );
                                 })}
