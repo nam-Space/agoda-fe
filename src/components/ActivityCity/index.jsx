@@ -471,7 +471,7 @@ const ActivityCity = () => {
                                     className="bg-white rounded-[16px] overflow-hidden border-[1px] border-[#d5d9e2] hover:shadow-[rgba(4,7,10,0.24)_0px_4px_10px_0px] transition-all duration-200"
                                 >
                                     <img
-                                        src={`${process.env.REACT_APP_BE_URL}/${item.images[0].image}`}
+                                        src={`${process.env.REACT_APP_BE_URL}${item.images[0].image}`}
                                         className="w-full h-[170px] object-cover"
                                     />
                                     <div className="pt-[12px] px-[16px] pb-[16px]">

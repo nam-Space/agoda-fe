@@ -283,7 +283,7 @@ export default function BookingContactActivity() {
                                     <div className="flex gap-3 p-3">
                                         <div className="relative w-20 h-20 flex-shrink-0 rounded-lg overflow-hidden">
                                             <img
-                                                src={`${process.env.REACT_APP_BE_URL}/${activity?.images?.[0]?.image}`}
+                                                src={`${process.env.REACT_APP_BE_URL}${activity?.images?.[0]?.image}`}
                                                 className="w-full h-full object-cover"
                                             />
                                         </div>
