@@ -61,7 +61,7 @@ const ActivityTab = () => {
                                 }}
                             >
                                 <img
-                                    src={`${process.env.REACT_APP_BE_URL}/${item.images[0].image}`}
+                                    src={`${process.env.REACT_APP_BE_URL}${item.images[0].image}`}
                                     className="w-[70px] h-[50px] object-cover"
                                 />
                                 <div>

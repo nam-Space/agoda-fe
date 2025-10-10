@@ -1,14 +1,28 @@
 import { callFetchMessage } from "config/api";
 import React, { useEffect, useState, useRef } from "react";
+import { useAppDispatch, useAppSelector } from "../../redux/hooks";
+import { getOtherUser } from "utils/conversation";
+import dayjs from "dayjs";
+import { IoIosMail } from "react-icons/io";
+import { BiSolidBookBookmark } from "react-icons/bi";
+import { fetchConversation } from "../../redux/slice/conversationSlide";
+import { Button, Input } from "antd";
+import { SendOutlined } from "@ant-design/icons";
+import { ROLE } from "constants/role";
+import { getUserAvatar } from "utils/imageUrl";
 
-const ChatRoom = ({ conversationId, userId, otherUserId }) => {
+const { TextArea } = Input;
+
+const ChatRoom = ({ conversation, otherUser }) => {
+    const dispatch = useAppDispatch();
     const chatRef = useRef(null);
+    const user = useAppSelector((state) => state.account.user);
     const [messages, setMessages] = useState([]);
     const [input, setInput] = useState("");
     const socketRef = useRef(null);
 
     const handleGetMessages = async () => {
-        const res = await callFetchMessage(conversationId);
+        const res = await callFetchMessage(conversation.id);
         if (res.isSuccess) {
             setMessages(res.data);
         }
@@ -30,27 +44,28 @@ const ChatRoom = ({ conversationId, userId, otherUserId }) => {
     }, [messages]);
 
     useEffect(() => {
-        if (!conversationId) return;
+        if (!conversation?.id) return;
         handleGetMessages();
 
         // (2) tạo kết nối WebSocket tới đúng phòng (conversationId là UUID string)
         const ws = new WebSocket(
-            `ws://localhost:8000/ws/chat/${conversationId}/`
+            `ws://localhost:8000/ws/chat/${conversation.id}/`
         );
         socketRef.current = ws;
 
         ws.onopen = () => {
-            console.log(`✅ Connected to conversation ${conversationId}`);
+            console.log(`✅ Connected to conversation ${conversation.id}`);
         };
 
         ws.onmessage = (event) => {
             const data = JSON.parse(event.data);
             console.log("📩 Message received:", data);
             setMessages((prev) => [...prev, data]);
+            dispatch(fetchConversation({ query: `current=1&pageSize=100` }));
         };
 
         ws.onclose = () => {
-            console.log(`❌ Disconnected from conversation ${conversationId}`);
+            console.log(`❌ Disconnected from conversation ${conversation.id}`);
         };
 
         ws.onerror = (error) => {
@@ -60,7 +75,7 @@ const ChatRoom = ({ conversationId, userId, otherUserId }) => {
         return () => {
             ws.close();
         };
-    }, [conversationId]);
+    }, [conversation]);
 
     const sendMessage = () => {
         if (
@@ -68,8 +83,8 @@ const ChatRoom = ({ conversationId, userId, otherUserId }) => {
             socketRef.current.readyState === WebSocket.OPEN
         ) {
             const payload = {
-                sender_id: userId,
-                receiver_id: otherUserId, // user id (int)
+                sender_id: user.id,
+                receiver_id: otherUser.id, // user id (int)
                 message: input,
                 // optional: conversation_id: conversationId
             };
@@ -84,39 +99,174 @@ const ChatRoom = ({ conversationId, userId, otherUserId }) => {
 
     return (
         <div>
-            <h2>💬 Chat Room #{conversationId}</h2>
             <div
                 ref={chatRef}
-                style={{
-                    border: "1px solid #ccc",
-                    height: "300px",
-                    overflowY: "auto",
-                    padding: "10px",
-                    marginBottom: "10px",
-                }}
+                className="border-[1px] bg-white border-[#ccc] h-[500px] overflow-y-auto relative"
             >
-                {messages.map((msg, idx) => (
-                    <div key={idx}>
-                        <b>
-                            {msg.sender.id === userId
-                                ? "Bạn"
-                                : `${msg.sender.first_name} ${msg.sender.last_name}`}
-                            :
-                        </b>{" "}
-                        {msg.text}
+                <div className="sticky top-0">
+                    <div className="grid grid-cols-3 p-[10px] bg-white border-[#ccc] border-b-[1px]">
+                        <div className="col-start-1 col-span-2">
+                            <div className="flex gap-[10px]">
+                                {getOtherUser(conversation, user)?.role ===
+                                ROLE.OWNER ? (
+                                    <>
+                                        <img
+                                            src={`${
+                                                process.env.REACT_APP_BE_URL
+                                            }${
+                                                getOtherUser(conversation, user)
+                                                    ?.hotel?.images?.[0]?.image
+                                            }`}
+                                            className="w-[50px] h-[50px] object-cover rounded-[50%]"
+                                        />
+                                        <div>
+                                            <p className="font-bold">
+                                                {
+                                                    getOtherUser(
+                                                        conversation,
+                                                        user
+                                                    )?.hotel?.name
+                                                }
+                                            </p>
+                                            <p className="text-[#5e6b82] text-[12px]">
+                                                {
+                                                    getOtherUser(
+                                                        conversation,
+                                                        user
+                                                    )?.hotel?.city?.name
+                                                }
+                                            </p>
+                                            <p className="font-semibold text-[13px]">
+                                                {dayjs(
+                                                    conversation.created_at
+                                                ).format("DD-MM-YYYY HH:mm:ss")}
+                                            </p>
+                                        </div>
+                                    </>
+                                ) : (
+                                    <>
+                                        <img
+                                            src={`${getUserAvatar(
+                                                getOtherUser(conversation, user)
+                                                    ?.avatar
+                                            )}`}
+                                            className="w-[50px] h-[50px] object-cover rounded-[50%]"
+                                        />
+                                        <div>
+                                            <p className="font-bold">
+                                                {`${
+                                                    getOtherUser(
+                                                        conversation,
+                                                        user
+                                                    )?.first_name
+                                                } ${
+                                                    getOtherUser(
+                                                        conversation,
+                                                        user
+                                                    )?.last_name
+                                                }`}
+                                            </p>
+                                            <p className="font-semibold text-[13px]">
+                                                {dayjs(
+                                                    conversation.created_at
+                                                ).format("DD-MM-YYYY HH:mm:ss")}
+                                            </p>
+                                        </div>
+                                    </>
+                                )}
+                            </div>
+                        </div>
+                        <div className="col-start-3 col-span-1">
+                            {getOtherUser(conversation, user)?.role ===
+                                ROLE.OWNER && (
+                                <div>
+                                    <div className="text-[12px] text-[#5392f9] flex gap-[3px] items-center">
+                                        <IoIosMail className="text-[13px]" />
+                                        Gửi thư điện tử cho Chỗ nghỉ
+                                    </div>
+                                    <p className="text-[12px] text-[#5392f9] flex gap-[3px] items-center">
+                                        <BiSolidBookBookmark className="text-[13px]" />
+                                        Xem Chi tiết Đặt phòng
+                                    </p>
+                                </div>
+                            )}
+                        </div>
                     </div>
-                ))}
+                </div>
+                <div className="pt-[10px]">
+                    {messages.map((msg, idx) => (
+                        <div key={idx}>
+                            <p className="text-[#5e6b82] text-[12px] text-center">
+                                {dayjs(msg.created_at).format(
+                                    "DD-MM-YYYY HH:mm:ss"
+                                )}
+                            </p>
+                            <div
+                                className={`${
+                                    msg.sender.id === user.id
+                                        ? "text-right ml-auto"
+                                        : "text-left mr-auto"
+                                }
+                                w-fit p-[12px] flex items-center gap-[6px]`}
+                            >
+                                {msg.sender.id !== user.id &&
+                                    (getOtherUser(conversation, user)?.role ===
+                                    ROLE.OWNER ? (
+                                        <img
+                                            src={`${
+                                                process.env.REACT_APP_BE_URL
+                                            }${
+                                                getOtherUser(conversation, user)
+                                                    ?.hotel?.images?.[0]?.image
+                                            }`}
+                                            className="w-[40px] h-[40px] object-cover rounded-[50%]"
+                                        />
+                                    ) : (
+                                        <img
+                                            src={`${getUserAvatar(
+                                                getOtherUser(conversation, user)
+                                                    ?.avatar
+                                            )}`}
+                                            className="w-[40px] h-[40px] object-cover rounded-[50%]"
+                                        />
+                                    ))}
+                                <p
+                                    className={`p-[10px] rounded-[6px] ${
+                                        msg.sender.id === user.id
+                                            ? "bg-[#dde9fd]"
+                                            : "bg-[#e9ebee]"
+                                    }`}
+                                >
+                                    {msg.text}
+                                </p>
+                            </div>
+                        </div>
+                    ))}
+                </div>
             </div>
 
-            <div style={{ display: "flex", gap: "8px" }}>
-                <input
-                    style={{ flex: 1 }}
-                    type="text"
-                    value={input}
-                    placeholder="Nhập tin nhắn..."
-                    onChange={(e) => setInput(e.target.value)}
-                />
-                <button onClick={sendMessage}>Gửi</button>
+            <div className="bg-white border-[#ccc] border-l-[1px] border-r-[1px] border-b-[1px] p-4">
+                <div className="flex gap-2 items-end">
+                    <TextArea
+                        value={input}
+                        onChange={(e) => setInput(e.target.value)}
+                        placeholder="Viết gì đó"
+                        autoSize={{ minRows: 1, maxRows: 4 }}
+                        className="flex-1"
+                        onPressEnter={(e) => {
+                            if (!e.shiftKey) {
+                                e.preventDefault();
+                                sendMessage();
+                            }
+                        }}
+                    />
+                    <Button
+                        type="primary"
+                        icon={<SendOutlined />}
+                        onClick={sendMessage}
+                        disabled={!input.trim()}
+                    />
+                </div>
             </div>
         </div>
     );

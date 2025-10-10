@@ -4,6 +4,8 @@ import { callRefreshToken } from "./api";
 import { store } from "../redux/store";
 import { setRefreshTokenAction } from "../redux/slice/accountSlide";
 import Cookies from "js-cookie";
+import { toast } from "react-toastify";
+
 const instance = axios.create({
     baseURL: process.env.REACT_APP_BE_URL,
     timeout: 60 * 1000, //60s
@@ -35,6 +37,12 @@ instance.interceptors.response.use(
         return response;
     },
     async function (error) {
+        if (error.response.status === 500) {
+            toast.error(error?.message, {
+                position: "bottom-right",
+            });
+        }
+
         if (error.response.status === 401 && error.config.url !== "/api/accounts/login/") {
             const refresh_token_agoda = Cookies.get("refresh_token_agoda");
             const res = await callRefreshToken({

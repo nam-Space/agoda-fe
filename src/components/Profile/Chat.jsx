@@ -5,16 +5,34 @@ import { v4 as uuidv4 } from "uuid";
 import { callGetOrCreateConversation } from "config/api";
 import { fetchConversation } from "../../redux/slice/conversationSlide";
 import { IoChatboxEllipses } from "react-icons/io5";
+import dayjs from "dayjs";
+import { getOtherUser } from "utils/conversation";
+import _ from "lodash";
+import { ROLE } from "constants/role";
+import { callFetchUser } from "config/api";
+import { Select } from "antd";
+import { getUserAvatar } from "utils/imageUrl";
 
 function Chat() {
     const dispatch = useAppDispatch();
     const user = useAppSelector((state) => state.account.user);
-    const [selectedConversation, setSelectedConversation] = useState(null);
-    const [selectedOtherUserId, setSelectedOtherUserId] = useState(null);
+    const [selectedConversation, setSelectedConversation] = useState({});
+    const [selectedOtherUser, setSelectedOtherUser] = useState({});
     const conversations = useAppSelector((state) => state.conversation.data);
+    const [users, setUsers] = useState([]);
+
+    const handleGetUsers = async (query) => {
+        const res = await callFetchUser(query);
+        if (res.isSuccess) {
+            setUsers(res.data);
+        }
+    };
 
     useEffect(() => {
         dispatch(fetchConversation({ query: `current=1&pageSize=100` }));
+        handleGetUsers(
+            `current=1&pageSize=1000&role=${ROLE.CUSTOMER}&is_active=1`
+        );
     }, [dispatch]);
 
     const handleOpenChat = async (conv) => {
@@ -22,14 +40,14 @@ function Chat() {
             const clientConvId = uuidv4(); // tạo uuid phía client (tùy chọn)
 
             const res = await callGetOrCreateConversation({
-                user_id: getOtherUser(conv).id,
+                user_id: getOtherUser(conv, user).id,
                 conversation_id: clientConvId,
             });
 
             if (res?.isSuccess) {
                 const conv = res.data;
-                setSelectedConversation(conv.id); // ID là UUID string
-                setSelectedOtherUserId(getOtherUser(conv).id);
+                setSelectedConversation(conv); // ID là UUID string
+                setSelectedOtherUser(getOtherUser(conv, user));
             } else {
                 console.error("Failed get/create conversation", res.data);
             }
@@ -38,54 +56,168 @@ function Chat() {
         }
     };
 
-    const getOtherUser = (conversation) => {
-        if (conversation.user1.id === user.id) return conversation.user2;
-        return conversation.user1;
+    const handleSelectUser = async (val) => {
+        try {
+            const res = await callGetOrCreateConversation({
+                user_id: val,
+            });
+            if (res?.isSuccess) {
+                const conv = res.data;
+                setSelectedConversation(conv); // ID là UUID string
+                setSelectedOtherUser(getOtherUser(conv, user));
+                dispatch(
+                    fetchConversation({ query: `current=1&pageSize=100` })
+                );
+            } else {
+                console.error("Failed get/create conversation", res.data);
+            }
+        } catch (e) {
+            console.error("Error getting/creating conversation", e);
+        }
     };
 
     return (
         <div>
-            {conversations.length > 0 ? (
-                <div style={{ display: "flex", gap: "20px" }}>
-                    <div>
-                        <h3>Danh sách cuộc trò chuyện</h3>
-                        <div className="h-[300px] overflow-y-auto">
-                            {conversations.map((conv) => (
-                                <div
-                                    key={conv.id}
-                                    onClick={() => handleOpenChat(conv)}
-                                    style={{
-                                        padding: "10px",
-                                        border: "1px solid #ddd",
-                                        marginBottom: "5px",
-                                        cursor: "pointer",
-                                        backgroundColor:
-                                            selectedOtherUserId ===
-                                            getOtherUser(conv).id
-                                                ? "#f0f0f0"
-                                                : "white",
-                                    }}
-                                >
-                                    {getOtherUser(conv).first_name}{" "}
-                                    {getOtherUser(conv).last_name}
-                                </div>
-                            ))}
-                        </div>
-                    </div>
+            {user.id > 0 && (
+                <>
+                    {user.role !== ROLE.CUSTOMER && (
+                        <Select
+                            placeholder="Select a person"
+                            className="w-[300px] h-[60px]"
+                            options={users.map((user) => {
+                                return {
+                                    label: (
+                                        <div className="flex items-center gap-[10px]">
+                                            <img
+                                                src={getUserAvatar(user.avatar)}
+                                                className="w-[40px] h-[40px] object-cover rounded-[50%]"
+                                            />
+                                            <div>
+                                                <p className="leading-[20px]">{`${user.first_name} ${user.last_name}`}</p>
+                                                <p className="leading-[20px] text-[#929292]">{`@${user.username}`}</p>
+                                            </div>
+                                        </div>
+                                    ),
+                                    value: user.id,
+                                };
+                            })}
+                            onChange={handleSelectUser}
+                        />
+                    )}
 
-                    <div style={{ flex: 1 }}>
-                        {selectedConversation ? (
-                            <ChatRoom
-                                conversationId={selectedConversation}
-                                userId={user.id}
-                                otherUserId={selectedOtherUserId}
-                            />
-                        ) : (
-                            <p>Chọn một cuộc trò chuyện để bắt đầu</p>
-                        )}
-                    </div>
-                </div>
-            ) : (
+                    {conversations.length > 0 && (
+                        <div className="flex gap-[20px] mt-[20px]">
+                            <div>
+                                <div className="h-[500px] overflow-y-auto">
+                                    {conversations.map((conv) => (
+                                        <div
+                                            key={conv.id}
+                                            onClick={() => handleOpenChat(conv)}
+                                            className={`flex gap-[10px] border-[1px] p-[10px] border-[#ddd] cursor-pointer mb-[5px] ${
+                                                selectedOtherUser.id ===
+                                                getOtherUser(conv, user).id
+                                                    ? "bg-[#f0f0f0]"
+                                                    : "bg-white"
+                                            }`}
+                                        >
+                                            {getOtherUser(conv, user)?.role ===
+                                            ROLE.OWNER ? (
+                                                <>
+                                                    <img
+                                                        src={`${
+                                                            process.env
+                                                                .REACT_APP_BE_URL
+                                                        }${
+                                                            getOtherUser(
+                                                                conv,
+                                                                user
+                                                            )?.hotel
+                                                                ?.images?.[0]
+                                                                ?.image
+                                                        }`}
+                                                        className="w-[50px] h-[50px] object-cover rounded-[50%]"
+                                                    />
+                                                    <div>
+                                                        <p className="font-bold">
+                                                            {
+                                                                getOtherUser(
+                                                                    conv,
+                                                                    user
+                                                                )?.hotel?.name
+                                                            }
+                                                        </p>
+                                                        <p className="w-[150px] whitespace-nowrap text-ellipsis overflow-hidden">
+                                                            {conv.last_message}
+                                                        </p>
+                                                        <p className="w-[150px] whitespace-nowrap text-ellipsis overflow-hidden text-[#5e6b82] text-[12px]">
+                                                            {dayjs(
+                                                                conv.created_at
+                                                            ).format(
+                                                                "DD-MM-YYYY HH:mm:ss"
+                                                            )}
+                                                        </p>
+                                                    </div>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <img
+                                                        src={`${getUserAvatar(
+                                                            getOtherUser(
+                                                                conv,
+                                                                user
+                                                            )?.avatar
+                                                        )}`}
+                                                        className="w-[50px] h-[50px] object-cover rounded-[50%]"
+                                                    />
+                                                    <div>
+                                                        <p className="font-bold">
+                                                            {`${
+                                                                getOtherUser(
+                                                                    conv,
+                                                                    user
+                                                                )?.first_name
+                                                            } ${
+                                                                getOtherUser(
+                                                                    conv,
+                                                                    user
+                                                                )?.last_name
+                                                            }`}
+                                                        </p>
+                                                        <p className="w-[150px] whitespace-nowrap text-ellipsis overflow-hidden">
+                                                            {conv.last_message}
+                                                        </p>
+                                                        <p className="w-[150px] whitespace-nowrap text-ellipsis overflow-hidden text-[#5e6b82] text-[12px]">
+                                                            {dayjs(
+                                                                conv.created_at
+                                                            ).format(
+                                                                "DD-MM-YYYY HH:mm:ss"
+                                                            )}
+                                                        </p>
+                                                    </div>
+                                                </>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div style={{ flex: 1 }}>
+                                {!_.isEmpty(selectedConversation) ? (
+                                    <ChatRoom
+                                        conversation={selectedConversation}
+                                        otherUser={selectedOtherUser}
+                                    />
+                                ) : (
+                                    <p>Chọn một cuộc trò chuyện để bắt đầu</p>
+                                )}
+                            </div>
+                        </div>
+                    )}
+                </>
+            )}
+            {(!user.id ||
+                (user.role === ROLE.CUSTOMER &&
+                    conversations.length === 0)) && (
                 <div className="bg-white h-[722px] rounded-[16px]">
                     <div className="flex items-center justify-center flex-col h-full">
                         <IoChatboxEllipses className="text-[100px] text-[#2067da]" />

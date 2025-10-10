@@ -275,7 +275,7 @@ export default function ActivityDetail() {
                                     {activity?.images?.map((image, index) => (
                                         <SwiperSlide key={index}>
                                             <img
-                                                src={`${process.env.REACT_APP_BE_URL}/${image.image}`}
+                                                src={`${process.env.REACT_APP_BE_URL}${image.image}`}
                                                 alt={image.image}
                                                 fill
                                                 className="object-cover w-full h-full"
@@ -703,7 +703,7 @@ export default function ActivityDetail() {
                                                 className="rounded-[16px] overflow-hidden border-[1px] border-[#d5d9e2] hover:shadow-[rgba(4,7,10,0.24)_0px_4px_10px_0px] transition-all duration-200"
                                             >
                                                 <img
-                                                    src={`${process.env.REACT_APP_BE_URL}/${item.images[0].image}`}
+                                                    src={`${process.env.REACT_APP_BE_URL}${item.images[0].image}`}
                                                     className="w-full h-[170px] object-cover"
                                                 />
                                                 <div className="pt-[12px] px-[16px] pb-[16px]">
@@ -954,7 +954,7 @@ export default function ActivityDetail() {
                                         <div className="flex-shrink-0">
                                             <div className="w-16 h-16 rounded-lg overflow-hidden">
                                                 <img
-                                                    src={`${process.env.REACT_APP_BE_URL}/${activity?.images?.[0]?.image}`}
+                                                    src={`${process.env.REACT_APP_BE_URL}${activity?.images?.[0]?.image}`}
                                                     alt={
                                                         selectedTickerOption
                                                             ?.activity_package
