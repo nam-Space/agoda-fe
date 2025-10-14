@@ -10,18 +10,21 @@ import {
 import { useAppSelector } from "../../redux/hooks";
 import { useLocation, useNavigate } from "react-router-dom";
 import { formatCurrency } from "utils/formatCurrency";
+import { useSearchParams } from "react-router-dom";
+import { ServiceType, ServiceTypeLabel} from "../../constants/serviceType";
+import { getCountries, addBookingContact, getBookingDetail, getRoomDetail  } from "../../config/api";
 
 export default function BookingContactActivity() {
-    const { state } = useLocation();
-    const {
-        activity,
-        activity_date,
-        adult_quantity_booking,
-        child_quantity_booking,
-        date_launch,
-    } = state;
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
     const user = useAppSelector((state) => state.account.user);
+    const bookingId = searchParams.get("booking_id");
+    const service_type = Number(searchParams.get("type"));
+    const ref_id = searchParams.get("ref");
+    const [countries, setCountries] = useState([]);
+    const [booking, setBooking] = useState(null);
+    const [room, setRoom] = useState(null);
+    const [loading, setLoading] = useState(true);
 
     const [formData, setFormData] = useState({
         first_name: user?.first_name || "",
@@ -29,36 +32,72 @@ export default function BookingContactActivity() {
         email: user?.email || "",
         countryCode: "+84",
         phone_number: user?.phone_number || "",
+        special_request: "",
     });
 
     useEffect(() => {
+        const fetchData = async () => {
+            try {
+                setLoading(true);
+                // Fetch booking details
+                const bookingResponse = await getBookingDetail(bookingId);
+                setBooking(bookingResponse);
+
+                // Fetch room details if service_type is HOTEL
+                if (service_type === ServiceType.HOTEL && ref_id) {
+                    const roomResponse = await getRoomDetail(ref_id);
+                    setRoom(roomResponse);
+                }
+
+                // Fetch countries
+                const countriesResponse = await getCountries();
+                setCountries(countriesResponse.data || []);
+            } catch (error) {
+                console.error("Error fetching data:", error);
+                alert("Không thể tải thông tin đặt chỗ!");
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchData();
         window.scrollTo(0, 0);
-    }, []);
+    }, [bookingId, ref_id, service_type]);
 
-    const getPrice = (item) => {
-        const activity_date = item.activity_package.activities_dates.find(
-            (activities_date) =>
-                activities_date.date_launch.substring(0, 10) === date_launch
-        );
-
-        const price =
-            (activity_date?.price_adult || 0) * adult_quantity_booking +
-            (activity_date?.price_child || 0) * child_quantity_booking;
-
-        return price;
+    const handleNextStep = async () => {
+        const guest_info = {
+            full_name: `${formData.last_name} ${formData.first_name}`,
+            email: formData.email,
+            phone: formData.phone_number,
+            country: countries.find(c => c.calling_code === formData.countryCode)?.name || "",
+            special_request: formData.special_request,
+        };
+        try {
+            await addBookingContact(bookingId, { guest_info });
+            navigate(`/book/payment?booking_id=${bookingId}`);
+        } catch (err) {
+            alert("Gửi thông tin liên lạc thất bại!");
+        }
     };
 
-    const handleNextStep = () => {
-        navigate(`/booking-contact-activity-step-2`, {
-            state: {
-                activity,
-                activity_date,
-                adult_quantity_booking,
-                child_quantity_booking,
-                date_launch,
-                user_information: formData,
-            },
-        });
+    if (loading) {
+        return <div className="min-h-screen bg-gray-50 flex items-center justify-center">Đang tải...</div>;
+    }
+
+    if (!booking) {
+        return <div className="min-h-screen bg-gray-50 flex items-center justify-center">Không tìm thấy thông tin đặt chỗ</div>;
+    }
+
+    const getPrice = () => {
+        return Number(booking.total_price) || 0;
+    };
+
+    const getGuestSummary = () => {
+        const numGuests = booking.hotel_detail?.num_guests || 0;
+        if (numGuests > 0) {
+            return `${numGuests} khách`;
+        }
+        return "Không có thông tin số lượng khách";
     };
 
     return (
@@ -67,7 +106,6 @@ export default function BookingContactActivity() {
             <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
                     <div className="flex items-center justify-between">
-                        {/* Progress Steps */}
                         <div className="hidden md:flex items-center gap-8 flex-1 max-w-2xl mx-auto">
                             <div className="flex items-center gap-2">
                                 <div className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center text-sm font-semibold">
@@ -141,7 +179,7 @@ export default function BookingContactActivity() {
                                 {/* Last Name */}
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                                        Họ (và tên) *
+                                        Họ (vd: Nguyễn) *
                                     </label>
                                     <input
                                         type="text"
@@ -174,8 +212,6 @@ export default function BookingContactActivity() {
                                     />
                                 </div>
 
-                                {/* Country */}
-
                                 {/* Phone Number */}
                                 <div className="md:col-span-2">
                                     <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -191,13 +227,16 @@ export default function BookingContactActivity() {
                                                 onChange={(e) =>
                                                     setFormData({
                                                         ...formData,
-                                                        countryCode:
-                                                            e.target.value,
+                                                        countryCode: e.target.value,
                                                     })
                                                 }
                                                 className="w-full px-4 py-2.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none appearance-none"
                                             >
-                                                <option>+84</option>
+                                                {countries.map((country) => (
+                                                    <option key={country.id} value={country.calling_code}>
+                                                        {country.name} ({country.calling_code})
+                                                    </option>
+                                                ))}
                                             </select>
                                             <ChevronDown className="absolute right-3 bottom-3 w-5 h-5 text-gray-400 pointer-events-none" />
                                         </div>
@@ -207,11 +246,11 @@ export default function BookingContactActivity() {
                                             </label>
                                             <input
                                                 type="tel"
-                                                value={formData.phone}
+                                                value={formData.phone_number}
                                                 onChange={(e) =>
                                                     setFormData({
                                                         ...formData,
-                                                        phone: e.target.value,
+                                                        phone_number: e.target.value,
                                                     })
                                                 }
                                                 className="w-full px-4 py-2.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
@@ -219,23 +258,36 @@ export default function BookingContactActivity() {
                                         </div>
                                     </div>
                                 </div>
+
+                                {/* Special Request */}
+                                <div className="md:col-span-2">
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        Yêu cầu đặc biệt
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={formData.special_request}
+                                        onChange={(e) =>
+                                            setFormData({
+                                                ...formData,
+                                                special_request: e.target.value,
+                                            })
+                                        }
+                                        className="w-full px-4 py-2.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                                        placeholder="Ví dụ: Giường đôi, tầng cao, v.v."
+                                    />
+                                </div>
                             </div>
                         </div>
                         <div className="space-y-4">
                             <p className="text-sm text-gray-600">
                                 Thực hiện bước tiếp theo đồng nghĩa với việc quý
                                 khách chấp nhận tuân thủ theo:{" "}
-                                <a
-                                    href="#"
-                                    className="text-blue-600 hover:underline"
-                                >
+                                <a href="#" className="text-blue-600 hover:underline">
                                     Điều khoản Sử dụng
                                 </a>{" "}
                                 và{" "}
-                                <a
-                                    href="#"
-                                    className="text-blue-600 hover:underline"
-                                >
+                                <a href="#" className="text-blue-600 hover:underline">
                                     Chính sách Quyền riêng tư
                                 </a>{" "}
                                 của Agoda.
@@ -259,18 +311,15 @@ export default function BookingContactActivity() {
                                     Tóm tắt đơn đặt
                                 </h3>
 
-                                {/* Attraction Badge */}
+                                {/* Service Type Badge */}
                                 <div className="flex items-center gap-2 mb-3">
                                     <div className="w-6 h-6 bg-gray-900 rounded flex items-center justify-center">
                                         <span className="text-white text-xs">
-                                            🎢
+                                            🏨
                                         </span>
                                     </div>
                                     <span className="font-semibold text-sm">
-                                        ĐIỂM THU HÚT
-                                    </span>
-                                    <span className="text-xs text-gray-500">
-                                        ({activity?.city?.name})
+                                        {ServiceTypeLabel[service_type].toUpperCase()}
                                     </span>
                                 </div>
 
@@ -278,28 +327,24 @@ export default function BookingContactActivity() {
                                     0% giảm giá
                                 </div>
 
-                                {/* Attraction Card */}
+                                {/* Room Card */}
                                 <div className="border border-gray-200 rounded-lg overflow-hidden mb-4">
                                     <div className="flex gap-3 p-3">
                                         <div className="relative w-20 h-20 flex-shrink-0 rounded-lg overflow-hidden">
                                             <img
-                                                src={`${process.env.REACT_APP_BE_URL}${activity?.images?.[0]?.image}`}
+                                                src={room?.images?.[0]?.image || "https://via.placeholder.com/80"}
                                                 className="w-full h-full object-cover"
+                                                alt={room?.room_type}
                                             />
                                         </div>
                                         <div className="flex-1 min-w-0">
                                             <h4 className="font-semibold text-sm text-gray-900 line-clamp-2 mb-1">
-                                                {activity?.name}
+                                                {room?.room_type || "Phòng"}
                                             </h4>
                                             <div className="flex items-center gap-1 text-xs">
                                                 <Star className="w-3 h-3 fill-orange-500 text-orange-500" />
-
-                                                <span className="font-semibold">
-                                                    {activity?.avg_star}
-                                                </span>
-                                                <span className="text-gray-500">
-                                                    1,128 bài đánh giá
-                                                </span>
+                                                <span className="font-semibold">4.5</span>
+                                                <span className="text-gray-500">1,000 bài đánh giá</span>
                                             </div>
                                         </div>
                                     </div>
@@ -307,29 +352,18 @@ export default function BookingContactActivity() {
                                     <div className="border-t border-gray-200 p-3 space-y-2">
                                         <div className="flex items-center gap-2 text-sm">
                                             <Calendar className="w-4 h-4 text-gray-500" />
-                                            <span>{date_launch}</span>
+                                            <span>
+                                                {booking.hotel_detail?.check_in} &rarr; {booking.hotel_detail?.check_out}
+                                            </span>
                                         </div>
 
                                         <div className="text-sm">
                                             <div className="font-semibold text-gray-900 mb-1">
-                                                {
-                                                    activity_date
-                                                        ?.activity_package?.name
-                                                }
+                                                {room?.room_type || "Phòng"}
                                             </div>
-                                            {adult_quantity_booking > 0 && (
-                                                <div className="text-gray-600 text-xs">
-                                                    {adult_quantity_booking}{" "}
-                                                    người lớn
-                                                </div>
-                                            )}
-
-                                            {child_quantity_booking > 0 && (
-                                                <div className="text-gray-600 text-xs">
-                                                    {child_quantity_booking} trẻ
-                                                    em
-                                                </div>
-                                            )}
+                                            <div className="text-gray-600 text-xs">
+                                                {getGuestSummary()}
+                                            </div>
                                         </div>
 
                                         <div className="flex items-start gap-2 text-xs pt-2">
@@ -343,8 +377,7 @@ export default function BookingContactActivity() {
                                             <CheckCircle className="w-3 h-3 text-green-500 flex-shrink-0 mt-0.5" />
                                             <div className="flex items-center gap-1">
                                                 <span className="text-gray-600">
-                                                    Đơn đặt hoàn đồng này không
-                                                    được hoàn tiền
+                                                    Đơn đặt hoàn đồng này không được hoàn tiền
                                                 </span>
                                                 <Info className="w-3 h-3 text-gray-400" />
                                             </div>
@@ -367,20 +400,14 @@ export default function BookingContactActivity() {
                                     <div className="flex justify-between text-sm">
                                         <div>
                                             <div className="text-gray-900">
-                                                {activity?.name}
+                                                {room?.room_type || "Phòng"}
                                             </div>
                                             <div className="text-gray-500 text-xs">
-                                                {date_launch} |{" "}
-                                                {adult_quantity_booking} người
-                                                lớn, {child_quantity_booking}{" "}
-                                                trẻ em
+                                                {booking.hotel_detail?.check_in} - {booking.hotel_detail?.check_out} | {getGuestSummary()}
                                             </div>
                                         </div>
                                         <div className="font-semibold text-gray-900 whitespace-nowrap ml-4">
-                                            {formatCurrency(
-                                                getPrice(activity_date)
-                                            )}{" "}
-                                            ₫
+                                            {formatCurrency(getPrice())} ₫
                                         </div>
                                     </div>
                                 </div>
@@ -389,10 +416,10 @@ export default function BookingContactActivity() {
                                     <div className="flex justify-between text-sm mb-2">
                                         <div>
                                             <div className="text-gray-900">
-                                                Tổng cộng
+                                                Giảm giá
                                             </div>
                                             <div className="text-gray-500 text-xs">
-                                                công thuế và phí
+                                                Nếu có
                                             </div>
                                         </div>
                                         <div className="text-gray-500 line-through">
@@ -407,19 +434,11 @@ export default function BookingContactActivity() {
                                             Tổng quý khách trả
                                         </span>
                                         <span className="text-2xl font-bold text-red-600">
-                                            {formatCurrency(
-                                                getPrice(activity_date)
-                                            )}{" "}
-                                            ₫
+                                            {formatCurrency(getPrice())} ₫
                                         </span>
                                     </div>
                                 </div>
                             </div>
-
-                            {/* Continue Button */}
-                            {/* <button className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3.5 px-6 rounded-lg transition-colors shadow-sm">
-                                Tiếp tục đến thanh toán
-                            </button> */}
                         </div>
                     </div>
                 </div>

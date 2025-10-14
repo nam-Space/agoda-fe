@@ -145,17 +145,6 @@ export const callFetchLocationMapInAllWorld = (query) => {
     return axiosBase.get(`https://photon.komoot.io/api/?q=${query}`);
 };
 
-// Promotion
-export const getPromotions = (params) => {
-    return axios.get("/api/promotions/", { params });
-};
-
-// City
-export const getCities = (params) => {
-    return axios.get("/api/cities/cities/", { params });
-};
-
-
 // Activity
 export const callFetchActivity = (query) => {
     return axios.get(`/api/activities/activities/?${query}`);
@@ -204,6 +193,61 @@ export const callUpdateActivityPackage = (id, data) => {
 export const callDeleteActivityPackage = (id) => {
     return axios.delete(`/api/activities/activities-packages/${id}/delete/`);
 };
+
+// Promotion
+export const getPromotions = (params) => {
+    return axios.get("/api/promotions/", { params });
+};
+
+//Country
+export const getCountries = (params) => {
+    return axios.get("/api/countries/countries/", { params });
+};
+
+// City
+export const getCities = (params) => {
+    return axios.get("/api/cities/cities/", { params });
+};
+
+// Get room detail
+export const getRoomDetail = (id) => {
+  return axios.get(`/api/rooms/rooms/${id}/`);
+};
+
+// Booking
+export const callBook = (data) => {
+    return axios.post("/api/bookings/", data);
+};
+
+export const addBookingContact = (bookingId, data) => {
+    return axios.patch(`/api/bookings/${bookingId}/`, data);
+};
+
+export const getBookingDetail = (id) => {
+  return axios.get(`/api/bookings/${id}/`);
+};
+
+// Payment
+export const createPayment = (data) => {
+    return axios.post("/api/payments/", data);
+};
+
+export const getPayment = (bookingId) => {
+  return axios.get(`/api/payments?booking_id=${bookingId}`);
+};
+
+export const payWithStripe = (paymentId, data) => {
+    return axios.post(`/api/payments/${paymentId}/pay/`, data);
+};
+
+export const confirmCashPayment = (paymentId) => {
+    return axios.post(`/api/payments/${paymentId}/confirm_cash/`);
+};
+
+export const capturePayment = (paymentId) => {
+    return axios.post(`/api/payments/${paymentId}/capture/`);
+};
+
 
 // Hotels API
 export const callGetHotels = ({ cityId, currentPage = 1, pageSize = 10, filters = {} }) => {

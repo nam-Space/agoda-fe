@@ -1,12 +1,37 @@
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { callFetchRoomQuery } from '../../config/api';
+import { callBook, callFetchRoomQuery } from '../../config/api';
 
-const RoomOptionsSection = ({ title, roomImage, roomDetails, cancellationPolicy, perks, price, bookingInfo, additionalInfo, hotelId, capacity, startDate, endDate }) => {
+const RoomOptionsSection = ({
+  title,
+  roomImage,
+  roomDetails,
+  cancellationPolicy,
+  perks,
+  price,
+  bookingInfo,
+  additionalInfo,
+  hotelId,
+  capacity,
+  startDate,
+  endDate
+}) => {
   const [rooms, setRooms] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const { hotelSlug } = useParams();
+
+  const [payload, setPayload] = useState({
+    service_type: 1,
+    service_ref_id: 2,
+    total_price: "500.00",
+    hotel_detail: {
+      room: 2,
+      check_in: startDate || "2025-10-10",
+      check_out: endDate || "2025-10-12",
+      num_guests: capacity || 2
+    }
+  });
 
   const extractHotelIdFromSlug = (slug) => {
     if (!slug) return null;
@@ -47,6 +72,20 @@ const RoomOptionsSection = ({ title, roomImage, roomDetails, cancellationPolicy,
 
     fetchRooms();
   }, [effectiveHotelId, capacity, startDate, endDate]);
+
+  const handleBookNow = async (roomId, roomPrice) => {
+    try {
+      const updatedPayload = {
+        ...payload,
+        service_ref_id: roomId,
+        total_price: roomPrice.toString()
+      };
+      const res = await callBook(updatedPayload);
+      window.open(`/book?booking_id=${res.booking_id}&type=${updatedPayload.service_type}&ref=${updatedPayload.service_ref_id}`, '_blank');
+    } catch (err) {
+      alert('Đã có lỗi xảy ra!');
+    }
+  };
 
   if (loading) return <div>Loading...</div>;
   if (error) return <div>{error}</div>;
@@ -92,16 +131,23 @@ const RoomOptionsSection = ({ title, roomImage, roomDetails, cancellationPolicy,
                 <p>Chương trình thưởng và giảm giá khác:</p>
                 <ul className="mt-2">
                   {additionalInfo.map((info, index) => (
-                    <li key={index} className={info.highlight ? "font-bold" : ""}>{info.text}</li>
+                    <li key={index} className={info.highlight ? "text-purple-600 font-bold" : ""}>
+                      {info.text}
+                    </li>
                   ))}
                 </ul>
               </div>
             </div>
             <div className="text-center">
-              <p className="text-red-600 text-lg font-bold">{parseFloat(room.price_per_night).toLocaleString('vi-VN')} VND</p>
+              <p className="text-red-600 text-lg font-bold">
+                {parseFloat(room.price_per_night).toLocaleString('vi-VN')} VND
+              </p>
               <p className="text-sm text-gray-600">Giá mỗi đêm chưa gồm thuế và phí</p>
-              <button className="bg-blue-600 text-white font-bold rounded-lg px-4 py-2 hover:bg-blue-700 mt-4">
-                {bookingInfo}
+              <button
+                className="bg-blue-600 text-white font-bold rounded-lg px-4 py-2 hover:bg-blue-700 mt-4"
+                onClick={() => handleBookNow(room.id, room.price_per_night)}
+              >
+                Đặt ngay
               </button>
               <br />
               <button className="bg-blue-500 text-white font-bold rounded-lg px-6 py-3 hover:bg-blue-600 shadow-md transition duration-300 ease-in-out mt-4">

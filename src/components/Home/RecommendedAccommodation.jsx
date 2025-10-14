@@ -85,7 +85,7 @@ const RecommendedAccommodation = () => {
                             <img
                                 src={
                                     hotel?.images
-                                        ? `http://localhost:8000${hotel.images[0].image}`
+                                        ? `http://localhost:8000${hotel.images[0]?.image}`
                                         : "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSYR83krjU8bD9NkDRlV3iGwsdCsAmyzAPSdg&s"
                                 }
                                 className="w-full h-[154px] rounded-[16px]"

@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import {
     CheckCircle2,
     Download,
@@ -10,13 +11,89 @@ import {
     Phone,
     ChevronRight,
 } from "lucide-react";
-import { useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
+import { formatCurrency } from "utils/formatCurrency";
+import {
+    ServiceType,
+    ServiceTypeLabel,
+    PaymentMethod,
+    PaymentMethodLabel,
+} from "../../constants/serviceType";
+import {
+    getBookingDetail,
+    getRoomDetail,
+    getPayment,
+    capturePayment,
+} from "../../config/api";
 
 export default function BookingContactActivityStep3() {
+    const [searchParams] = useSearchParams();
+    const bookingId = searchParams.get("booking_id");
+    const isSuccess = searchParams.get("isSuccess") === "true";
+    const [booking, setBooking] = useState(null);
+    const [room, setRoom] = useState(null);
+    const [payment, setPayment] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [captureStatus, setCaptureStatus] = useState(null);
+
     useEffect(() => {
+        const fetchData = async () => {
+            try {
+                setLoading(true);
+
+                // Lấy thông tin booking
+                const bookingResponse = await getBookingDetail(bookingId);
+                setBooking(bookingResponse);
+
+                // Lấy thông tin phòng
+                if (bookingResponse.service_type === ServiceType.HOTEL) {
+                    const roomResponse = await getRoomDetail(bookingResponse.service_ref_id);
+                    setRoom(roomResponse);
+                }
+
+                // Lấy thông tin thanh toán
+                const paymentResponse = await getPayment(bookingId);
+                if (paymentResponse.results.length > 0) {
+                    setPayment(paymentResponse.results[0]);
+                }
+
+                // Nếu isSuccess=true, gọi API capture
+                if (isSuccess && paymentResponse.results.length > 0) {
+                    const paymentId = paymentResponse.results[0].id;
+                    try {
+                        const captureResponse = await capturePayment(paymentId);
+                        setCaptureStatus(captureResponse.detail);
+                    } catch (error) {
+                        console.error("Lỗi khi capture thanh toán:", error);
+                        setCaptureStatus("Payment not completed");
+                    }
+                }
+            } catch (error) {
+                console.error("Lỗi khi tải dữ liệu:", error);
+                alert("Không thể tải thông tin đặt chỗ hoặc thanh toán!");
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        if (bookingId) {
+            fetchData();
+        }
         window.scrollTo(0, 0);
-    }, []);
+    }, [bookingId, isSuccess]);
+
+    if (loading) {
+        return <div className="min-h-screen bg-gray-50 flex items-center justify-center">Đang tải...</div>;
+    }
+
+    if (!booking || !room || !payment) {
+        return <div className="min-h-screen bg-gray-50 flex items-center justify-center">Không tìm thấy thông tin đặt chỗ, phòng hoặc thanh toán</div>;
+    }
+
+    const getGuestSummary = () => {
+        const numGuests = booking.hotel_detail?.num_guests || 0;
+        return numGuests > 0 ? `${numGuests} khách` : "Không có thông tin số lượng khách";
+    };
 
     return (
         <div className="min-h-screen bg-gray-50">
@@ -64,21 +141,24 @@ export default function BookingContactActivityStep3() {
                         {/* Success Message */}
                         <div className="bg-white rounded-lg shadow-sm p-8 text-center">
                             <div className="flex justify-center mb-4">
-                                <CheckCircle2 className="w-20 h-20 text-green-500" />
+                                <CheckCircle2 className={`w-20 h-20 ${isSuccess ? "text-green-500" : "text-red-500"}`} />
                             </div>
                             <h1 className="text-3xl font-bold text-gray-900 mb-2">
-                                Đặt chỗ thành công!
+                                {isSuccess ? "Đặt chỗ thành công!" : "Thanh toán thất bại!"}
                             </h1>
                             <p className="text-gray-600 mb-6">
-                                Cảm ơn bạn đã đặt chỗ. Chúng tôi đã gửi email
-                                xác nhận đến
+                                {isSuccess
+                                    ? `Cảm ơn bạn đã đặt chỗ. Chúng tôi đã gửi email xác nhận đến`
+                                    : "Thanh toán không thành công. Vui lòng thử lại hoặc liên hệ hỗ trợ."}
                             </p>
-                            <div className="inline-flex items-center gap-2 px-4 py-2 bg-blue-50 rounded-lg">
-                                <Mail className="w-5 h-5 text-blue-600" />
-                                <span className="font-medium text-blue-900">
-                                    namhello2003@gmail.com
-                                </span>
-                            </div>
+                            {isSuccess && (
+                                <div className="inline-flex items-center gap-2 px-4 py-2 bg-blue-50 rounded-lg">
+                                    <Mail className="w-5 h-5 text-blue-600" />
+                                    <span className="font-medium text-blue-900">
+                                        {booking.guest_info?.email || "email khách hàng"}
+                                    </span>
+                                </div>
+                            )}
                         </div>
 
                         {/* Booking Reference */}
@@ -93,7 +173,7 @@ export default function BookingContactActivityStep3() {
                                             Mã xác nhận
                                         </p>
                                         <p className="text-3xl font-bold text-blue-600">
-                                            AG-354319176
+                                            {booking.booking_code}
                                         </p>
                                     </div>
                                     <div className="flex gap-2">
@@ -120,38 +200,27 @@ export default function BookingContactActivityStep3() {
                                 Chi tiết đặt chỗ
                             </h2>
 
-                            {/* Attraction Info */}
+                            {/* Hotel Info */}
                             <div className="flex gap-4 mb-6 pb-6 border-b">
                                 <div className="relative w-32 h-32 rounded-lg overflow-hidden flex-shrink-0">
                                     <img
-                                        src="/vinwonders-phu-quoc-theme-park-colorful-attraction.jpg"
-                                        alt="VinWonders Phu Quoc"
-                                        fill
-                                        className="object-cover"
+                                        src={room.images?.[0]?.image || "https://via.placeholder.com/150"}
+                                        alt={room.room_type}
+                                        className="object-cover w-full h-full"
                                     />
                                 </div>
                                 <div className="flex-1">
-                                    <div className="inline-block px-2 py-1 bg-red-100 text-red-700 text-xs font-semibold rounded mb-2">
-                                        9% giảm giá
-                                    </div>
                                     <h3 className="font-bold text-gray-900 mb-2">
-                                        VinWonders Phu Quoc Theme Park -
-                                        Vinpearl Safari Phu Quoc Ticket...
+                                        {room.room_type} - Phòng khách sạn
                                     </h3>
                                     <div className="flex items-center gap-1 text-sm mb-2">
-                                        <span className="text-yellow-500">
-                                            ★
-                                        </span>
-                                        <span className="font-semibold">
-                                            4.6
-                                        </span>
-                                        <span className="text-gray-500">
-                                            1,130 bài đánh giá
-                                        </span>
+                                        <span className="text-yellow-500">★</span>
+                                        <span className="font-semibold">4.7</span>
+                                        <span className="text-gray-500">(1,128 bài đánh giá)</span>
                                     </div>
                                     <p className="text-sm text-gray-600">
                                         <MapPin className="w-4 h-4 inline mr-1" />
-                                        ĐẢO PHÚ QUỐC
+                                        {room.description || "Phòng view biển"}
                                     </p>
                                 </div>
                             </div>
@@ -161,11 +230,9 @@ export default function BookingContactActivityStep3() {
                                 <div className="flex items-start gap-3">
                                     <Calendar className="w-5 h-5 text-gray-400 mt-0.5" />
                                     <div>
-                                        <p className="text-sm text-gray-600">
-                                            Ngày tham quan
-                                        </p>
+                                        <p className="text-sm text-gray-600">Ngày nhận phòng - trả phòng</p>
                                         <p className="font-semibold text-gray-900">
-                                            Thứ 7, 4 tháng 10
+                                            {booking.hotel_detail?.check_in} - {booking.hotel_detail?.check_out}
                                         </p>
                                     </div>
                                 </div>
@@ -173,15 +240,10 @@ export default function BookingContactActivityStep3() {
                                 <div className="flex items-start gap-3">
                                     <Users className="w-5 h-5 text-gray-400 mt-0.5" />
                                     <div>
-                                        <p className="text-sm text-gray-600">
-                                            Số lượng khách
-                                        </p>
-                                        <p className="font-semibold text-gray-900">
-                                            1 người lớn
-                                        </p>
+                                        <p className="text-sm text-gray-600">Số lượng khách</p>
+                                        <p className="font-semibold text-gray-900">{getGuestSummary()}</p>
                                         <p className="text-sm text-gray-600 mt-1">
-                                            Standard Admission Ticket (QR Code
-                                            Direct Entry) | Vinpearl Safari
+                                            {room.room_type} | {room.beds} phòng | {room.capacity} người
                                         </p>
                                     </div>
                                 </div>
@@ -189,11 +251,9 @@ export default function BookingContactActivityStep3() {
                                 <div className="flex items-start gap-3">
                                     <CreditCard className="w-5 h-5 text-gray-400 mt-0.5" />
                                     <div>
-                                        <p className="text-sm text-gray-600">
-                                            Phương thức thanh toán
-                                        </p>
+                                        <p className="text-sm text-gray-600">Phương thức thanh toán</p>
                                         <p className="font-semibold text-gray-900">
-                                            Thẻ tín dụng/ghi nợ
+                                            {PaymentMethodLabel[payment.method] || "Không xác định"}
                                         </p>
                                     </div>
                                 </div>
@@ -207,35 +267,27 @@ export default function BookingContactActivityStep3() {
                             </h2>
                             <div className="grid sm:grid-cols-2 gap-4">
                                 <div>
-                                    <p className="text-sm text-gray-600 mb-1">
-                                        Họ và tên
-                                    </p>
+                                    <p className="text-sm text-gray-600 mb-1">Họ và tên</p>
                                     <p className="font-semibold text-gray-900">
-                                        Nam Nguyễn Việt
+                                        {booking.guest_info?.full_name || "Không xác định"}
                                     </p>
                                 </div>
                                 <div>
-                                    <p className="text-sm text-gray-600 mb-1">
-                                        Email
-                                    </p>
+                                    <p className="text-sm text-gray-600 mb-1">Email</p>
                                     <p className="font-semibold text-gray-900">
-                                        namhello2003@gmail.com
+                                        {booking.guest_info?.email || "Không xác định"}
                                     </p>
                                 </div>
                                 <div>
-                                    <p className="text-sm text-gray-600 mb-1">
-                                        Số điện thoại
-                                    </p>
+                                    <p className="text-sm text-gray-600 mb-1">Số điện thoại</p>
                                     <p className="font-semibold text-gray-900">
-                                        +84 354319176
+                                        {booking.guest_info?.phone || "Không xác định"}
                                     </p>
                                 </div>
                                 <div>
-                                    <p className="text-sm text-gray-600 mb-1">
-                                        Quốc gia
-                                    </p>
+                                    <p className="text-sm text-gray-600 mb-1">Quốc gia</p>
                                     <p className="font-semibold text-gray-900">
-                                        Việt Nam
+                                        {booking.guest_info?.country || "Không xác định"}
                                     </p>
                                 </div>
                             </div>
@@ -256,8 +308,7 @@ export default function BookingContactActivityStep3() {
                                             Kiểm tra email của bạn
                                         </p>
                                         <p className="text-sm text-gray-600">
-                                            Chúng tôi đã gửi xác nhận đặt chỗ và
-                                            vé điện tử đến email của bạn
+                                            Chúng tôi đã gửi xác nhận đặt chỗ đến email của bạn
                                         </p>
                                     </div>
                                 </div>
@@ -267,11 +318,10 @@ export default function BookingContactActivityStep3() {
                                     </div>
                                     <div>
                                         <p className="font-semibold text-gray-900">
-                                            Chuẩn bị cho chuyến đi
+                                            Chuẩn bị nhận phòng
                                         </p>
                                         <p className="text-sm text-gray-600">
-                                            Mang theo mã QR hoặc in vé để xuất
-                                            trình tại cổng vào
+                                            Mang theo mã đặt chỗ và giấy tờ tùy thân đến khách sạn
                                         </p>
                                     </div>
                                 </div>
@@ -281,11 +331,10 @@ export default function BookingContactActivityStep3() {
                                     </div>
                                     <div>
                                         <p className="font-semibold text-gray-900">
-                                            Tận hưởng trải nghiệm
+                                            Tận hưởng kỳ nghỉ
                                         </p>
                                         <p className="text-sm text-gray-600">
-                                            Đến VinWonders Phu Quoc vào ngày đã
-                                            chọn và tận hưởng!
+                                            Đến khách sạn vào ngày nhận phòng và tận hưởng!
                                         </p>
                                     </div>
                                 </div>
@@ -327,29 +376,11 @@ export default function BookingContactActivityStep3() {
                             <div className="space-y-3 mb-4 pb-4 border-b">
                                 <div>
                                     <p className="text-sm text-gray-900 mb-1">
-                                        VinWonders Phu Quoc Theme Park -
-                                        Vinpearl Safari Phu Quoc Ticket
-                                        (Optional Theme Park)
+                                        {room.room_type} - Phòng khách sạn
                                     </p>
                                     <p className="text-xs text-gray-500">
-                                        4 tháng 10 | 1 người lớn
+                                        {booking.hotel_detail?.check_in} - {booking.hotel_detail?.check_out} | {getGuestSummary()}
                                     </p>
-                                </div>
-                                <div className="flex justify-between items-center">
-                                    <span className="text-sm text-gray-600">
-                                        Giá gốc
-                                    </span>
-                                    <span className="text-sm text-gray-900 line-through">
-                                        749.538 ₫
-                                    </span>
-                                </div>
-                                <div className="flex justify-between items-center">
-                                    <span className="text-sm text-gray-600">
-                                        Giảm giá (9%)
-                                    </span>
-                                    <span className="text-sm text-green-600 font-semibold">
-                                        -59.963 ₫
-                                    </span>
                                 </div>
                             </div>
 
@@ -363,7 +394,7 @@ export default function BookingContactActivityStep3() {
                                         </span>
                                     </span>
                                     <span className="text-sm text-gray-900">
-                                        689.575 ₫
+                                        {formatCurrency(booking.total_price)} ₫
                                     </span>
                                 </div>
                             </div>
@@ -373,20 +404,19 @@ export default function BookingContactActivityStep3() {
                                     Tổng quý khách trả
                                 </span>
                                 <span className="text-2xl font-bold text-red-600">
-                                    689.575 ₫
+                                    {formatCurrency(booking.total_price)} ₫
                                 </span>
                             </div>
 
                             <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
                                 <div className="flex items-start gap-2">
-                                    <CheckCircle2 className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+                                    <CheckCircle2 className={`w-5 h-5 ${captureStatus === "Payment completed successfully" ? "text-green-600" : "text-red-600"} flex-shrink-0 mt-0.5`} />
                                     <div>
                                         <p className="text-sm font-semibold text-green-900 mb-1">
-                                            Thanh toán thành công
+                                            {captureStatus === "Payment completed successfully" ? "Thanh toán thành công" : "Thanh toán thất bại"}
                                         </p>
                                         <p className="text-xs text-green-700">
-                                            Đơn đặt hoàn đồng này không được
-                                            hoàn tiền
+                                            Đơn đặt này không được hoàn tiền
                                         </p>
                                     </div>
                                 </div>

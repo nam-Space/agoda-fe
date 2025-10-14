@@ -40,9 +40,9 @@ function App() {
     dispatch(fetchAccount())
   }, [])
 
-  if (isLoading) {
-    return <Spin spinning={true} fullscreen />
-  }
+  // if (isLoading) {
+  //   return <Spin spinning={true} fullscreen />
+  // }
 
   const router = createBrowserRouter([
     {
@@ -95,17 +95,17 @@ function App() {
             <ActivityDetailPage />
         },
         {
-          path: "booking-contact-activity",
+          path: "book",
           element:
             <BookingContactActivityPage />
         },
         {
-          path: "booking-contact-activity-step-2",
+          path: "book/payment",
           element:
             <BookingContactActivityStep2Page />
         },
         {
-          path: "booking-contact-activity-step-3",
+          path: "book/confirmation",
           element:
             <BookingContactActivityStep3Page />
         },

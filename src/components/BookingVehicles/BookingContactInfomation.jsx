@@ -32,10 +32,33 @@ import { formatCurrency } from "utils/formatCurrency";
 import { useAppSelector } from "../../redux/hooks";
 
 const { Option } = Select;
-
 export default function BookingConfirmation() {
+    const mockState = {
+        option: "from-airport", // hoặc "from-location"
+        formFromAirportIn: {
+            airportIn: { name: "Noi Bai (HAN)", lat: 21.2189, lng: 105.8048 },
+            locationTo: { name: "My Dinh", lat: 21.0285, lng: 105.7835 },
+            timeStart: "2025-10-06 10:00",
+            capacity: 2,
+        },
+        formFromLocationIn: {
+            locationIn: { name: "Hanoi Old Quarter", lat: 21.0285, lng: 105.8542 },
+            airportTo: { name: "Noi Bai (HAN)", lat: 21.2189, lng: 105.8048 },
+            timeStart: "2025-10-06 10:00",
+            capacity: 2,
+        },
+        car: {
+            name: "Economy Sedan",
+            description: "4 chỗ - thoải mái cho chuyến đi ngắn",
+            image: "uploads/cars/economy.jpg", // hoặc đường dẫn hợp lệ
+            avg_speed: 40, // km/h
+            luggage: 2,
+            price_per_km: 5000,
+            capacity: 4,
+        },
+    };
     const { state } = useLocation();
-    const { option, formFromAirportIn, formFromLocationIn, car } = state;
+    const { option, formFromAirportIn, formFromLocationIn, car } = state || mockState;
     const user = useAppSelector((state) => state.account.user);
 
     const [contactInfo, setContactInfo] = useState({
