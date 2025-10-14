@@ -33,6 +33,9 @@ import { callFetchActivityPackageByActivityIdAndDateLaunch } from "config/api";
 import _ from "lodash";
 import { INF } from "constants/activity";
 import { useAppSelector } from "../../redux/hooks";
+import { callBook } from "config/api";
+import { toast } from "react-toastify";
+import { SERVICE_TYPE } from "constants/booking";
 const { Panel } = Collapse;
 const { Text } = Typography;
 
@@ -183,6 +186,16 @@ export default function ActivityDetail() {
         return price;
     };
 
+    const getActivityDate = (item, index) => {
+        const activity_date = item.activity_package.activities_dates.find(
+            (activities_date) =>
+                activities_date.date_launch.substring(0, 10) ===
+                dateTickets[index]
+        );
+
+        return activity_date;
+    };
+
     const handleDisableDate = (currentDate, item) => {
         const activity_date = item.activity_package.activities_dates.some(
             (activities_date) =>
@@ -208,18 +221,79 @@ export default function ActivityDetail() {
         }
     };
 
-    const handleGoToBooking = () => {
-        navigate(`/booking-contact-activity`, {
-            state: {
-                activity,
-                activity_date: {
-                    ...selectedTickerOption,
+    const handleGoToBooking = async () => {
+        try {
+            // console.log("dataSend", {
+            //     activity,
+            //     activity_date: {
+            //         ...selectedTickerOption,
+            //     },
+            //     adult_quantity_booking: adultTickets[selectedIndexTicket],
+            //     child_quantity_booking: childTickets[selectedIndexTicket],
+            //     date_launch: dateTickets[selectedIndexTicket],
+            // });
+
+            const body = {
+                service_type: SERVICE_TYPE.ACTIVITY,
+                service_ref_id: getActivityDate(
+                    selectedTickerOption,
+                    selectedIndexTicket
+                ).id,
+                total_price: getPrice(
+                    selectedTickerOption,
+                    selectedIndexTicket
+                ),
+                activity_detail: {
+                    room: 2,
+                    activity_date: getActivityDate(
+                        selectedTickerOption,
+                        selectedIndexTicket
+                    ).id,
+                    price_adult: getSinglePriceAdult(
+                        selectedTickerOption,
+                        selectedIndexTicket
+                    ),
+                    price_child: getSinglePriceChild(
+                        selectedTickerOption,
+                        selectedIndexTicket
+                    ),
+                    adult_quantity_booking: adultTickets[selectedIndexTicket],
+                    child_quantity_booking: childTickets[selectedIndexTicket],
+                    date_launch: dateTickets[selectedIndexTicket],
+                    activity_package_name:
+                        selectedTickerOption.activity_package.name,
+                    activity_name: activity.name,
+                    activity_image: activity?.images?.[0]?.image,
+                    avg_price: activity.avg_price,
+                    avg_star: activity.avg_star,
+                    city_name: activity.city.name,
                 },
-                adult_quantity_booking: adultTickets[selectedIndexTicket],
-                child_quantity_booking: childTickets[selectedIndexTicket],
-                date_launch: dateTickets[selectedIndexTicket],
-            },
-        });
+            };
+
+            // console.log("body", body);
+
+            const res = await callBook(body);
+            navigate(
+                `/book?booking_id=${res.booking_id}&type=${body.service_type}&ref=${body.service_ref_id}`,
+                {
+                    state: {
+                        activity,
+                        activity_date: {
+                            ...selectedTickerOption,
+                        },
+                        adult_quantity_booking:
+                            adultTickets[selectedIndexTicket],
+                        child_quantity_booking:
+                            childTickets[selectedIndexTicket],
+                        date_launch: dateTickets[selectedIndexTicket],
+                    },
+                }
+            );
+        } catch (e) {
+            toast.error(e.message, {
+                position: "bottom-right",
+            });
+        }
     };
 
     return (

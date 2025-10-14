@@ -3,12 +3,14 @@ export const ServiceType = Object.freeze({
   HOTEL: 1,
   CAR: 2,
   FLIGHT: 3,
+  ACTIVITY: 4
 });
 
 export const ServiceTypeLabel = {
   [ServiceType.HOTEL]: "room",
   [ServiceType.CAR]: "car",
   [ServiceType.FLIGHT]: "flight",
+  [ServiceType.ACTIVITY]: 'activity'
 };
 
 export const PaymentMethod = Object.freeze({
