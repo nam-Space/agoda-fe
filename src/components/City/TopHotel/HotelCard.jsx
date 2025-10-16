@@ -6,16 +6,20 @@ import { Link } from "react-router-dom";
 const HotelCard = ({ hotel }) => {
   const [showFullReview, setShowFullReview] = useState(false);
 
-   // ✅ Định dạng giá logic: số nguyên thì không hiển thị thập phân
-  const displayPrice =
-    hotel?.price && !isNaN(hotel.price)
-      ? Number(hotel.price) % 1 === 0
-        ? Number(hotel.price).toLocaleString("vi-VN") + " VND"
-        : Number(hotel.price).toLocaleString("vi-VN", {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2,
-          }) + " VND"
-      : "Liên hệ";
+  //  const displayPrice =
+  //   hotel?.min_price && !isNaN(hotel.min_price)
+  //     ? Number(hotel.min_price).toLocaleString("vi-VN") + " VND"
+  //     : "Liên hệ";
+
+  const price = Number(hotel?.min_price);
+
+const displayPrice = !isNaN(price) && price > 0
+  ? (price % 1 === 0
+      ? price.toLocaleString("vi-VN")
+      : price.toLocaleString("vi-VN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+    ) + " VND"
+  : "Liên hệ";
+
 
   return (
     <div className="flex bg-white rounded-xl shadow p-4 mb-4 hover:shadow-lg transition-shadow cursor-pointer">
