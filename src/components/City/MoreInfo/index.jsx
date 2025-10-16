@@ -1,16 +1,15 @@
-import React from 'react'
-import GoodToKnow from './GoodToKnow';
-import List from './List';
-import Question from './Question';
+import GoodToKnow from "./GoodToKnow";
+import List from "./List";
+import Question from "./Question";
 
-const MoreInfo = () => {
+const MoreInfo = ({ cityId }) => {
   return (
     <>
-        <GoodToKnow />
-        <List />
-        <Question />
+      <GoodToKnow cityId={cityId} /> 
+      <List cityId={cityId} />
+      <Question cityId={cityId} />
     </>
-  )
-}
+  );
+};
 
-export default MoreInfo
+export default MoreInfo;

@@ -1,55 +1,79 @@
-import React from 'react';
+import { useEffect, useState } from "react";
 
-const quickInfo = [
-  { label: 'Nơi ở', value: '5,534 chỗ', highlight: true },
-  { label: 'Khách sạn phổ biến', value: 'Khách sạn Centre' },
-  { label: 'Địa bàn phổ biến', value: 'Phước Mỹ', highlight: true },
-  { label: 'Giá mỗi đêm từ', value: '131015 ₫' },
-  { label: 'Sân bay', value: 'Sân bay Quốc tế Đà Nẵng', highlight: true },
-  { label: 'Lý do vi vu', value: 'Bãi biển, Ngắm cảnh, Nhà hàng' },
-];
+const GoodToKnow = ({ cityId }) => {
+  const [neighborhoods, setNeighborhoods] = useState([]);
+  const [quickInfo, setQuickInfo] = useState([]);
+  const [cityInfo, setCityInfo] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-const neighborhoods = [
-  [
-    { name: 'Phước Mỹ', count: '3665 khách sạn', link: '/vi-vn/phu-c-m/maps/da-nang-vn.html' },
-    { name: 'Hòa Hải', count: '1728 khách sạn', link: '/vi-vn/hoa-h-i/maps/da-nang-vn.html' },
-    { name: 'Hải Châu', count: '989 khách sạn', link: '/vi-vn/h-i-chau/maps/da-nang-vn.html' },
-    { name: 'An Hải Bắc', count: '586 khách sạn', link: '/vi-vn/an-hai-bac/maps/da-nang-vn.html' },
-  ],
-  [
-    { name: 'Xuân Hà', count: '254 khách sạn', link: '/vi-vn/xuan-ha/maps/da-nang-vn.html' },
-    { name: 'Thọ Quang', count: '118 khách sạn', link: '/vi-vn/tho-quang/maps/da-nang-vn.html' },
-    { name: 'Hòa Vang', count: '99 khách sạn', link: '/vi-vn/hoa-vang/maps/da-nang-vn.html' },
-    { name: 'Hòa Minh', count: '84 khách sạn', link: '/vi-vn/hoa-minh/maps/da-nang-vn.html' },
-  ],
-  [
-    { name: 'Lăng Cô', count: '58 khách sạn', link: '/vi-vn/lang-co/maps/da-nang-vn.html' },
-    { name: 'Cẩm Lệ', count: '55 khách sạn', link: '/vi-vn/cam-le/maps/da-nang-vn.html' },
-    { name: 'Hòa Hiệp Bắc', count: '9 khách sạn', link: '/vi-vn/hoa-hiep-bac/maps/da-nang-vn.html' },
-    { name: 'Hòa Ninh', count: '8 khách sạn', link: '/vi-vn/hoa-ninh/maps/da-nang-vn.html' },
-  ],
-];
+  useEffect(() => {
+    if (!cityId) return;
 
-const GoodToKnow = () => {
+    const fetchData = async () => {
+      try {
+        const [neighRes, quickRes] = await Promise.all([
+          fetch(`http://localhost:8000/api/neighborhoods?city_id=${cityId}`),
+          fetch(`http://localhost:8000/api/quick-info/by-city/?city_id=${cityId}`),
+
+        ]);
+
+        if (!neighRes.ok || !quickRes.ok)
+          throw new Error("Không thể tải dữ liệu");
+
+        const neighData = await neighRes.json();
+        const quickData = await quickRes.json();
+
+        setNeighborhoods(neighData.results || []);
+        setQuickInfo(quickData.results || []);
+
+        // Lấy thông tin city từ bất kỳ object nào có city
+        const city =
+          (neighData.results?.[0]?.city || quickData.results?.[0]?.city) ?? null;
+        setCityInfo(city);
+      } catch (error) {
+        console.error("Lỗi khi tải dữ liệu:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [cityId]);
+
   return (
     <div className="container mx-auto my-6">
       {/* Quick Info */}
       <div className="bg-white rounded-lg shadow p-6 mb-8 border">
         <div className="border-b pb-4 mb-4">
-          <h2 className="text-2xl font-bold text-blue-700">Thông tin nhanh về Đà Nẵng, Việt Nam</h2>
+          <h2 className="text-2xl font-bold text-blue-700">
+            Thông tin nhanh về{" "}
+            {cityInfo
+              ? `${cityInfo.name}, ${cityInfo.country.name}`
+              : "Đang tải..."}
+          </h2>
         </div>
         <div className="overflow-x-auto">
           <table className="min-w-full">
             <tbody>
-              {quickInfo.map((item, idx) => (
-                <tr
-                  key={item.label}
-                  className={item.highlight ? 'bg-blue-50' : ''}
-                >
-                  <td className="py-2 px-4 font-semibold text-gray-700 w-1/3">{item.label}</td>
-                  <td className="py-2 px-4 text-gray-900">{item.value}</td>
+              {quickInfo.length > 0 ? (
+                quickInfo.map((item) => (
+                  <tr
+                    key={item.id}
+                    className={item.highlight ? "bg-blue-50" : ""}
+                  >
+                    <td className="py-2 px-4 font-semibold text-gray-700 w-1/3">
+                      {item.label}
+                    </td>
+                    <td className="py-2 px-4 text-gray-900">{item.value}</td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td className="py-2 px-4 text-gray-500" colSpan={2}>
+                    Không có dữ liệu nhanh.
+                  </td>
                 </tr>
-              ))}
+              )}
             </tbody>
           </table>
         </div>
@@ -59,28 +83,32 @@ const GoodToKnow = () => {
       <section className="mb-8">
         <div className="bg-white rounded-lg shadow p-6 border">
           <div className="mb-4 border-b pb-4">
-            <h2 className="text-2xl font-bold text-blue-700">Khám phá khu vực ở Đà Nẵng</h2>
+            <h2 className="text-2xl font-bold text-blue-700">
+              {cityInfo
+                ? `Khám phá khu vực ở ${cityInfo.name}`
+                : "Khám phá khu vực"}
+            </h2>
           </div>
-          <div className="flex flex-col md:flex-row gap-4">
-            {neighborhoods.map((col, colIdx) => (
-              <div key={colIdx} className="flex-1">
-                <dl>
-                  {col.map((item) => (
-                    <a
-                      key={item.name}
-                      href={item.link}
-                      className="block hover:bg-blue-50 rounded px-2 py-2 transition"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      <dt className="font-semibold text-gray-700">{item.name}</dt>
-                      <dd className="text-gray-500">{item.count}</dd>
-                    </a>
-                  ))}
-                </dl>
-              </div>
-            ))}
-          </div>
+
+          {loading ? (
+            <p className="text-gray-500">Đang tải dữ liệu...</p>
+          ) : neighborhoods.length === 0 ? (
+            <p className="text-gray-500">Không có dữ liệu khu vực.</p>
+          ) : (
+            <div className="grid md:grid-cols-3 gap-4">
+              {neighborhoods.map((item) => (
+                <div
+                  key={item.id}
+                  className="block hover:bg-blue-50 rounded px-3 py-3 transition border border-gray-100"
+                >
+                  <dt className="font-semibold text-gray-700">{item.name}</dt>
+                  <dd className="text-gray-500 text-sm">
+                    {item.description || "Chưa có mô tả"}
+                  </dd>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </section>
     </div>
@@ -88,3 +116,4 @@ const GoodToKnow = () => {
 };
 
 export default GoodToKnow;
+

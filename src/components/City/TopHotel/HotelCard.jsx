@@ -1,10 +1,21 @@
-import React, { useState } from "react";
-import { FaStar } from "react-icons/fa";
 import { EnvironmentOutlined } from "@ant-design/icons";
+import { useState } from "react";
+import { FaStar } from "react-icons/fa";
 import { Link } from "react-router-dom";
 
 const HotelCard = ({ hotel }) => {
   const [showFullReview, setShowFullReview] = useState(false);
+
+   // ✅ Định dạng giá logic: số nguyên thì không hiển thị thập phân
+  const displayPrice =
+    hotel?.price && !isNaN(hotel.price)
+      ? Number(hotel.price) % 1 === 0
+        ? Number(hotel.price).toLocaleString("vi-VN") + " VND"
+        : Number(hotel.price).toLocaleString("vi-VN", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          }) + " VND"
+      : "Liên hệ";
 
   return (
     <div className="flex bg-white rounded-xl shadow p-4 mb-4 hover:shadow-lg transition-shadow cursor-pointer">
@@ -140,7 +151,7 @@ const HotelCard = ({ hotel }) => {
         
         <div className="mt-4 text-right">
           <div className="text-xs text-gray-500">Giá trung bình mỗi đêm</div>
-          <div className="font-bold text-red-600 text-2xl">{hotel.price}</div>
+          <div className="font-bold text-red-600 text-2xl">{displayPrice}</div>
         </div>
         
         {/* Thay đổi thành Link thay vì external link */}
