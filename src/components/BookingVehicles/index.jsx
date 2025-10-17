@@ -61,41 +61,41 @@ const { Option } = Select;
 const { RangePicker } = DatePicker;
 
 export default function BookingVehicles() {
-
-const defaultFakeState = {
-    option: "from-airport", // hoặc "from-location"
-    formFromAirportIn: {
-        airportIn: {
-            lat: 21.2187,
-            lng: 105.8041,
-            name: "Sân bay Nội Bài",
+    const defaultFakeState = {
+        option: "from-airport", // hoặc "from-location"
+        formFromAirportIn: {
+            airportIn: {
+                lat: 21.2187,
+                lng: 105.8041,
+                name: "Sân bay Nội Bài",
+            },
+            locationTo: {
+                lat: 21.0285,
+                lng: 105.8542,
+                name: "Trung tâm Hà Nội",
+            },
+            timeStart: new Date().toISOString(),
+            capacity: 4,
         },
-        locationTo: {
-            lat: 21.0285,
-            lng: 105.8542,
-            name: "Trung tâm Hà Nội",
+        formFromLocationIn: {
+            locationIn: {
+                lat: 21.0285,
+                lng: 105.8542,
+                name: "Trung tâm Hà Nội",
+            },
+            airportTo: {
+                lat: 21.2187,
+                lng: 105.8041,
+                name: "Sân bay Nội Bài",
+            },
+            timeStart: new Date().toISOString(),
+            capacity: 4,
         },
-        timeStart: new Date().toISOString(),
-        capacity: 4,
-    },
-    formFromLocationIn: {
-        locationIn: {
-            lat: 21.0285,
-            lng: 105.8542,
-            name: "Trung tâm Hà Nội",
-        },
-        airportTo: {
-            lat: 21.2187,
-            lng: 105.8041,
-            name: "Sân bay Nội Bài",
-        },
-        timeStart: new Date().toISOString(),
-        capacity: 4,
-    },
-};
+    };
     const nagivate = useNavigate();
     const { state } = useLocation();
-    const { option, formFromAirportIn, formFromLocationIn } = state || defaultFakeState;
+    const { option, formFromAirportIn, formFromLocationIn } =
+        state || defaultFakeState;
     const [vehicleData, setVehicleData] = useState([]);
     const [selectedItem, setSelectedItem] = useState(vehicleData[0]);
     const [openExtra, setOpenExtra] = useState(false);
@@ -965,7 +965,7 @@ const defaultFakeState = {
                                             <div className="flex items-center space-x-4">
                                                 <div className="w-24 h-16 relative">
                                                     <img
-                                                        src={`${process.env.REACT_APP_BE_URL}/${vehicle.image}`}
+                                                        src={`${process.env.REACT_APP_BE_URL}${vehicle.image}`}
                                                         alt={vehicle.name}
                                                         fill
                                                         className="object-cover w-full"

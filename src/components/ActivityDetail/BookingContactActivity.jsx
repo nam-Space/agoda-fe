@@ -8,11 +8,18 @@ import {
     Info,
 } from "lucide-react";
 import { useAppSelector } from "../../redux/hooks";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { formatCurrency } from "utils/formatCurrency";
 import { useSearchParams } from "react-router-dom";
-import { ServiceType, ServiceTypeLabel} from "../../constants/serviceType";
-import { getCountries, addBookingContact, getBookingDetail, getRoomDetail  } from "../../config/api";
+import { ServiceType, ServiceTypeLabel } from "../../constants/serviceType";
+import {
+    getCountries,
+    addBookingContact,
+    getBookingDetail,
+    getRoomDetail,
+    callFetchDetailActivityDateBooking,
+} from "../../config/api";
+import dayjs from "dayjs";
 
 export default function BookingContactActivity() {
     const navigate = useNavigate();
@@ -24,6 +31,7 @@ export default function BookingContactActivity() {
     const [countries, setCountries] = useState([]);
     const [booking, setBooking] = useState(null);
     const [room, setRoom] = useState(null);
+    const [activityDateBooking, setActivityDateBooking] = useState(null);
     const [loading, setLoading] = useState(true);
 
     const [formData, setFormData] = useState({
@@ -49,6 +57,15 @@ export default function BookingContactActivity() {
                     setRoom(roomResponse);
                 }
 
+                if (service_type === ServiceType.ACTIVITY && ref_id) {
+                    const res = await callFetchDetailActivityDateBooking(
+                        ref_id
+                    );
+                    if (res.isSuccess) {
+                        setActivityDateBooking(res.data);
+                    }
+                }
+
                 // Fetch countries
                 const countriesResponse = await getCountries();
                 setCountries(countriesResponse.data || []);
@@ -69,23 +86,35 @@ export default function BookingContactActivity() {
             full_name: `${formData.last_name} ${formData.first_name}`,
             email: formData.email,
             phone: formData.phone_number,
-            country: countries.find(c => c.calling_code === formData.countryCode)?.name || "",
+            country:
+                countries.find((c) => c.calling_code === formData.countryCode)
+                    ?.name || "",
             special_request: formData.special_request,
         };
         try {
             await addBookingContact(bookingId, { guest_info });
-            navigate(`/book/payment?booking_id=${bookingId}`);
+            navigate(
+                `/book/payment?booking_id=${bookingId}&type=${service_type}&ref=${ref_id}`
+            );
         } catch (err) {
             alert("Gửi thông tin liên lạc thất bại!");
         }
     };
 
     if (loading) {
-        return <div className="min-h-screen bg-gray-50 flex items-center justify-center">Đang tải...</div>;
+        return (
+            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+                Đang tải...
+            </div>
+        );
     }
 
     if (!booking) {
-        return <div className="min-h-screen bg-gray-50 flex items-center justify-center">Không tìm thấy thông tin đặt chỗ</div>;
+        return (
+            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+                Không tìm thấy thông tin đặt chỗ
+            </div>
+        );
     }
 
     const getPrice = () => {
@@ -227,14 +256,21 @@ export default function BookingContactActivity() {
                                                 onChange={(e) =>
                                                     setFormData({
                                                         ...formData,
-                                                        countryCode: e.target.value,
+                                                        countryCode:
+                                                            e.target.value,
                                                     })
                                                 }
                                                 className="w-full px-4 py-2.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none appearance-none"
                                             >
                                                 {countries.map((country) => (
-                                                    <option key={country.id} value={country.calling_code}>
-                                                        {country.name} ({country.calling_code})
+                                                    <option
+                                                        key={country.id}
+                                                        value={
+                                                            country.calling_code
+                                                        }
+                                                    >
+                                                        {country.name} (
+                                                        {country.calling_code})
                                                     </option>
                                                 ))}
                                             </select>
@@ -250,7 +286,8 @@ export default function BookingContactActivity() {
                                                 onChange={(e) =>
                                                     setFormData({
                                                         ...formData,
-                                                        phone_number: e.target.value,
+                                                        phone_number:
+                                                            e.target.value,
                                                     })
                                                 }
                                                 className="w-full px-4 py-2.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
@@ -283,11 +320,17 @@ export default function BookingContactActivity() {
                             <p className="text-sm text-gray-600">
                                 Thực hiện bước tiếp theo đồng nghĩa với việc quý
                                 khách chấp nhận tuân thủ theo:{" "}
-                                <a href="#" className="text-blue-600 hover:underline">
+                                <a
+                                    href="#"
+                                    className="text-blue-600 hover:underline"
+                                >
                                     Điều khoản Sử dụng
                                 </a>{" "}
                                 và{" "}
-                                <a href="#" className="text-blue-600 hover:underline">
+                                <a
+                                    href="#"
+                                    className="text-blue-600 hover:underline"
+                                >
                                     Chính sách Quyền riêng tư
                                 </a>{" "}
                                 của Agoda.
@@ -319,7 +362,9 @@ export default function BookingContactActivity() {
                                         </span>
                                     </div>
                                     <span className="font-semibold text-sm">
-                                        {ServiceTypeLabel[service_type].toUpperCase()}
+                                        {ServiceTypeLabel[
+                                            service_type
+                                        ].toUpperCase()}
                                     </span>
                                 </div>
 
@@ -328,62 +373,168 @@ export default function BookingContactActivity() {
                                 </div>
 
                                 {/* Room Card */}
-                                <div className="border border-gray-200 rounded-lg overflow-hidden mb-4">
-                                    <div className="flex gap-3 p-3">
-                                        <div className="relative w-20 h-20 flex-shrink-0 rounded-lg overflow-hidden">
-                                            <img
-                                                src={room?.images?.[0]?.image || "https://via.placeholder.com/80"}
-                                                className="w-full h-full object-cover"
-                                                alt={room?.room_type}
-                                            />
-                                        </div>
-                                        <div className="flex-1 min-w-0">
-                                            <h4 className="font-semibold text-sm text-gray-900 line-clamp-2 mb-1">
-                                                {room?.room_type || "Phòng"}
-                                            </h4>
-                                            <div className="flex items-center gap-1 text-xs">
-                                                <Star className="w-3 h-3 fill-orange-500 text-orange-500" />
-                                                <span className="font-semibold">4.5</span>
-                                                <span className="text-gray-500">1,000 bài đánh giá</span>
+                                {service_type === ServiceType.HOTEL && (
+                                    <div className="border border-gray-200 rounded-lg overflow-hidden mb-4">
+                                        <div className="flex gap-3 p-3">
+                                            <div className="relative w-20 h-20 flex-shrink-0 rounded-lg overflow-hidden">
+                                                <img
+                                                    src={
+                                                        room?.images?.[0]
+                                                            ?.image ||
+                                                        "https://via.placeholder.com/80"
+                                                    }
+                                                    className="w-full h-full object-cover"
+                                                    alt={room?.room_type}
+                                                />
                                             </div>
-                                        </div>
-                                    </div>
-
-                                    <div className="border-t border-gray-200 p-3 space-y-2">
-                                        <div className="flex items-center gap-2 text-sm">
-                                            <Calendar className="w-4 h-4 text-gray-500" />
-                                            <span>
-                                                {booking.hotel_detail?.check_in} &rarr; {booking.hotel_detail?.check_out}
-                                            </span>
-                                        </div>
-
-                                        <div className="text-sm">
-                                            <div className="font-semibold text-gray-900 mb-1">
-                                                {room?.room_type || "Phòng"}
-                                            </div>
-                                            <div className="text-gray-600 text-xs">
-                                                {getGuestSummary()}
+                                            <div className="flex-1 min-w-0">
+                                                <h4 className="font-semibold text-sm text-gray-900 line-clamp-2 mb-1">
+                                                    {room?.room_type || "Phòng"}
+                                                </h4>
+                                                <div className="flex items-center gap-1 text-xs">
+                                                    <Star className="w-3 h-3 fill-orange-500 text-orange-500" />
+                                                    <span className="font-semibold">
+                                                        4.5
+                                                    </span>
+                                                    <span className="text-gray-500">
+                                                        1,000 bài đánh giá
+                                                    </span>
+                                                </div>
                                             </div>
                                         </div>
 
-                                        <div className="flex items-start gap-2 text-xs pt-2">
-                                            <Zap className="w-3 h-3 text-yellow-500 flex-shrink-0 mt-0.5" />
-                                            <span className="text-gray-600">
-                                                Xác nhận ngay lập tức
-                                            </span>
-                                        </div>
-
-                                        <div className="flex items-start gap-2 text-xs">
-                                            <CheckCircle className="w-3 h-3 text-green-500 flex-shrink-0 mt-0.5" />
-                                            <div className="flex items-center gap-1">
-                                                <span className="text-gray-600">
-                                                    Đơn đặt hoàn đồng này không được hoàn tiền
+                                        <div className="border-t border-gray-200 p-3 space-y-2">
+                                            <div className="flex items-center gap-2 text-sm">
+                                                <Calendar className="w-4 h-4 text-gray-500" />
+                                                <span>
+                                                    {
+                                                        booking.hotel_detail
+                                                            ?.check_in
+                                                    }{" "}
+                                                    &rarr;{" "}
+                                                    {
+                                                        booking.hotel_detail
+                                                            ?.check_out
+                                                    }
                                                 </span>
-                                                <Info className="w-3 h-3 text-gray-400" />
+                                            </div>
+
+                                            <div className="text-sm">
+                                                <div className="font-semibold text-gray-900 mb-1">
+                                                    {room?.room_type || "Phòng"}
+                                                </div>
+                                                <div className="text-gray-600 text-xs">
+                                                    {getGuestSummary()}
+                                                </div>
+                                            </div>
+
+                                            <div className="flex items-start gap-2 text-xs pt-2">
+                                                <Zap className="w-3 h-3 text-yellow-500 flex-shrink-0 mt-0.5" />
+                                                <span className="text-gray-600">
+                                                    Xác nhận ngay lập tức
+                                                </span>
+                                            </div>
+
+                                            <div className="flex items-start gap-2 text-xs">
+                                                <CheckCircle className="w-3 h-3 text-green-500 flex-shrink-0 mt-0.5" />
+                                                <div className="flex items-center gap-1">
+                                                    <span className="text-gray-600">
+                                                        Đơn đặt hoàn đồng này
+                                                        không được hoàn tiền
+                                                    </span>
+                                                    <Info className="w-3 h-3 text-gray-400" />
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
+                                )}
+                                {service_type === ServiceType.ACTIVITY && (
+                                    <div className="border border-gray-200 rounded-lg overflow-hidden mb-4">
+                                        <div className="flex gap-3 p-3">
+                                            <div className="relative w-20 h-20 flex-shrink-0 rounded-lg overflow-hidden">
+                                                <img
+                                                    src={`${process.env.REACT_APP_BE_URL}${activityDateBooking?.activity_image}`}
+                                                    className="w-full h-full object-cover"
+                                                />
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <h4 className="font-semibold text-sm text-gray-900 line-clamp-2 mb-1">
+                                                    {
+                                                        activityDateBooking?.activity_name
+                                                    }
+                                                </h4>
+                                                <div className="flex items-center gap-1 text-xs">
+                                                    <Star className="w-3 h-3 fill-orange-500 text-orange-500" />
+
+                                                    <span className="font-semibold">
+                                                        {
+                                                            activityDateBooking?.avg_star
+                                                        }
+                                                    </span>
+                                                    <span className="text-gray-500">
+                                                        1,128 bài đánh giá
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="border-t border-gray-200 p-3 space-y-2">
+                                            <div className="flex items-center gap-2 text-sm">
+                                                <Calendar className="w-4 h-4 text-gray-500" />
+                                                <span>
+                                                    {dayjs(
+                                                        activityDateBooking?.date_launch
+                                                    ).format("YYYY-MM-DD")}
+                                                </span>
+                                            </div>
+
+                                            <div className="text-sm">
+                                                <div className="font-semibold text-gray-900 mb-1">
+                                                    {
+                                                        activityDateBooking?.activity_package_name
+                                                    }
+                                                </div>
+                                                {activityDateBooking?.adult_quantity_booking >
+                                                    0 && (
+                                                    <div className="text-gray-600 text-xs">
+                                                        {
+                                                            activityDateBooking?.adult_quantity_booking
+                                                        }{" "}
+                                                        người lớn
+                                                    </div>
+                                                )}
+
+                                                {activityDateBooking?.child_quantity_booking >
+                                                    0 && (
+                                                    <div className="text-gray-600 text-xs">
+                                                        {
+                                                            activityDateBooking?.child_quantity_booking
+                                                        }{" "}
+                                                        trẻ em
+                                                    </div>
+                                                )}
+                                            </div>
+
+                                            <div className="flex items-start gap-2 text-xs pt-2">
+                                                <Zap className="w-3 h-3 text-yellow-500 flex-shrink-0 mt-0.5" />
+                                                <span className="text-gray-600">
+                                                    Xác nhận ngay lập tức
+                                                </span>
+                                            </div>
+
+                                            <div className="flex items-start gap-2 text-xs">
+                                                <CheckCircle className="w-3 h-3 text-green-500 flex-shrink-0 mt-0.5" />
+                                                <div className="flex items-center gap-1">
+                                                    <span className="text-gray-600">
+                                                        Đơn đặt hoàn đồng này
+                                                        không được hoàn tiền
+                                                    </span>
+                                                    <Info className="w-3 h-3 text-gray-400" />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
 
                                 <button className="text-blue-600 text-sm font-semibold hover:underline">
                                     Xem thêm
@@ -403,7 +554,13 @@ export default function BookingContactActivity() {
                                                 {room?.room_type || "Phòng"}
                                             </div>
                                             <div className="text-gray-500 text-xs">
-                                                {booking.hotel_detail?.check_in} - {booking.hotel_detail?.check_out} | {getGuestSummary()}
+                                                {booking.hotel_detail?.check_in}{" "}
+                                                -{" "}
+                                                {
+                                                    booking.hotel_detail
+                                                        ?.check_out
+                                                }{" "}
+                                                | {getGuestSummary()}
                                             </div>
                                         </div>
                                         <div className="font-semibold text-gray-900 whitespace-nowrap ml-4">

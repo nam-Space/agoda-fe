@@ -235,10 +235,10 @@ export default function ActivityDetail() {
 
             const body = {
                 service_type: SERVICE_TYPE.ACTIVITY,
-                service_ref_id: getActivityDate(
-                    selectedTickerOption,
-                    selectedIndexTicket
-                ).id,
+                // service_ref_id: getActivityDate(
+                //     selectedTickerOption,
+                //     selectedIndexTicket
+                // ).id,
                 total_price: getPrice(
                     selectedTickerOption,
                     selectedIndexTicket
@@ -273,22 +273,24 @@ export default function ActivityDetail() {
             // console.log("body", body);
 
             const res = await callBook(body);
-            navigate(
-                `/book?booking_id=${res.booking_id}&type=${body.service_type}&ref=${body.service_ref_id}`,
-                {
-                    state: {
-                        activity,
-                        activity_date: {
-                            ...selectedTickerOption,
+            if (res.isSuccess) {
+                navigate(
+                    `/book?booking_id=${res.booking_id}&type=${body.service_type}&ref=${res.data.id}`,
+                    {
+                        state: {
+                            activity,
+                            activity_date: {
+                                ...selectedTickerOption,
+                            },
+                            adult_quantity_booking:
+                                adultTickets[selectedIndexTicket],
+                            child_quantity_booking:
+                                childTickets[selectedIndexTicket],
+                            date_launch: dateTickets[selectedIndexTicket],
                         },
-                        adult_quantity_booking:
-                            adultTickets[selectedIndexTicket],
-                        child_quantity_booking:
-                            childTickets[selectedIndexTicket],
-                        date_launch: dateTickets[selectedIndexTicket],
-                    },
-                }
-            );
+                    }
+                );
+            }
         } catch (e) {
             toast.error(e.message, {
                 position: "bottom-right",

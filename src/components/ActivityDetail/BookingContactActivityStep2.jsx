@@ -11,15 +11,32 @@ import {
 import { useSearchParams } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import { formatCurrency } from "utils/formatCurrency";
-import { ServiceType, ServiceTypeLabel, PaymentMethod, PaymentMethodLabel,} from "../../constants/serviceType";
-import {getBookingDetail, getRoomDetail,createPayment,payWithStripe,confirmCashPayment,getPayment} from "../../config/api";
+import {
+    ServiceType,
+    ServiceTypeLabel,
+    PaymentMethod,
+    PaymentMethodLabel,
+} from "../../constants/serviceType";
+import {
+    getBookingDetail,
+    getRoomDetail,
+    createPayment,
+    payWithStripe,
+    confirmCashPayment,
+    getPayment,
+    callFetchDetailActivityDateBooking,
+} from "../../config/api";
+import dayjs from "dayjs";
 
 export default function BookingContactActivityStep2() {
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
     const bookingId = searchParams.get("booking_id");
     const [booking, setBooking] = useState(null);
+    const service_type = Number(searchParams.get("type"));
+    const ref_id = searchParams.get("ref");
     const [room, setRoom] = useState(null);
+    const [activityDateBooking, setActivityDateBooking] = useState(null);
     const [paymentMethod, setPaymentMethod] = useState(PaymentMethod.ONLINE);
     const [loading, setLoading] = useState(true);
     const [paymentId, setPaymentId] = useState(null);
@@ -34,10 +51,20 @@ export default function BookingContactActivityStep2() {
 
                 // Lấy thông tin phòng
                 if (bookingResponse.service_type === ServiceType.HOTEL) {
-                    const roomResponse = await getRoomDetail(bookingResponse.service_ref_id);
+                    const roomResponse = await getRoomDetail(
+                        bookingResponse.service_ref_id
+                    );
                     setRoom(roomResponse);
                 }
 
+                if (bookingResponse.service_type === ServiceType.ACTIVITY) {
+                    const res = await callFetchDetailActivityDateBooking(
+                        bookingResponse.service_ref_id
+                    );
+                    if (res.isSuccess) {
+                        setActivityDateBooking(res.data);
+                    }
+                }
             } catch (error) {
                 console.error("Lỗi khi tải dữ liệu:", error);
                 alert("Không thể tải thông tin đặt chỗ hoặc tạo thanh toán!");
@@ -53,8 +80,8 @@ export default function BookingContactActivityStep2() {
     }, [bookingId]);
 
     const handleNextStep = async () => {
-        const successUrl = `${window.location.origin}/book/confirmation?isSuccess=true&booking_id=${bookingId}`;
-        const cancelUrl = `${window.location.origin}/book/confirmation?isSuccess=false&booking_id=${bookingId}`;
+        const successUrl = `${window.location.origin}/book/confirmation?isSuccess=true&booking_id=${bookingId}&type=${service_type}&ref=${ref_id}`;
+        const cancelUrl = `${window.location.origin}/book/confirmation?isSuccess=false&booking_id=${bookingId}&type=${service_type}&ref=${ref_id}`;
         if (!bookingId) {
             alert("Không tìm thấy booking!");
             return;
@@ -74,7 +101,7 @@ export default function BookingContactActivityStep2() {
                     method: paymentMethod, // 1 = Online, 2 = Cash
                     amount: booking.total_price,
                 });
-                payment = paymentResponse
+                payment = paymentResponse;
             }
 
             const paymentId = payment.id; // cập nhật id
@@ -97,9 +124,9 @@ export default function BookingContactActivityStep2() {
                 const result = await confirmCashPayment(paymentId);
                 // Giả sử API confirmCashPayment trả về { success: true/false }
                 if (result.success) {
-                   window.location.href = successUrl;
+                    window.location.href = successUrl;
                 } else {
-                   window.location.href = cancelUrl;
+                    window.location.href = cancelUrl;
                 }
             }
         } catch (error) {
@@ -108,20 +135,29 @@ export default function BookingContactActivityStep2() {
         }
     };
 
-
     if (loading) {
-        return <div className="min-h-screen bg-gray-50 flex items-center justify-center">Đang tải...</div>;
+        return (
+            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+                Đang tải...
+            </div>
+        );
     }
 
-    if (!booking || !room) {
-        return <div className="min-h-screen bg-gray-50 flex items-center justify-center">Không tìm thấy thông tin đặt chỗ hoặc phòng</div>;
+    if (!booking) {
+        return (
+            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+                Không tìm thấy thông tin đặt chỗ
+            </div>
+        );
     }
 
     const getPrice = () => Number(booking.total_price) || 0;
 
     const getGuestSummary = () => {
         const numGuests = booking.hotel_detail?.num_guests || 0;
-        return numGuests > 0 ? `${numGuests} khách` : "Không có thông tin số lượng khách";
+        return numGuests > 0
+            ? `${numGuests} khách`
+            : "Không có thông tin số lượng khách";
     };
 
     return (
@@ -174,24 +210,38 @@ export default function BookingContactActivityStep2() {
                                     <input
                                         type="radio"
                                         name="payment"
-                                        checked={paymentMethod === PaymentMethod.ONLINE}
-                                        onChange={() => setPaymentMethod(PaymentMethod.ONLINE)}
-                                        className="w-5 h-5 accent-white cursor-pointer"
+                                        checked={
+                                            paymentMethod ===
+                                            PaymentMethod.ONLINE
+                                        }
+                                        onChange={() =>
+                                            setPaymentMethod(
+                                                PaymentMethod.ONLINE
+                                            )
+                                        }
+                                        className="w-5 h-5 cursor-pointer"
                                     />
                                     <span className="text-white font-semibold">
-                                        {PaymentMethodLabel[PaymentMethod.ONLINE]}
+                                        {
+                                            PaymentMethodLabel[
+                                                PaymentMethod.ONLINE
+                                            ]
+                                        }
                                     </span>
                                 </div>
                                 <div className="flex items-center gap-2">
                                     <div className="bg-white rounded px-2 py-1">
-                                        <span className="text-blue-600 font-bold text-xs">Stripe</span>
+                                        <span className="text-blue-600 font-bold text-xs">
+                                            Stripe
+                                        </span>
                                     </div>
                                 </div>
                             </div>
                             {paymentMethod === PaymentMethod.ONLINE && (
                                 <div className="p-6">
                                     <p className="text-sm text-gray-600">
-                                        Quý khách sẽ sớm hoàn tất thanh toán an toàn bằng Stripe.
+                                        Quý khách sẽ sớm hoàn tất thanh toán an
+                                        toàn bằng Stripe.
                                     </p>
                                 </div>
                             )}
@@ -204,9 +254,13 @@ export default function BookingContactActivityStep2() {
                                     <input
                                         type="radio"
                                         name="payment"
-                                        checked={paymentMethod === PaymentMethod.CASH}
-                                        onChange={() => setPaymentMethod(PaymentMethod.CASH)}
-                                        className="w-5 h-5 accent-white cursor-pointer"
+                                        checked={
+                                            paymentMethod === PaymentMethod.CASH
+                                        }
+                                        onChange={() =>
+                                            setPaymentMethod(PaymentMethod.CASH)
+                                        }
+                                        className="w-5 h-5 cursor-pointer"
                                     />
                                     <span className="text-white font-semibold">
                                         {PaymentMethodLabel[PaymentMethod.CASH]}
@@ -216,7 +270,8 @@ export default function BookingContactActivityStep2() {
                             {paymentMethod === PaymentMethod.CASH && (
                                 <div className="p-6">
                                     <p className="text-sm text-gray-600">
-                                        Quý khách sẽ thanh toán trực tiếp với nhà cung cấp.
+                                        Quý khách sẽ thanh toán trực tiếp với
+                                        nhà cung cấp.
                                     </p>
                                 </div>
                             )}
@@ -230,7 +285,8 @@ export default function BookingContactActivityStep2() {
                             <p className="text-sm text-blue-900">
                                 Chúng tôi sẽ gửi xác nhận đặt phòng đến{" "}
                                 <span className="font-semibold">
-                                    {booking.guest_info?.email || "email khách hàng"}
+                                    {booking.guest_info?.email ||
+                                        "email khách hàng"}
                                 </span>
                             </p>
                         </div>
@@ -256,61 +312,187 @@ export default function BookingContactActivityStep2() {
                                     Tóm tắt đơn đặt
                                 </h3>
 
+                                {/* Service Type Badge */}
                                 <div className="flex items-center gap-2 mb-3">
                                     <div className="w-6 h-6 bg-gray-900 rounded flex items-center justify-center">
-                                        <span className="text-white text-xs">🏨</span>
+                                        <span className="text-white text-xs">
+                                            🏨
+                                        </span>
                                     </div>
                                     <span className="font-semibold text-sm">
-                                        {ServiceTypeLabel[booking.service_type].toUpperCase()}
+                                        {ServiceTypeLabel[
+                                            service_type
+                                        ].toUpperCase()}
                                     </span>
                                 </div>
 
-                                <div className="border border-gray-200 rounded-lg overflow-hidden mb-4">
-                                    <div className="flex gap-3 p-3">
-                                        <img
-                                            src={room?.images?.[0]?.image || "https://via.placeholder.com/80"}
-                                            alt={room?.room_type}
-                                            className="w-20 h-20 object-cover rounded-lg"
-                                        />
-                                        <div className="flex-1">
-                                            <h4 className="font-semibold text-sm text-gray-900 mb-1">
-                                                {room?.room_type || "Phòng"}
-                                            </h4>
-                                            <div className="flex items-center gap-1 text-xs">
-                                                <Star className="w-3 h-3 fill-orange-500 text-orange-500" />
-                                                <span className="font-semibold">4.7</span>
-                                                <span className="text-gray-500">(1.128 đánh giá)</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div className="border-t border-gray-200 p-3 space-y-2">
-                                        <div className="flex items-center gap-2 text-sm">
-                                            <Calendar className="w-4 h-4 text-gray-500" />
-                                            <span>
-                                                {booking.hotel_detail?.check_in} &rarr; {booking.hotel_detail?.check_out}
-                                            </span>
-                                        </div>
-                                        <div className="text-sm">
-                                            <div className="font-semibold text-gray-900 mb-1">
-                                                {room?.room_type || "Phòng"}
-                                            </div>
-                                            <div className="text-gray-600 text-xs">{getGuestSummary()}</div>
-                                        </div>
-                                        <div className="flex items-start gap-2 text-xs pt-2">
-                                            <Zap className="w-3 h-3 text-yellow-500 flex-shrink-0 mt-0.5" />
-                                            <span className="text-gray-600">Xác nhận ngay lập tức</span>
-                                        </div>
-                                        <div className="flex items-start gap-2 text-xs">
-                                            <CheckCircle className="w-3 h-3 text-green-500 flex-shrink-0 mt-0.5" />
-                                            <div className="flex items-center gap-1">
-                                                <span className="text-gray-600">
-                                                    Đơn đặt này không được hoàn tiền
-                                                </span>
-                                                <Info className="w-3 h-3 text-gray-400" />
-                                            </div>
-                                        </div>
-                                    </div>
+                                <div className="bg-red-50 text-red-600 text-xs font-semibold px-2 py-1 rounded inline-block mb-3">
+                                    0% giảm giá
                                 </div>
+
+                                {/* Room Card */}
+                                {service_type === ServiceType.HOTEL && (
+                                    <div className="border border-gray-200 rounded-lg overflow-hidden mb-4">
+                                        <div className="flex gap-3 p-3">
+                                            <div className="relative w-20 h-20 flex-shrink-0 rounded-lg overflow-hidden">
+                                                <img
+                                                    src={
+                                                        room?.images?.[0]
+                                                            ?.image ||
+                                                        "https://via.placeholder.com/80"
+                                                    }
+                                                    className="w-full h-full object-cover"
+                                                    alt={room?.room_type}
+                                                />
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <h4 className="font-semibold text-sm text-gray-900 line-clamp-2 mb-1">
+                                                    {room?.room_type || "Phòng"}
+                                                </h4>
+                                                <div className="flex items-center gap-1 text-xs">
+                                                    <Star className="w-3 h-3 fill-orange-500 text-orange-500" />
+                                                    <span className="font-semibold">
+                                                        4.5
+                                                    </span>
+                                                    <span className="text-gray-500">
+                                                        1,000 bài đánh giá
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="border-t border-gray-200 p-3 space-y-2">
+                                            <div className="flex items-center gap-2 text-sm">
+                                                <Calendar className="w-4 h-4 text-gray-500" />
+                                                <span>
+                                                    {
+                                                        booking.hotel_detail
+                                                            ?.check_in
+                                                    }{" "}
+                                                    &rarr;{" "}
+                                                    {
+                                                        booking.hotel_detail
+                                                            ?.check_out
+                                                    }
+                                                </span>
+                                            </div>
+
+                                            <div className="text-sm">
+                                                <div className="font-semibold text-gray-900 mb-1">
+                                                    {room?.room_type || "Phòng"}
+                                                </div>
+                                                <div className="text-gray-600 text-xs">
+                                                    {getGuestSummary()}
+                                                </div>
+                                            </div>
+
+                                            <div className="flex items-start gap-2 text-xs pt-2">
+                                                <Zap className="w-3 h-3 text-yellow-500 flex-shrink-0 mt-0.5" />
+                                                <span className="text-gray-600">
+                                                    Xác nhận ngay lập tức
+                                                </span>
+                                            </div>
+
+                                            <div className="flex items-start gap-2 text-xs">
+                                                <CheckCircle className="w-3 h-3 text-green-500 flex-shrink-0 mt-0.5" />
+                                                <div className="flex items-center gap-1">
+                                                    <span className="text-gray-600">
+                                                        Đơn đặt hoàn đồng này
+                                                        không được hoàn tiền
+                                                    </span>
+                                                    <Info className="w-3 h-3 text-gray-400" />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+                                {service_type === ServiceType.ACTIVITY && (
+                                    <div className="border border-gray-200 rounded-lg overflow-hidden mb-4">
+                                        <div className="flex gap-3 p-3">
+                                            <div className="relative w-20 h-20 flex-shrink-0 rounded-lg overflow-hidden">
+                                                <img
+                                                    src={`${process.env.REACT_APP_BE_URL}${activityDateBooking?.activity_image}`}
+                                                    className="w-full h-full object-cover"
+                                                />
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <h4 className="font-semibold text-sm text-gray-900 line-clamp-2 mb-1">
+                                                    {
+                                                        activityDateBooking?.activity_name
+                                                    }
+                                                </h4>
+                                                <div className="flex items-center gap-1 text-xs">
+                                                    <Star className="w-3 h-3 fill-orange-500 text-orange-500" />
+
+                                                    <span className="font-semibold">
+                                                        {
+                                                            activityDateBooking?.avg_star
+                                                        }
+                                                    </span>
+                                                    <span className="text-gray-500">
+                                                        1,128 bài đánh giá
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="border-t border-gray-200 p-3 space-y-2">
+                                            <div className="flex items-center gap-2 text-sm">
+                                                <Calendar className="w-4 h-4 text-gray-500" />
+                                                <span>
+                                                    {dayjs(
+                                                        activityDateBooking?.date_launch
+                                                    ).format("YYYY-MM-DD")}
+                                                </span>
+                                            </div>
+
+                                            <div className="text-sm">
+                                                <div className="font-semibold text-gray-900 mb-1">
+                                                    {
+                                                        activityDateBooking?.activity_package_name
+                                                    }
+                                                </div>
+                                                {activityDateBooking?.adult_quantity_booking >
+                                                    0 && (
+                                                    <div className="text-gray-600 text-xs">
+                                                        {
+                                                            activityDateBooking?.adult_quantity_booking
+                                                        }{" "}
+                                                        người lớn
+                                                    </div>
+                                                )}
+
+                                                {activityDateBooking?.child_quantity_booking >
+                                                    0 && (
+                                                    <div className="text-gray-600 text-xs">
+                                                        {
+                                                            activityDateBooking?.child_quantity_booking
+                                                        }{" "}
+                                                        trẻ em
+                                                    </div>
+                                                )}
+                                            </div>
+
+                                            <div className="flex items-start gap-2 text-xs pt-2">
+                                                <Zap className="w-3 h-3 text-yellow-500 flex-shrink-0 mt-0.5" />
+                                                <span className="text-gray-600">
+                                                    Xác nhận ngay lập tức
+                                                </span>
+                                            </div>
+
+                                            <div className="flex items-start gap-2 text-xs">
+                                                <CheckCircle className="w-3 h-3 text-green-500 flex-shrink-0 mt-0.5" />
+                                                <div className="flex items-center gap-1">
+                                                    <span className="text-gray-600">
+                                                        Đơn đặt hoàn đồng này
+                                                        không được hoàn tiền
+                                                    </span>
+                                                    <Info className="w-3 h-3 text-gray-400" />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
 
                                 <div className="flex justify-between items-center pt-3 border-t border-gray-200">
                                     <span className="font-semibold text-gray-900">
