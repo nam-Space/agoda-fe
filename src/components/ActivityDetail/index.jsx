@@ -234,6 +234,7 @@ export default function ActivityDetail() {
             // });
 
             const body = {
+                user: user?.id,
                 service_type: SERVICE_TYPE.ACTIVITY,
                 // service_ref_id: getActivityDate(
                 //     selectedTickerOption,

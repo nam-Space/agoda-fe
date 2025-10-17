@@ -54,7 +54,9 @@ export default function BookingContactActivityStep2() {
                     const roomResponse = await getRoomDetail(
                         bookingResponse.service_ref_id
                     );
-                    setRoom(roomResponse);
+                    if (roomResponse.isSuccess) {
+                        setRoom(roomResponse.data);
+                    }
                 }
 
                 if (bookingResponse.service_type === ServiceType.ACTIVITY) {
@@ -336,11 +338,7 @@ export default function BookingContactActivityStep2() {
                                         <div className="flex gap-3 p-3">
                                             <div className="relative w-20 h-20 flex-shrink-0 rounded-lg overflow-hidden">
                                                 <img
-                                                    src={
-                                                        room?.images?.[0]
-                                                            ?.image ||
-                                                        "https://via.placeholder.com/80"
-                                                    }
+                                                    src={`${process.env.REACT_APP_BE_URL}${room?.images?.[0]?.image}`}
                                                     className="w-full h-full object-cover"
                                                     alt={room?.room_type}
                                                 />
@@ -352,7 +350,7 @@ export default function BookingContactActivityStep2() {
                                                 <div className="flex items-center gap-1 text-xs">
                                                     <Star className="w-3 h-3 fill-orange-500 text-orange-500" />
                                                     <span className="font-semibold">
-                                                        4.5
+                                                        {room?.hotel?.avg_star}
                                                     </span>
                                                     <span className="text-gray-500">
                                                         1,000 bài đánh giá
