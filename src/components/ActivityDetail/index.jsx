@@ -234,6 +234,7 @@ export default function ActivityDetail() {
             // });
 
             const body = {
+                user: user?.id,
                 service_type: SERVICE_TYPE.ACTIVITY,
                 // service_ref_id: getActivityDate(
                 //     selectedTickerOption,
@@ -775,8 +776,8 @@ export default function ActivityDetail() {
                                     return (
                                         <SwiperSlide key={index}>
                                             <div className="rounded-[16px] overflow-hidden border-[1px] border-[#d5d9e2]">
-                                                <Link
-                                                    to={`/activity/detail/${item.id}`}
+                                                <a
+                                                    href={`/activity/detail/${item.id}`}
                                                 >
                                                     <img
                                                         src={`${process.env.REACT_APP_BE_URL}${item.images[0].image}`}
@@ -842,7 +843,7 @@ export default function ActivityDetail() {
                                                             </div>
                                                         </div>
                                                     </div>
-                                                </Link>
+                                                </a>
                                             </div>
                                         </SwiperSlide>
                                     );

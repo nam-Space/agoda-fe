@@ -56,7 +56,9 @@ export default function BookingContactActivityStep3() {
                     const roomResponse = await getRoomDetail(
                         bookingResponse.service_ref_id
                     );
-                    setRoom(roomResponse);
+                    if (roomResponse.isSuccess) {
+                        setRoom(roomResponse.data);
+                    }
                 }
 
                 if (bookingResponse.service_type === ServiceType.ACTIVITY) {
@@ -241,24 +243,22 @@ export default function BookingContactActivityStep3() {
                                 <div className="flex gap-4 mb-6 pb-6 border-b">
                                     <div className="relative w-32 h-32 rounded-lg overflow-hidden flex-shrink-0">
                                         <img
-                                            src={
-                                                room.images?.[0]?.image ||
-                                                "https://via.placeholder.com/150"
-                                            }
-                                            alt={room.room_type}
+                                            src={`${process.env.REACT_APP_BE_URL}${room?.images?.[0]?.image}`}
+                                            alt={room?.room_type}
                                             className="object-cover w-full h-full"
                                         />
                                     </div>
                                     <div className="flex-1">
                                         <h3 className="font-bold text-gray-900 mb-2">
-                                            {room.room_type} - Phòng khách sạn
+                                            {room?.room_type} -{" "}
+                                            {room?.hotel?.name}
                                         </h3>
                                         <div className="flex items-center gap-1 text-sm mb-2">
                                             <span className="text-yellow-500">
                                                 ★
                                             </span>
                                             <span className="font-semibold">
-                                                4.7
+                                                {room?.hotel?.avg_star}
                                             </span>
                                             <span className="text-gray-500">
                                                 (1,128 bài đánh giá)
@@ -266,8 +266,7 @@ export default function BookingContactActivityStep3() {
                                         </div>
                                         <p className="text-sm text-gray-600">
                                             <MapPin className="w-4 h-4 inline mr-1" />
-                                            {room.description ||
-                                                "Phòng view biển"}
+                                            {room?.description}
                                         </p>
                                     </div>
                                 </div>
@@ -553,7 +552,8 @@ export default function BookingContactActivityStep3() {
                                 <div className="space-y-3 mb-4 pb-4 border-b">
                                     <div>
                                         <p className="text-sm text-gray-900 mb-1">
-                                            {room.room_type} - Phòng khách sạn
+                                            {room?.room_type} -{" "}
+                                            {room?.hotel?.name}
                                         </p>
                                         <p className="text-xs text-gray-500">
                                             {booking.hotel_detail?.check_in} -{" "}

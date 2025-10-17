@@ -74,7 +74,7 @@ const HomeOverviewSection = ({
                 </div>
 
 
-            {/* Room and Space Section */}
+            {/* Room and Space Section
             <div className="room-space-section mb-6">
                 <h2 className="text-lg font-bold text-gray-800 mb-4">Không gian & phòng</h2>
                 <div className="grid grid-cols-3 gap-4">
@@ -85,7 +85,7 @@ const HomeOverviewSection = ({
                             </div>
                         ))}
                 </div>
-            </div>
+            </div> */}
 
             {/* Promotion Section */}
             <div className="new-section bg-white border border-gray-300 rounded-lg p-4 mt-6">

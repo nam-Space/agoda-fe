@@ -1,30 +1,41 @@
-import HostProfilePopup from 'components/Hotel/HostProfilePopup';
-import avatar from 'images/hotel/ic_avatar.png'; // giả sử có sẵn avatar
-import { useState } from 'react';
+import HostProfilePopup from "components/Hotel/HostProfilePopup";
+import { useState } from "react";
 
-export default function HostProfileLink() {
+export default function HostProfileLink({ host }) {
   const [showModal, setShowModal] = useState(false);
+
+  if (!host) return null; // ✅ tránh lỗi nếu chưa có host
+if (!host || Object.keys(host).length === 0) {
+    return (
+      <div className="border rounded-lg p-4 bg-gray-50 text-gray-500 text-sm text-center shadow-sm">
+        Thông tin chủ nhà hiện không khả dụng.
+      </div>
+    );
+  }
+  const avatarSrc = host.avatar || "/images/hotel/ic_avatar.png";
 
   return (
     <>
-      <div className="border rounded-lg p-4 h-full flex flex-col justify-between">
+      <div className="border rounded-lg p-4 h-full flex flex-col justify-between shadow-sm bg-white">
         <div>
           <div className="flex items-center gap-3 mb-3">
             <img
-              src={avatar}
+              src={avatarSrc}
               alt="Host avatar"
               className="w-12 h-12 rounded-full object-cover"
             />
             <div>
-              <p className="font-semibold text-base">Hosted by Uyen Tran</p>
+              <p className="font-semibold text-base">
+                {`Chủ nhà: ${host.name}`}
+              </p>
               <p className="text-green-600 text-sm font-medium">
-                🏆 8.4 Máy chủ được đánh giá cao
+                🏆 {host.rating || "Chưa có"} • Máy chủ được đánh giá cao
               </p>
             </div>
           </div>
-
+n
           <p className="text-sm text-gray-600 mb-2">
-            4 bất động sản • 392 đánh giá
+            {host.properties || 0} bất động sản • {host.reviews || 0} đánh giá
           </p>
         </div>
 
@@ -36,7 +47,12 @@ export default function HostProfileLink() {
         </button>
       </div>
 
-      {showModal && <HostProfilePopup onClose={() => setShowModal(false)} />}
+      {showModal && (
+        <HostProfilePopup
+          onClose={() => setShowModal(false)}
+          host={host}
+        />
+      )}
     </>
   );
 }

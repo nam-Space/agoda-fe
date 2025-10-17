@@ -95,7 +95,7 @@ const transformHotelData = (apiHotel) => {
         rating: apiHotel.avg_star?.toFixed(1) || "N/A",
         ratingText: getRatingText(apiHotel.avg_star || 0),
         ratingCount: Math.floor(Math.random() * 1000) + 100,
-        price: "Liên hệ",
+        price: "" + (apiHotel.min_price || 0).toLocaleString("vi-VN") + " đ",
         url: `/hotel/${createHotelSlug(apiHotel.name, apiHotel.id)}`,
         cityName: apiHotel.city?.name || "",
         point: apiHotel.point || 0,
