@@ -1,10 +1,25 @@
-import React, { useState } from "react";
-import { FaStar } from "react-icons/fa";
 import { EnvironmentOutlined } from "@ant-design/icons";
+import { useState } from "react";
+import { FaStar } from "react-icons/fa";
 import { Link } from "react-router-dom";
 
 const HotelCard = ({ hotel }) => {
   const [showFullReview, setShowFullReview] = useState(false);
+
+  //  const displayPrice =
+  //   hotel?.min_price && !isNaN(hotel.min_price)
+  //     ? Number(hotel.min_price).toLocaleString("vi-VN") + " VND"
+  //     : "Liên hệ";
+
+  const price = Number(hotel?.min_price);
+
+const displayPrice = !isNaN(price) && price > 0
+  ? (price % 1 === 0
+      ? price.toLocaleString("vi-VN")
+      : price.toLocaleString("vi-VN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+    ) + " VND"
+  : "Liên hệ";
+
 
   return (
     <div className="flex bg-white rounded-xl shadow p-4 mb-4 hover:shadow-lg transition-shadow cursor-pointer">
@@ -140,7 +155,7 @@ const HotelCard = ({ hotel }) => {
         
         <div className="mt-4 text-right">
           <div className="text-xs text-gray-500">Giá trung bình mỗi đêm</div>
-          <div className="font-bold text-red-600 text-2xl">{hotel.price}</div>
+          <div className="font-bold text-red-600 text-2xl">{displayPrice}</div>
         </div>
         
         {/* Thay đổi thành Link thay vì external link */}

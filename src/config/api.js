@@ -15,6 +15,11 @@ export const callRegister = (data) => {
     });
 };
 
+// Fetch amenities của 1 phòng
+export const callFetchAmenities = (roomId) => {
+    return axios.get(`/api/rooms/rooms/${roomId}/amenities/`);
+};
+
 export const callGetAccount = (config) => {
     return axios.get(`/api/accounts/profile/`, config);
 }
@@ -295,3 +300,7 @@ export const callFetchRoomQuery = (query) => {
 export const callGetRoomDetail = (roomId) => {
     return axios.get(`/api/rooms/rooms/${roomId}/`);
 };
+
+export const callSearchRoomQuery = (query) => {
+    return axios.get(`/api/rooms/rooms/search/?${query}`);
+}

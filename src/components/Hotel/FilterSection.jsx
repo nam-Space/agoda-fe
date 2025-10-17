@@ -1,117 +1,176 @@
-import React, { useState } from 'react';
-import { Tune } from '@mui/icons-material';
+import { Tune } from "@mui/icons-material";
+import { useEffect, useState } from "react";
+import { callFetchAmenities, callFetchRoomQuery } from "../../config/api";
 
-const FilterSection = () => {
-    const [showMoreFilters, setShowMoreFilters] = useState(false); // State to toggle additional filters
-    const [selectedFilters, setSelectedFilters] = useState([]); // State to track selected filters
+const FilterSection = ({ hotelId, onFilterChange }) => {
+  const [showMoreFilters, setShowMoreFilters] = useState(false);
+  const [selectedFilters, setSelectedFilters] = useState([]);
+  const [amenities, setAmenities] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-    const toggleShowMoreFilters = () => {
-        setShowMoreFilters(!showMoreFilters); // Toggle between showing more filters and hiding them
+  // 🔹 Gọi API để lấy tiện ích từ toàn bộ phòng của khách sạn
+  useEffect(() => {
+    if (!hotelId) return;
+
+    const fetchAllAmenities = async () => {
+      setLoading(true);
+      try {
+        // 1️⃣ Lấy danh sách phòng theo hotel_id
+        const resRooms = await callFetchRoomQuery(`hotel_id=${hotelId}`);
+        const rooms = resRooms?.data || [];
+
+        console.log("📦 Danh sách phòng:", rooms);
+
+        // 2️⃣ Gọi song song các API tiện nghi của từng phòng
+        const amenitySet = new Set(); // dùng để tránh trùng tên tiện nghi
+        const allAmenities = [];
+
+        await Promise.all(
+          rooms.map(async (room) => {
+            const resAmen = await callFetchAmenities(room.id);
+            const raw = resAmen?.data || resAmen;
+
+            let amenList = [];
+            if (Array.isArray(raw?.results)) {
+              amenList = raw.results;
+            } else if (Array.isArray(raw)) {
+              amenList = raw;
+            } else if (raw && typeof raw === "object" && raw.id) {
+              amenList = [raw];
+            }
+
+            amenList.forEach((a) => {
+              if (a?.name && !amenitySet.has(a.name)) {
+                amenitySet.add(a.name);
+                allAmenities.push(a);
+              }
+            });
+          })
+        );
+
+        console.log("✅ Tiện ích hợp nhất:", allAmenities);
+        setAmenities(allAmenities);
+      } catch (err) {
+        console.error("🔥 Lỗi khi tải tiện nghi:", err);
+        setAmenities([]);
+      } finally {
+        setLoading(false);
+      }
     };
 
-    const toggleFilterSelection = (filter) => {
-        if (selectedFilters.includes(filter)) {
-            setSelectedFilters(selectedFilters.filter((item) => item !== filter)); // Remove filter if already selected
-        } else {
-            setSelectedFilters([...selectedFilters, filter]); // Add filter if not selected
-        }
-    };
+    fetchAllAmenities();
+  }, [hotelId]);
 
-    const clearAllFilters = () => {
-        setSelectedFilters([]); // Reset selected filters
-    };
+  // 🔹 Toggle xem thêm
+  const toggleShowMoreFilters = () => setShowMoreFilters(!showMoreFilters);
 
-    return (
-        <div className="filter-section bg-white border border-gray-300 rounded-lg p-4">
-            {/* Title */}
-            <div className="flex justify-between items-center mb-4">
-                <h2 className="text-lg font-bold text-gray-800">Chọn phòng</h2>
-                <a href="#" className="text-blue-600 hover:underline text-sm font-bold">Chúng tôi khớp giá!</a>
-            </div>
+  // 🔹 Chọn / bỏ chọn filter
+  const toggleFilterSelection = (filter) => {
+    let newSelected;
+    if (selectedFilters.includes(filter)) {
+      newSelected = selectedFilters.filter((f) => f !== filter);
+    } else {
+      newSelected = [...selectedFilters, filter];
+    }
+    setSelectedFilters(newSelected);
+    if (onFilterChange) onFilterChange(newSelected);
+  };
 
-            {/* Filters */}
-            <div className="filters">
-                <div className="flex justify-between items-center mb-4">
-                    <div className="flex items-center space-x-2">
-                        <Tune className="text-gray-600" />
-                        <span className="text-sm font-bold text-gray-800">Chọn lọc:</span>
-                    </div>
-                    <button
-                        onClick={clearAllFilters}
-                        className="text-blue-600 hover:underline text-sm"
-                    >
-                        Xóa hết
-                    </button>
-                </div>
+  // 🔹 Xóa tất cả bộ lọc
+  const clearAllFilters = () => {
+    setSelectedFilters([]);
+    if (onFilterChange) onFilterChange([]);
+  };
 
-                {/* Tip */}
-                <p className="text-sm text-gray-600 mb-4">
-                    <span className="text-green-600 font-bold">Mẹo:</span> Phải một thời gian mới đến ngày quý khách đến/đi. Hãy thử một ưu đãi có
-                    <a href="#" className="text-green-600 hover:underline"> hủy Miễn Phí</a> để linh hoạt trong trường hợp kế hoạch thay đổi.
-                </p>
+  // 🔹 Phân chia hiển thị
+  const visibleAmenities = amenities.slice(0, 6);
+  const moreAmenities = amenities.slice(6);
 
-                {/* Filter Buttons */}
-                <div className="grid grid-cols-3 gap-2">
-                    {[
-                        { label: 'Không hút thuốc (5)', icon: '🚭' },
-                        { label: 'Nhà bếp (10)', icon: '🏠' },
-                        { label: 'Giường đôi lớn (5)', icon: '🛏️' },
-                        { label: 'Hướng biển (3)', icon: '🌊' },
-                        { label: '≥ 20 m² (10)', icon: '📏' },
-                        { label: '≥ 40 m² (10)', icon: '📏' },
-                        { label: '≥ 60 m² (3)', icon: '📏' },
-                        { label: 'Lựa chọn trả tiền sau (4)', icon: '💳' },
-                        { label: 'Hủy miễn phí (10)', icon: '🔄' },
-                    ].map((filter, index) => (
-                        <button
-                            key={index}
-                            onClick={() => toggleFilterSelection(filter.label)}
-                            className={`flex items-center border rounded-full px-4 py-2 text-sm ${
-                                selectedFilters.includes(filter.label)
-                                    ? 'bg-blue-600 text-white'
-                                    : 'bg-white border-gray-300 text-gray-800'
-                            }`}
-                        >
-                            <span className="mr-2">{filter.icon}</span> {filter.label}
-                        </button>
-                    ))}
-                </div>
+  if (loading) return <div>Đang tải tiện nghi...</div>;
 
-                {/* Additional Filters */}
-                {showMoreFilters && (
-                    <div className="grid grid-cols-3 gap-2 mt-4">
-                        {[
-                            { label: 'Đánh giá cao (8)', icon: '🌟' },
-                            { label: 'Bồn tắm (5)', icon: '🛁' },
-                            { label: 'Gần bãi biển (7)', icon: '🏖️' },
-                        ].map((filter, index) => (
-                            <button
-                                key={index}
-                                onClick={() => toggleFilterSelection(filter.label)}
-                                className={`flex items-center border rounded-full px-4 py-2 text-sm ${
-                                    selectedFilters.includes(filter.label)
-                                        ? 'bg-blue-600 text-white'
-                                        : 'bg-white border-gray-300 text-gray-800'
-                                }`}
-                            >
-                                <span className="mr-2">{filter.icon}</span> {filter.label}
-                            </button>
-                        ))}
-                    </div>
-                )}
+  return (
+    <div className="filter-section bg-white border border-gray-300 rounded-lg p-4">
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-lg font-bold text-gray-800">Chọn lọc phòng</h2>
+        <a href="#" className="text-blue-600 hover:underline text-sm font-bold">
+          Chúng tôi khớp giá!
+        </a>
+      </div>
 
-                {/* More Filters Link */}
-                <div className="text-center mt-4">
-                    <button
-                        onClick={toggleShowMoreFilters}
-                        className="text-blue-600 hover:underline text-sm"
-                    >
-                        {showMoreFilters ? 'Thu gọn' : 'Xem 3 mục khác'}
-                    </button>
-                </div>
-            </div>
+      <div className="filters">
+        <div className="flex justify-between items-center mb-4">
+          <div className="flex items-center space-x-2">
+            <Tune className="text-gray-600" />
+            <span className="text-sm font-bold text-gray-800">Tiện nghi:</span>
+          </div>
+          <button
+            onClick={clearAllFilters}
+            className="text-blue-600 hover:underline text-sm"
+          >
+            Xóa hết
+          </button>
         </div>
-    );
+
+        <p className="text-sm text-gray-600 mb-4">
+          <span className="text-green-600 font-bold">Mẹo:</span> Hãy chọn các
+          tiện nghi bạn muốn để tìm phòng phù hợp hơn.
+        </p>
+
+        {amenities.length === 0 ? (
+          <p className="text-sm text-gray-500 italic">Không có tiện nghi nào.</p>
+        ) : (
+          <>
+            <div className="grid grid-cols-3 gap-2">
+              {visibleAmenities.map((amenity) => (
+                <button
+                  key={amenity.id || amenity.name}
+                  onClick={() => toggleFilterSelection(amenity.name)}
+                  className={`flex items-center border rounded-full px-4 py-2 text-sm ${
+                    selectedFilters.includes(amenity.name)
+                      ? "bg-blue-600 text-white"
+                      : "bg-white border-gray-300 text-gray-800"
+                  }`}
+                >
+                  {amenity.name}
+                </button>
+              ))}
+            </div>
+
+            {showMoreFilters && moreAmenities.length > 0 && (
+              <div className="grid grid-cols-3 gap-2 mt-4">
+                {moreAmenities.map((amenity) => (
+                  <button
+                    key={amenity.id || amenity.name}
+                    onClick={() => toggleFilterSelection(amenity.name)}
+                    className={`flex items-center border rounded-full px-4 py-2 text-sm ${
+                      selectedFilters.includes(amenity.name)
+                        ? "bg-blue-600 text-white"
+                        : "bg-white border-gray-300 text-gray-800"
+                    }`}
+                  >
+                    {amenity.name}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            <div className="text-center mt-4">
+              {moreAmenities.length > 0 && (
+                <button
+                  onClick={toggleShowMoreFilters}
+                  className="text-blue-600 hover:underline text-sm"
+                >
+                  {showMoreFilters
+                    ? "Thu gọn"
+                    : `Xem thêm ${moreAmenities.length} mục`}
+                </button>
+              )}
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  );
 };
 
 export default FilterSection;

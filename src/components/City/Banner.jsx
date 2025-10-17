@@ -24,7 +24,7 @@ const Banner = () => {
             )}
             {/* Content */}
             <div className="relative z-20 w-full max-w-4xl mx-auto px-4 flex flex-col items-center text-center text-white">
-                <h1 className="text-2xl md:text-4xl font-bold mb-2 drop-shadow-lg">Khách sạn và nơi để ở tại Đà Nẵng</h1>
+                <h1 className="text-2xl md:text-4xl font-bold mb-2 drop-shadow-lg">Khách sạn và nơi để ở</h1>
                 <h2 className="text-base md:text-xl font-medium mb-6 drop-shadow">Tìm kiếm để so sánh giá cả và khám phá ưu đãi tuyệt vời có miễn phí hủy</h2>
                     <SearchBar
                         activeInput={activeInput}
