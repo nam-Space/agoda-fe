@@ -31,6 +31,7 @@ import { fetchAccount } from './redux/slice/accountSlide';
 import BookingContactActivityPage from 'pages/BookingContactActivityPage';
 import BookingContactActivityStep2Page from 'pages/BookingContactActivityStep2Page';
 import BookingContactActivityStep3Page from 'pages/BookingContactActivityStep3Page';
+import BookingContactActivityStep4Page from 'pages/BookingContactActivityStep4Page';
 
 function App() {
   const dispatch = useAppDispatch();
@@ -108,6 +109,11 @@ function App() {
           path: "book/confirmation",
           element:
             <BookingContactActivityStep3Page />
+        },
+        {
+          path: "step-4",
+          element:
+            <BookingContactActivityStep4Page />
         },
         {
           path: "hotel",

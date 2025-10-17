@@ -24,14 +24,20 @@ import {
     getRoomDetail,
     getPayment,
     capturePayment,
+    callFetchDetailActivityDateBooking,
 } from "../../config/api";
+import { SERVICE_TYPE } from "constants/booking";
+import dayjs from "dayjs";
 
 export default function BookingContactActivityStep3() {
     const [searchParams] = useSearchParams();
     const bookingId = searchParams.get("booking_id");
     const isSuccess = searchParams.get("isSuccess") === "true";
+    const service_type = Number(searchParams.get("type"));
+    const ref_id = searchParams.get("ref");
     const [booking, setBooking] = useState(null);
     const [room, setRoom] = useState(null);
+    const [activityDateBooking, setActivityDateBooking] = useState(null);
     const [payment, setPayment] = useState(null);
     const [loading, setLoading] = useState(true);
     const [captureStatus, setCaptureStatus] = useState(null);
@@ -47,8 +53,19 @@ export default function BookingContactActivityStep3() {
 
                 // Lấy thông tin phòng
                 if (bookingResponse.service_type === ServiceType.HOTEL) {
-                    const roomResponse = await getRoomDetail(bookingResponse.service_ref_id);
+                    const roomResponse = await getRoomDetail(
+                        bookingResponse.service_ref_id
+                    );
                     setRoom(roomResponse);
+                }
+
+                if (bookingResponse.service_type === ServiceType.ACTIVITY) {
+                    const res = await callFetchDetailActivityDateBooking(
+                        bookingResponse.service_ref_id
+                    );
+                    if (res.isSuccess) {
+                        setActivityDateBooking(res.data);
+                    }
                 }
 
                 // Lấy thông tin thanh toán
@@ -83,16 +100,26 @@ export default function BookingContactActivityStep3() {
     }, [bookingId, isSuccess]);
 
     if (loading) {
-        return <div className="min-h-screen bg-gray-50 flex items-center justify-center">Đang tải...</div>;
+        return (
+            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+                Đang tải...
+            </div>
+        );
     }
 
-    if (!booking || !room || !payment) {
-        return <div className="min-h-screen bg-gray-50 flex items-center justify-center">Không tìm thấy thông tin đặt chỗ, phòng hoặc thanh toán</div>;
+    if (!booking || !payment) {
+        return (
+            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+                Không tìm thấy thông tin đặt chỗ, phòng hoặc thanh toán
+            </div>
+        );
     }
 
     const getGuestSummary = () => {
         const numGuests = booking.hotel_detail?.num_guests || 0;
-        return numGuests > 0 ? `${numGuests} khách` : "Không có thông tin số lượng khách";
+        return numGuests > 0
+            ? `${numGuests} khách`
+            : "Không có thông tin số lượng khách";
     };
 
     return (
@@ -141,10 +168,18 @@ export default function BookingContactActivityStep3() {
                         {/* Success Message */}
                         <div className="bg-white rounded-lg shadow-sm p-8 text-center">
                             <div className="flex justify-center mb-4">
-                                <CheckCircle2 className={`w-20 h-20 ${isSuccess ? "text-green-500" : "text-red-500"}`} />
+                                <CheckCircle2
+                                    className={`w-20 h-20 ${
+                                        isSuccess
+                                            ? "text-green-500"
+                                            : "text-red-500"
+                                    }`}
+                                />
                             </div>
                             <h1 className="text-3xl font-bold text-gray-900 mb-2">
-                                {isSuccess ? "Đặt chỗ thành công!" : "Thanh toán thất bại!"}
+                                {isSuccess
+                                    ? "Đặt chỗ thành công!"
+                                    : "Thanh toán thất bại!"}
                             </h1>
                             <p className="text-gray-600 mb-6">
                                 {isSuccess
@@ -155,7 +190,8 @@ export default function BookingContactActivityStep3() {
                                 <div className="inline-flex items-center gap-2 px-4 py-2 bg-blue-50 rounded-lg">
                                     <Mail className="w-5 h-5 text-blue-600" />
                                     <span className="font-medium text-blue-900">
-                                        {booking.guest_info?.email || "email khách hàng"}
+                                        {booking.guest_info?.email ||
+                                            "email khách hàng"}
                                     </span>
                                 </div>
                             )}
@@ -195,70 +231,195 @@ export default function BookingContactActivityStep3() {
                         </div>
 
                         {/* Booking Details */}
-                        <div className="bg-white rounded-lg shadow-sm p-6">
-                            <h2 className="text-xl font-bold text-gray-900 mb-4">
-                                Chi tiết đặt chỗ
-                            </h2>
+                        {service_type === ServiceType.HOTEL && (
+                            <div className="bg-white rounded-lg shadow-sm p-6">
+                                <h2 className="text-xl font-bold text-gray-900 mb-4">
+                                    Chi tiết đặt chỗ
+                                </h2>
 
-                            {/* Hotel Info */}
-                            <div className="flex gap-4 mb-6 pb-6 border-b">
-                                <div className="relative w-32 h-32 rounded-lg overflow-hidden flex-shrink-0">
-                                    <img
-                                        src={room.images?.[0]?.image || "https://via.placeholder.com/150"}
-                                        alt={room.room_type}
-                                        className="object-cover w-full h-full"
-                                    />
-                                </div>
-                                <div className="flex-1">
-                                    <h3 className="font-bold text-gray-900 mb-2">
-                                        {room.room_type} - Phòng khách sạn
-                                    </h3>
-                                    <div className="flex items-center gap-1 text-sm mb-2">
-                                        <span className="text-yellow-500">★</span>
-                                        <span className="font-semibold">4.7</span>
-                                        <span className="text-gray-500">(1,128 bài đánh giá)</span>
+                                {/* Hotel Info */}
+                                <div className="flex gap-4 mb-6 pb-6 border-b">
+                                    <div className="relative w-32 h-32 rounded-lg overflow-hidden flex-shrink-0">
+                                        <img
+                                            src={
+                                                room.images?.[0]?.image ||
+                                                "https://via.placeholder.com/150"
+                                            }
+                                            alt={room.room_type}
+                                            className="object-cover w-full h-full"
+                                        />
                                     </div>
-                                    <p className="text-sm text-gray-600">
-                                        <MapPin className="w-4 h-4 inline mr-1" />
-                                        {room.description || "Phòng view biển"}
-                                    </p>
+                                    <div className="flex-1">
+                                        <h3 className="font-bold text-gray-900 mb-2">
+                                            {room.room_type} - Phòng khách sạn
+                                        </h3>
+                                        <div className="flex items-center gap-1 text-sm mb-2">
+                                            <span className="text-yellow-500">
+                                                ★
+                                            </span>
+                                            <span className="font-semibold">
+                                                4.7
+                                            </span>
+                                            <span className="text-gray-500">
+                                                (1,128 bài đánh giá)
+                                            </span>
+                                        </div>
+                                        <p className="text-sm text-gray-600">
+                                            <MapPin className="w-4 h-4 inline mr-1" />
+                                            {room.description ||
+                                                "Phòng view biển"}
+                                        </p>
+                                    </div>
+                                </div>
+
+                                {/* Visit Details */}
+                                <div className="space-y-4">
+                                    <div className="flex items-start gap-3">
+                                        <Calendar className="w-5 h-5 text-gray-400 mt-0.5" />
+                                        <div>
+                                            <p className="text-sm text-gray-600">
+                                                Ngày nhận phòng - trả phòng
+                                            </p>
+                                            <p className="font-semibold text-gray-900">
+                                                {booking.hotel_detail?.check_in}{" "}
+                                                -{" "}
+                                                {
+                                                    booking.hotel_detail
+                                                        ?.check_out
+                                                }
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex items-start gap-3">
+                                        <Users className="w-5 h-5 text-gray-400 mt-0.5" />
+                                        <div>
+                                            <p className="text-sm text-gray-600">
+                                                Số lượng khách
+                                            </p>
+                                            <p className="font-semibold text-gray-900">
+                                                {getGuestSummary()}
+                                            </p>
+                                            <p className="text-sm text-gray-600 mt-1">
+                                                {room.room_type} | {room.beds}{" "}
+                                                phòng | {room.capacity} người
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex items-start gap-3">
+                                        <CreditCard className="w-5 h-5 text-gray-400 mt-0.5" />
+                                        <div>
+                                            <p className="text-sm text-gray-600">
+                                                Phương thức thanh toán
+                                            </p>
+                                            <p className="font-semibold text-gray-900">
+                                                {PaymentMethodLabel[
+                                                    payment.method
+                                                ] || "Không xác định"}
+                                            </p>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
+                        )}
+                        {service_type === ServiceType.ACTIVITY && (
+                            <div className="bg-white rounded-lg shadow-sm p-6">
+                                <h2 className="text-xl font-bold text-gray-900 mb-4">
+                                    Chi tiết đặt chỗ
+                                </h2>
 
-                            {/* Visit Details */}
-                            <div className="space-y-4">
-                                <div className="flex items-start gap-3">
-                                    <Calendar className="w-5 h-5 text-gray-400 mt-0.5" />
-                                    <div>
-                                        <p className="text-sm text-gray-600">Ngày nhận phòng - trả phòng</p>
-                                        <p className="font-semibold text-gray-900">
-                                            {booking.hotel_detail?.check_in} - {booking.hotel_detail?.check_out}
+                                {/* Attraction Info */}
+                                <div className="flex gap-4 mb-6 pb-6 border-b">
+                                    <div className="relative w-32 h-32 rounded-lg overflow-hidden flex-shrink-0">
+                                        <img
+                                            src={`${process.env.REACT_APP_BE_URL}${activityDateBooking?.activity_image}`}
+                                            alt={`${activityDateBooking?.activity_name}`}
+                                            fill
+                                            className="object-cover"
+                                        />
+                                    </div>
+                                    <div className="flex-1">
+                                        <div className="inline-block px-2 py-1 bg-red-100 text-red-700 text-xs font-semibold rounded mb-2">
+                                            0% giảm giá
+                                        </div>
+                                        <h3 className="font-bold text-gray-900 mb-2">
+                                            {activityDateBooking?.activity_name}
+                                        </h3>
+                                        <div className="flex items-center gap-1 text-sm mb-2">
+                                            <span className="text-yellow-500">
+                                                ★
+                                            </span>
+                                            <span className="font-semibold">
+                                                {activityDateBooking?.avg_star}
+                                            </span>
+                                            <span className="text-gray-500">
+                                                1,130 bài đánh giá
+                                            </span>
+                                        </div>
+                                        <p className="text-sm text-gray-600">
+                                            <MapPin className="w-4 h-4 inline mr-1" />
+                                            {activityDateBooking?.city_name}
                                         </p>
                                     </div>
                                 </div>
 
-                                <div className="flex items-start gap-3">
-                                    <Users className="w-5 h-5 text-gray-400 mt-0.5" />
-                                    <div>
-                                        <p className="text-sm text-gray-600">Số lượng khách</p>
-                                        <p className="font-semibold text-gray-900">{getGuestSummary()}</p>
-                                        <p className="text-sm text-gray-600 mt-1">
-                                            {room.room_type} | {room.beds} phòng | {room.capacity} người
-                                        </p>
+                                {/* Visit Details */}
+                                <div className="space-y-4">
+                                    <div className="flex items-start gap-3">
+                                        <Calendar className="w-5 h-5 text-gray-400 mt-0.5" />
+                                        <div>
+                                            <p className="text-sm text-gray-600">
+                                                Ngày tham quan
+                                            </p>
+                                            <p className="font-semibold text-gray-900">
+                                                {dayjs(
+                                                    activityDateBooking?.date_launch
+                                                ).format("YYYY-MM-DD")}
+                                            </p>
+                                        </div>
                                     </div>
-                                </div>
 
-                                <div className="flex items-start gap-3">
-                                    <CreditCard className="w-5 h-5 text-gray-400 mt-0.5" />
-                                    <div>
-                                        <p className="text-sm text-gray-600">Phương thức thanh toán</p>
-                                        <p className="font-semibold text-gray-900">
-                                            {PaymentMethodLabel[payment.method] || "Không xác định"}
-                                        </p>
+                                    <div className="flex items-start gap-3">
+                                        <Users className="w-5 h-5 text-gray-400 mt-0.5" />
+                                        <div>
+                                            <p className="text-sm text-gray-600">
+                                                Số lượng khách
+                                            </p>
+                                            <p className="font-semibold text-gray-900">
+                                                {
+                                                    activityDateBooking?.adult_quantity_booking
+                                                }{" "}
+                                                người lớn |{" "}
+                                                {
+                                                    activityDateBooking?.children_quantity_booking
+                                                }{" "}
+                                                trẻ em
+                                            </p>
+                                            <p className="text-sm text-gray-600 mt-1">
+                                                {
+                                                    activityDateBooking?.activity_package_name
+                                                }
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex items-start gap-3">
+                                        <CreditCard className="w-5 h-5 text-gray-400 mt-0.5" />
+                                        <div>
+                                            <p className="text-sm text-gray-600">
+                                                Phương thức thanh toán
+                                            </p>
+                                            <p className="font-semibold text-gray-900">
+                                                {PaymentMethodLabel[
+                                                    payment.method
+                                                ] || "Không xác định"}
+                                            </p>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
+                        )}
 
                         {/* Guest Information */}
                         <div className="bg-white rounded-lg shadow-sm p-6">
@@ -267,27 +428,39 @@ export default function BookingContactActivityStep3() {
                             </h2>
                             <div className="grid sm:grid-cols-2 gap-4">
                                 <div>
-                                    <p className="text-sm text-gray-600 mb-1">Họ và tên</p>
+                                    <p className="text-sm text-gray-600 mb-1">
+                                        Họ và tên
+                                    </p>
                                     <p className="font-semibold text-gray-900">
-                                        {booking.guest_info?.full_name || "Không xác định"}
+                                        {booking.guest_info?.full_name ||
+                                            "Không xác định"}
                                     </p>
                                 </div>
                                 <div>
-                                    <p className="text-sm text-gray-600 mb-1">Email</p>
+                                    <p className="text-sm text-gray-600 mb-1">
+                                        Email
+                                    </p>
                                     <p className="font-semibold text-gray-900">
-                                        {booking.guest_info?.email || "Không xác định"}
+                                        {booking.guest_info?.email ||
+                                            "Không xác định"}
                                     </p>
                                 </div>
                                 <div>
-                                    <p className="text-sm text-gray-600 mb-1">Số điện thoại</p>
+                                    <p className="text-sm text-gray-600 mb-1">
+                                        Số điện thoại
+                                    </p>
                                     <p className="font-semibold text-gray-900">
-                                        {booking.guest_info?.phone || "Không xác định"}
+                                        {booking.guest_info?.phone ||
+                                            "Không xác định"}
                                     </p>
                                 </div>
                                 <div>
-                                    <p className="text-sm text-gray-600 mb-1">Quốc gia</p>
+                                    <p className="text-sm text-gray-600 mb-1">
+                                        Quốc gia
+                                    </p>
                                     <p className="font-semibold text-gray-900">
-                                        {booking.guest_info?.country || "Không xác định"}
+                                        {booking.guest_info?.country ||
+                                            "Không xác định"}
                                     </p>
                                 </div>
                             </div>
@@ -308,7 +481,8 @@ export default function BookingContactActivityStep3() {
                                             Kiểm tra email của bạn
                                         </p>
                                         <p className="text-sm text-gray-600">
-                                            Chúng tôi đã gửi xác nhận đặt chỗ đến email của bạn
+                                            Chúng tôi đã gửi xác nhận đặt chỗ
+                                            đến email của bạn
                                         </p>
                                     </div>
                                 </div>
@@ -321,7 +495,8 @@ export default function BookingContactActivityStep3() {
                                             Chuẩn bị nhận phòng
                                         </p>
                                         <p className="text-sm text-gray-600">
-                                            Mang theo mã đặt chỗ và giấy tờ tùy thân đến khách sạn
+                                            Mang theo mã đặt chỗ và giấy tờ tùy
+                                            thân đến khách sạn
                                         </p>
                                     </div>
                                 </div>
@@ -334,7 +509,8 @@ export default function BookingContactActivityStep3() {
                                             Tận hưởng kỳ nghỉ
                                         </p>
                                         <p className="text-sm text-gray-600">
-                                            Đến khách sạn vào ngày nhận phòng và tận hưởng!
+                                            Đến khách sạn vào ngày nhận phòng và
+                                            tận hưởng!
                                         </p>
                                     </div>
                                 </div>
@@ -373,16 +549,62 @@ export default function BookingContactActivityStep3() {
                                 Chi Tiết Giá
                             </h2>
 
-                            <div className="space-y-3 mb-4 pb-4 border-b">
-                                <div>
-                                    <p className="text-sm text-gray-900 mb-1">
-                                        {room.room_type} - Phòng khách sạn
-                                    </p>
-                                    <p className="text-xs text-gray-500">
-                                        {booking.hotel_detail?.check_in} - {booking.hotel_detail?.check_out} | {getGuestSummary()}
-                                    </p>
+                            {service_type === SERVICE_TYPE.HOTEL && (
+                                <div className="space-y-3 mb-4 pb-4 border-b">
+                                    <div>
+                                        <p className="text-sm text-gray-900 mb-1">
+                                            {room.room_type} - Phòng khách sạn
+                                        </p>
+                                        <p className="text-xs text-gray-500">
+                                            {booking.hotel_detail?.check_in} -{" "}
+                                            {booking.hotel_detail?.check_out} |{" "}
+                                            {getGuestSummary()}
+                                        </p>
+                                    </div>
                                 </div>
-                            </div>
+                            )}
+
+                            {service_type === SERVICE_TYPE.ACTIVITY && (
+                                <div className="space-y-3 mb-4 pb-4 border-b">
+                                    <div>
+                                        <p className="text-sm text-gray-900 mb-1">
+                                            {activityDateBooking?.activity_name}
+                                        </p>
+                                        <p className="text-xs text-gray-500">
+                                            {dayjs(
+                                                activityDateBooking?.date_launch
+                                            ).format("YYYY-MM-DD")}{" "}
+                                            |{" "}
+                                            {
+                                                activityDateBooking?.adult_quantity_booking
+                                            }{" "}
+                                            người lớn,{" "}
+                                            {
+                                                activityDateBooking?.children_quantity_booking
+                                            }{" "}
+                                            trẻ em
+                                        </p>
+                                    </div>
+                                    <div className="flex justify-between items-center">
+                                        <span className="text-sm text-gray-600">
+                                            Giá gốc
+                                        </span>
+                                        <span className="text-sm text-gray-900 line-through">
+                                            {formatCurrency(
+                                                activityDateBooking?.total_price
+                                            )}
+                                        </span>
+                                    </div>
+                                    <div className="flex justify-between items-center">
+                                        <span className="text-sm text-gray-600">
+                                            Giảm giá (0%)
+                                        </span>
+                                        <span className="text-sm text-green-600 font-semibold line-through">
+                                            0 ₫
+                                        </span>
+                                    </div>
+                                </div>
+                            )}
 
                             <div className="space-y-3 mb-4 pb-4 border-b">
                                 <div className="flex justify-between items-center">
@@ -410,10 +632,20 @@ export default function BookingContactActivityStep3() {
 
                             <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
                                 <div className="flex items-start gap-2">
-                                    <CheckCircle2 className={`w-5 h-5 ${captureStatus === "Payment completed successfully" ? "text-green-600" : "text-red-600"} flex-shrink-0 mt-0.5`} />
+                                    <CheckCircle2
+                                        className={`w-5 h-5 ${
+                                            captureStatus ===
+                                            "Payment completed successfully"
+                                                ? "text-green-600"
+                                                : "text-red-600"
+                                        } flex-shrink-0 mt-0.5`}
+                                    />
                                     <div>
                                         <p className="text-sm font-semibold text-green-900 mb-1">
-                                            {captureStatus === "Payment completed successfully" ? "Thanh toán thành công" : "Thanh toán thất bại"}
+                                            {captureStatus ===
+                                            "Payment completed successfully"
+                                                ? "Thanh toán thành công"
+                                                : "Thanh toán thất bại"}
                                         </p>
                                         <p className="text-xs text-green-700">
                                             Đơn đặt này không được hoàn tiền

@@ -39,7 +39,7 @@ const ExploreLocationNearby = () => {
                             <SwiperSlide key={index}>
                                 <Link to={`/activity/city/${item.id}`}>
                                     <img
-                                        src={`${process.env.REACT_APP_BE_URL}/${item.image}`}
+                                        src={`${process.env.REACT_APP_BE_URL}${item.image}`}
                                         className="w-full h-[148px] object-cover rounded-[16px]"
                                     />
                                     <p className="pl-[4px] leading-[18px] text-[14px] mt-[7px] font-semibold">

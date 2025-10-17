@@ -194,6 +194,12 @@ export const callDeleteActivityPackage = (id) => {
     return axios.delete(`/api/activities/activities-packages/${id}/delete/`);
 };
 
+// Activity date booking
+export const callFetchDetailActivityDateBooking = (id) => {
+    return axios.get(`/api/activities/activities-dates-booking/${id}/`);
+};
+
+
 // Promotion
 export const getPromotions = (params) => {
     return axios.get("/api/promotions/", { params });
@@ -211,7 +217,7 @@ export const getCities = (params) => {
 
 // Get room detail
 export const getRoomDetail = (id) => {
-  return axios.get(`/api/rooms/rooms/${id}/`);
+    return axios.get(`/api/rooms/rooms/${id}/`);
 };
 
 // Booking
@@ -224,7 +230,7 @@ export const addBookingContact = (bookingId, data) => {
 };
 
 export const getBookingDetail = (id) => {
-  return axios.get(`/api/bookings/${id}/`);
+    return axios.get(`/api/bookings/${id}/`);
 };
 
 // Payment
@@ -233,7 +239,7 @@ export const createPayment = (data) => {
 };
 
 export const getPayment = (bookingId) => {
-  return axios.get(`/api/payments?booking_id=${bookingId}`);
+    return axios.get(`/api/payments?booking_id=${bookingId}`);
 };
 
 export const payWithStripe = (paymentId, data) => {
