@@ -245,7 +245,6 @@ export default function ActivityDetail() {
                     selectedIndexTicket
                 ),
                 activity_detail: {
-                    room: 2,
                     activity_date: getActivityDate(
                         selectedTickerOption,
                         selectedIndexTicket

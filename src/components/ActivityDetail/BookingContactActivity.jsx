@@ -11,15 +11,27 @@ import { useAppSelector } from "../../redux/hooks";
 import { useNavigate } from "react-router-dom";
 import { formatCurrency } from "utils/formatCurrency";
 import { useSearchParams } from "react-router-dom";
-import { ServiceType, ServiceTypeLabel } from "../../constants/serviceType";
+import {
+    ServiceType,
+    ServiceTypeLabel,
+    ServiceTypeLabelVi,
+} from "../../constants/serviceType";
 import {
     getCountries,
     addBookingContact,
     getBookingDetail,
     getRoomDetail,
     callFetchDetailActivityDateBooking,
+    callFetchDetailCarBooking,
 } from "../../config/api";
 import dayjs from "dayjs";
+import { Button, Card, Divider } from "antd";
+import { MapContainer, Marker, Popup, TileLayer } from "react-leaflet";
+import MarkerClusterGroup from "react-leaflet-cluster";
+import { Icon } from "leaflet";
+import { CarOutlined, EditOutlined, UserOutlined } from "@ant-design/icons";
+import { haversine } from "utils/googleMap";
+import markerImg from "../../images/booking-vehicles/google-map/marker.webp";
 
 export default function BookingContactActivity() {
     const navigate = useNavigate();
@@ -32,7 +44,11 @@ export default function BookingContactActivity() {
     const [booking, setBooking] = useState(null);
     const [room, setRoom] = useState(null);
     const [activityDateBooking, setActivityDateBooking] = useState(null);
+    const [carBooking, setCarBooking] = useState(null);
+    const [center, setCenter] = useState([0, 0]);
     const [loading, setLoading] = useState(true);
+    const [distance, setDistance] = useState(0);
+    const [zoomLevel, setZoomLevel] = useState(0);
 
     const [formData, setFormData] = useState({
         first_name: user?.first_name || "",
@@ -42,6 +58,10 @@ export default function BookingContactActivity() {
         phone_number: user?.phone_number || "",
         special_request: "",
     });
+
+    // const center = [(carBooking?.lat1 || 0 + carBooking?.lat2 || 0) / 2, (carBooking?.lng1 + carBooking?.lng2) / 2];
+    // const distance = haversine(lat1, long1, lat2, long2);
+    console.log("carBooking", carBooking);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -65,6 +85,34 @@ export default function BookingContactActivity() {
                     );
                     if (res.isSuccess) {
                         setActivityDateBooking(res.data);
+                    }
+                }
+
+                if (service_type === ServiceType.CAR && ref_id) {
+                    const res = await callFetchDetailCarBooking(ref_id);
+                    if (res.isSuccess) {
+                        const carBookingData = res.data;
+                        setCarBooking(carBookingData);
+                        setCenter([
+                            (carBookingData.lat1 + carBookingData.lat2) / 2,
+                            (carBookingData.lng1 + carBookingData.lng2) / 2,
+                        ]);
+                        const dist = haversine(
+                            carBookingData.lat1,
+                            carBookingData.lng1,
+                            carBookingData.lat2,
+                            carBookingData.lng2
+                        );
+                        setDistance(dist);
+                        if (dist < 100) {
+                            setZoomLevel(10);
+                        } else if (dist < 500) {
+                            setZoomLevel(8); // Khoảng cách vừa
+                        } else if (dist < 1500) {
+                            setZoomLevel(5); // Xa nhau, zoom thấp
+                        } else {
+                            setZoomLevel(3); // Cách xa nhau nhiều, zoom thấp
+                        }
                     }
                 }
 
@@ -533,6 +581,196 @@ export default function BookingContactActivity() {
                                         </div>
                                     </div>
                                 )}
+                                {service_type === ServiceType.CAR && (
+                                    <div>
+                                        {/* Map */}
+                                        <div className="mb-4">
+                                            <MapContainer
+                                                center={center}
+                                                zoom={zoomLevel}
+                                                className="w-full h-[300px]"
+                                                scrollWheelZoom={true}
+                                            >
+                                                <TileLayer
+                                                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                                                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                                                />
+
+                                                <MarkerClusterGroup
+                                                    chunkedLoading
+                                                >
+                                                    <Marker
+                                                        position={[
+                                                            carBooking?.lat1 ||
+                                                                0,
+                                                            carBooking?.lng1 ||
+                                                                0,
+                                                        ]}
+                                                        icon={
+                                                            new Icon({
+                                                                iconUrl:
+                                                                    markerImg,
+                                                                iconSize: [
+                                                                    38, 38,
+                                                                ],
+                                                            })
+                                                        }
+                                                        title="Noi Bai International Airport (HAN)"
+                                                    >
+                                                        <Popup>
+                                                            Noi Bai
+                                                            International
+                                                            Airport (HAN)
+                                                        </Popup>
+                                                    </Marker>
+                                                    <Marker
+                                                        position={[
+                                                            carBooking?.lat2 ||
+                                                                0,
+                                                            carBooking?.lng2 ||
+                                                                0,
+                                                        ]}
+                                                        icon={
+                                                            new Icon({
+                                                                iconUrl:
+                                                                    markerImg,
+                                                                iconSize: [
+                                                                    38, 38,
+                                                                ],
+                                                            })
+                                                        }
+                                                        title="BT Homestay 120 Phu My - My Dinh"
+                                                    >
+                                                        <Popup>
+                                                            BT Homestay 120 Phu
+                                                            My - My Dinh
+                                                        </Popup>
+                                                    </Marker>
+                                                </MarkerClusterGroup>
+                                            </MapContainer>
+                                        </div>
+
+                                        {/* Trip Details */}
+                                        <div className="mb-4">
+                                            <div className="flex items-center justify-between mb-3">
+                                                <h3 className="font-semibold">
+                                                    Chuyến đi của bạn
+                                                </h3>
+                                                <Button
+                                                    type="text"
+                                                    size="small"
+                                                    icon={<EditOutlined />}
+                                                    className="text-blue-500"
+                                                />
+                                            </div>
+
+                                            <div className="space-y-3">
+                                                <div>
+                                                    <div className="font-medium">
+                                                        {
+                                                            carBooking?.pickup_location
+                                                        }
+                                                    </div>
+                                                    <div className="text-sm text-gray-500">
+                                                        {dayjs(
+                                                            carBooking?.pickup_datetime
+                                                        ).format(
+                                                            "YYYY-MM-DD HH:mm:ss"
+                                                        )}
+                                                    </div>
+                                                    <div className="text-xs text-gray-400">
+                                                        Khoảng cách:{" "}
+                                                        {distance.toFixed(2)} km
+                                                    </div>
+                                                    <div className="text-xs text-gray-400">
+                                                        Thời gian đi lấy: 3 phút
+                                                    </div>
+                                                    <div className="text-xs text-gray-400">
+                                                        Thời gian ước lượng:{" "}
+                                                        {(
+                                                            carBooking?.total_time_estimate ||
+                                                            0
+                                                        ).toFixed(1)}{" "}
+                                                        giờ
+                                                    </div>
+                                                </div>
+
+                                                <div className="text-sm">
+                                                    {
+                                                        carBooking?.dropoff_location
+                                                    }
+                                                </div>
+
+                                                <Divider className="my-2" />
+
+                                                <div className="flex items-center space-x-4 text-sm">
+                                                    <div className="flex items-center space-x-1">
+                                                        <UserOutlined />
+                                                        <span>
+                                                            {
+                                                                carBooking?.passenger_quantity_booking
+                                                            }{" "}
+                                                            Hành khách
+                                                        </span>
+                                                    </div>
+                                                    <div className="flex items-center space-x-1">
+                                                        <CarOutlined />
+                                                        <span>
+                                                            Tối đa{" "}
+                                                            {
+                                                                carBooking?.car
+                                                                    ?.luggage
+                                                            }{" "}
+                                                            vali
+                                                        </span>
+                                                    </div>
+                                                </div>
+
+                                                <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded">
+                                                    <img
+                                                        src={`${process.env.REACT_APP_BE_URL}${carBooking?.car?.image}`}
+                                                        alt="Economy sedan"
+                                                        width={60}
+                                                        height={40}
+                                                        className="object-contain"
+                                                    />
+                                                    <div>
+                                                        <div className="font-medium text-sm">
+                                                            {
+                                                                carBooking?.car
+                                                                    ?.name
+                                                            }
+                                                        </div>
+                                                        <div className="text-xs text-gray-500">
+                                                            {
+                                                                carBooking?.car
+                                                                    ?.description
+                                                            }
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Extras */}
+                                        <div className="mb-4">
+                                            <div className="flex items-center justify-between mb-3">
+                                                <h3 className="font-semibold">
+                                                    Extras
+                                                </h3>
+                                                <Button
+                                                    type="text"
+                                                    size="small"
+                                                    icon={<EditOutlined />}
+                                                    className="text-blue-500"
+                                                />
+                                            </div>
+                                            <div className="text-sm">
+                                                Chào đón và đưa đón
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
 
                                 <button className="text-blue-600 text-sm font-semibold hover:underline">
                                     Xem thêm
@@ -549,7 +787,9 @@ export default function BookingContactActivity() {
                                     <div className="flex justify-between text-sm">
                                         <div>
                                             <div className="text-gray-900">
-                                                {room?.room_type || "Phòng"}
+                                                {ServiceTypeLabelVi[
+                                                    service_type
+                                                ] || "Phòng"}
                                             </div>
                                             <div className="text-gray-500 text-xs">
                                                 {booking.hotel_detail?.check_in}{" "}

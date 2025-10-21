@@ -13,6 +13,13 @@ export const ServiceTypeLabel = {
   [ServiceType.ACTIVITY]: 'activity'
 };
 
+export const ServiceTypeLabelVi = {
+  [ServiceType.HOTEL]: "Phòng",
+  [ServiceType.CAR]: "Xe",
+  [ServiceType.FLIGHT]: "Máy bay",
+  [ServiceType.ACTIVITY]: 'Hoạt động'
+};
+
 export const PaymentMethod = Object.freeze({
   ONLINE: 1,
   CASH: 2,

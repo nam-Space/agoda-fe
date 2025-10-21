@@ -42,7 +42,11 @@ export default function BookingConfirmation() {
             capacity: 2,
         },
         formFromLocationIn: {
-            locationIn: { name: "Hanoi Old Quarter", lat: 21.0285, lng: 105.8542 },
+            locationIn: {
+                name: "Hanoi Old Quarter",
+                lat: 21.0285,
+                lng: 105.8542,
+            },
             airportTo: { name: "Noi Bai (HAN)", lat: 21.2189, lng: 105.8048 },
             timeStart: "2025-10-06 10:00",
             capacity: 2,
@@ -58,7 +62,8 @@ export default function BookingConfirmation() {
         },
     };
     const { state } = useLocation();
-    const { option, formFromAirportIn, formFromLocationIn, car } = state || mockState;
+    const { option, formFromAirportIn, formFromLocationIn, car } =
+        state || mockState;
     const user = useAppSelector((state) => state.account.user);
 
     const [contactInfo, setContactInfo] = useState({
@@ -275,7 +280,10 @@ export default function BookingConfirmation() {
                                         Khoảng cách: {distance.toFixed(2)} km
                                     </div>
                                     <div className="text-xs text-gray-400">
-                                        Thời gian đi lấy:{" "}
+                                        Thời gian đi lấy: 3 phút
+                                    </div>
+                                    <div className="text-xs text-gray-400">
+                                        Thời gian ước lượng:{" "}
                                         {(distance / car.avg_speed).toFixed(1)}{" "}
                                         giờ
                                     </div>
@@ -307,7 +315,7 @@ export default function BookingConfirmation() {
 
                                 <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded">
                                     <img
-                                        src={`${process.env.REACT_APP_BE_URL}/${car.image}`}
+                                        src={`${process.env.REACT_APP_BE_URL}${car.image}`}
                                         alt="Economy sedan"
                                         width={60}
                                         height={40}
