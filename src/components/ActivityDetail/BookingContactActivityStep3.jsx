@@ -25,9 +25,15 @@ import {
     getPayment,
     capturePayment,
     callFetchDetailActivityDateBooking,
+    callFetchDetailCarBooking,
 } from "../../config/api";
 import { SERVICE_TYPE } from "constants/booking";
 import dayjs from "dayjs";
+import { haversine } from "utils/googleMap";
+import { MapContainer, Marker, Popup, TileLayer } from "react-leaflet";
+import MarkerClusterGroup from "react-leaflet-cluster";
+import { Icon } from "leaflet";
+import markerImg from "../../images/booking-vehicles/google-map/marker.webp";
 
 export default function BookingContactActivityStep3() {
     const [searchParams] = useSearchParams();
@@ -38,8 +44,12 @@ export default function BookingContactActivityStep3() {
     const [booking, setBooking] = useState(null);
     const [room, setRoom] = useState(null);
     const [activityDateBooking, setActivityDateBooking] = useState(null);
-    const [payment, setPayment] = useState(null);
+    const [carBooking, setCarBooking] = useState(null);
+    const [center, setCenter] = useState([0, 0]);
     const [loading, setLoading] = useState(true);
+    const [distance, setDistance] = useState(0);
+    const [zoomLevel, setZoomLevel] = useState(0);
+    const [payment, setPayment] = useState(null);
     const [captureStatus, setCaptureStatus] = useState(null);
 
     useEffect(() => {
@@ -67,6 +77,36 @@ export default function BookingContactActivityStep3() {
                     );
                     if (res.isSuccess) {
                         setActivityDateBooking(res.data);
+                    }
+                }
+
+                if (bookingResponse.service_type === ServiceType.CAR) {
+                    const res = await callFetchDetailCarBooking(
+                        bookingResponse.service_ref_id
+                    );
+                    if (res.isSuccess) {
+                        const carBookingData = res.data;
+                        setCarBooking(carBookingData);
+                        setCenter([
+                            (carBookingData.lat1 + carBookingData.lat2) / 2,
+                            (carBookingData.lng1 + carBookingData.lng2) / 2,
+                        ]);
+                        const dist = haversine(
+                            carBookingData.lat1,
+                            carBookingData.lng1,
+                            carBookingData.lat2,
+                            carBookingData.lng2
+                        );
+                        setDistance(dist);
+                        if (dist < 100) {
+                            setZoomLevel(10);
+                        } else if (dist < 500) {
+                            setZoomLevel(8); // Khoảng cách vừa
+                        } else if (dist < 1500) {
+                            setZoomLevel(5); // Xa nhau, zoom thấp
+                        } else {
+                            setZoomLevel(3); // Cách xa nhau nhiều, zoom thấp
+                        }
                     }
                 }
 
@@ -420,6 +460,98 @@ export default function BookingContactActivityStep3() {
                             </div>
                         )}
 
+                        {service_type === ServiceType.CAR && (
+                            <div className="bg-white rounded-lg shadow-sm p-6">
+                                <h2 className="text-xl font-bold text-gray-900 mb-4">
+                                    Chi tiết đặt chỗ
+                                </h2>
+
+                                {/* Attraction Info */}
+                                <div className="flex gap-4 mb-6 pb-6 border-b">
+                                    <div className="relative w-32 h-32 rounded-lg overflow-hidden flex-shrink-0">
+                                        <img
+                                            src={`${process.env.REACT_APP_BE_URL}${carBooking?.car?.image}`}
+                                            alt={carBooking?.car?.name}
+                                            fill
+                                            className="object-cover"
+                                        />
+                                    </div>
+                                    <div className="flex-1">
+                                        <div className="inline-block px-2 py-1 bg-red-100 text-red-700 text-xs font-semibold rounded mb-2">
+                                            0% giảm giá
+                                        </div>
+                                        <h3 className="font-bold text-gray-900 mb-2">
+                                            {carBooking?.pickup_location} -{">"}{" "}
+                                            {carBooking?.dropoff_location}
+                                        </h3>
+                                        <div className="flex items-center gap-1 text-sm mb-2">
+                                            <span className="text-yellow-500">
+                                                ★
+                                            </span>
+                                            <span className="font-semibold">
+                                                {carBooking?.car?.avg_star || 0}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Visit Details */}
+                                <div className="space-y-4">
+                                    <div className="flex items-start gap-3">
+                                        <Calendar className="w-5 h-5 text-gray-400 mt-0.5" />
+                                        <div>
+                                            <p className="text-sm text-gray-600">
+                                                Thời gian khởi hành
+                                            </p>
+                                            <p className="font-semibold text-gray-900">
+                                                {dayjs(
+                                                    carBooking?.pickup_datetime
+                                                ).format("YYYY-MM-DD HH:mm:ss")}
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex items-start gap-3">
+                                        <Users className="w-5 h-5 text-gray-400 mt-0.5" />
+                                        <div>
+                                            <p className="text-sm text-gray-600">
+                                                Số lượng khách
+                                            </p>
+                                            <p className="font-semibold text-gray-900">
+                                                {carBooking?.passenger_quantity_booking ||
+                                                    0}{" "}
+                                                người lớn, tối đa{" "}
+                                                {carBooking?.car?.luggage || 0}{" "}
+                                                hành lý
+                                            </p>
+                                            <p className="text-sm text-gray-600 mt-1">
+                                                Tổng thời gian ước tính:{" "}
+                                                {(
+                                                    carBooking?.total_time_estimate ||
+                                                    0
+                                                ).toFixed(1)}{" "}
+                                                giờ
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex items-start gap-3">
+                                        <CreditCard className="w-5 h-5 text-gray-400 mt-0.5" />
+                                        <div>
+                                            <p className="text-sm text-gray-600">
+                                                Phương thức thanh toán
+                                            </p>
+                                            <p className="font-semibold text-gray-900">
+                                                {PaymentMethodLabel[
+                                                    payment.method
+                                                ] || "Không xác định"}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
                         {/* Guest Information */}
                         <div className="bg-white rounded-lg shadow-sm p-6">
                             <h2 className="text-xl font-bold text-gray-900 mb-4">
@@ -592,6 +724,103 @@ export default function BookingContactActivityStep3() {
                                         <span className="text-sm text-gray-900 line-through">
                                             {formatCurrency(
                                                 activityDateBooking?.total_price
+                                            )}
+                                        </span>
+                                    </div>
+                                    <div className="flex justify-between items-center">
+                                        <span className="text-sm text-gray-600">
+                                            Giảm giá (0%)
+                                        </span>
+                                        <span className="text-sm text-green-600 font-semibold line-through">
+                                            0 ₫
+                                        </span>
+                                    </div>
+                                </div>
+                            )}
+
+                            {service_type === SERVICE_TYPE.CAR && (
+                                <div className="space-y-3 mb-4 pb-4 border-b">
+                                    <div className="mb-4">
+                                        <MapContainer
+                                            center={center}
+                                            zoom={zoomLevel}
+                                            className="w-full h-[300px]"
+                                            scrollWheelZoom={true}
+                                        >
+                                            <TileLayer
+                                                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                                                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                                            />
+
+                                            <MarkerClusterGroup chunkedLoading>
+                                                <Marker
+                                                    position={[
+                                                        carBooking?.lat1 || 0,
+                                                        carBooking?.lng1 || 0,
+                                                    ]}
+                                                    icon={
+                                                        new Icon({
+                                                            iconUrl: markerImg,
+                                                            iconSize: [38, 38],
+                                                        })
+                                                    }
+                                                    title={
+                                                        carBooking?.pickup_location
+                                                    }
+                                                >
+                                                    <Popup>
+                                                        {
+                                                            carBooking?.pickup_location
+                                                        }
+                                                    </Popup>
+                                                </Marker>
+                                                <Marker
+                                                    position={[
+                                                        carBooking?.lat2 || 0,
+                                                        carBooking?.lng2 || 0,
+                                                    ]}
+                                                    icon={
+                                                        new Icon({
+                                                            iconUrl: markerImg,
+                                                            iconSize: [38, 38],
+                                                        })
+                                                    }
+                                                    title={
+                                                        carBooking?.dropoff_location
+                                                    }
+                                                >
+                                                    <Popup>
+                                                        {
+                                                            carBooking?.dropoff_location
+                                                        }
+                                                    </Popup>
+                                                </Marker>
+                                            </MarkerClusterGroup>
+                                        </MapContainer>
+                                    </div>
+                                    <div>
+                                        <p className="text-sm text-gray-900 mb-1">
+                                            {carBooking?.pickup_location} -{">"}{" "}
+                                            {carBooking?.dropoff_location}
+                                        </p>
+                                        <p className="text-xs text-gray-500">
+                                            {dayjs(
+                                                carBooking?.pickup_datetime
+                                            ).format("YYYY-MM-DD")}{" "}
+                                            |{" "}
+                                            {
+                                                carBooking?.passenger_quantity_booking
+                                            }{" "}
+                                            hành khách
+                                        </p>
+                                    </div>
+                                    <div className="flex justify-between items-center">
+                                        <span className="text-sm text-gray-600">
+                                            Giá gốc
+                                        </span>
+                                        <span className="text-sm text-gray-900 line-through">
+                                            {formatCurrency(
+                                                booking?.total_price
                                             )}
                                         </span>
                                     </div>

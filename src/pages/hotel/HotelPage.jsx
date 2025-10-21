@@ -34,19 +34,18 @@ const HotelPage = () => {
     const { hotelSlug } = useParams();
     const dispatch = useAppDispatch();
     const [debugData, setDebugData] = useState(null);
-const [searchParams, setSearchParams] = useState({
-  capacity: null,
-  startDate: null,
-  endDate: null,
-});
-const [searchedHotel, setSearchedHotel] = useState(null);
-const [searchedRooms, setSearchedRooms] = useState([]); // ✅ thêm
+    const [searchParams, setSearchParams] = useState({
+        capacity: null,
+        startDate: null,
+        endDate: null,
+    });
+    const [searchedHotel, setSearchedHotel] = useState(null);
+    const [searchedRooms, setSearchedRooms] = useState([]); // ✅ thêm
 
     const { hotelDetail, isLoadingHotelDetail, error } = useAppSelector(
         (state) => state.hotel
     );
     const { hotels, isLoadingHotels } = useAppSelector((state) => state.hotel);
-    
 
     const isDetailPage = !!hotelSlug;
 
@@ -90,22 +89,23 @@ const [searchedRooms, setSearchedRooms] = useState([]); // ✅ thêm
     };
 
     const extractFacilities = (input) => {
-    if (!input) return [];
+        if (!input) return [];
 
-    // Nếu có thẻ HTML thì xử lý kiểu cũ
-    if (/<[^>]*>/.test(input)) {
-        const matches = input.match(/>([^<]+)</g);
-        return matches
-            ? matches.map((m) => m.replace(/[><]/g, "").trim()).filter(Boolean)
-            : [];
-    }
+        // Nếu có thẻ HTML thì xử lý kiểu cũ
+        if (/<[^>]*>/.test(input)) {
+            const matches = input.match(/>([^<]+)</g);
+            return matches
+                ? matches
+                      .map((m) => m.replace(/[><]/g, "").trim())
+                      .filter(Boolean)
+                : [];
+        }
 
-    return input
-        .split(",")
-        .map((item) => item.trim())
-        .filter((text) => text.length > 0);
-};
-
+        return input
+            .split(",")
+            .map((item) => item.trim())
+            .filter((text) => text.length > 0);
+    };
 
     const transformHotelListToHotelData = (firstHotel) => {
         return {
@@ -124,7 +124,7 @@ const [searchedRooms, setSearchedRooms] = useState([]); // ✅ thêm
             amenitiesAndFacilities:
                 stripHtml(firstHotel.amenitiesAndFacilities) || "",
             locationInfo: stripHtml(firstHotel.locationInfo) || "",
-regulation: firstHotel.regulation || "",
+            regulation: firstHotel.regulation || "",
             point: firstHotel.point || 0,
             cityName: firstHotel.city?.name || "",
             city_id: firstHotel.city_id,
@@ -159,17 +159,22 @@ regulation: firstHotel.regulation || "",
         }
     }, [error]);
 
-  const handleSearch = ({ hotelId, capacity, startDate, endDate, hotel, rooms }) => {
-  setSearchParams({ capacity, startDate, endDate });
+    const handleSearch = ({
+        hotelId,
+        capacity,
+        startDate,
+        endDate,
+        hotel,
+        rooms,
+    }) => {
+        setSearchParams({ capacity, startDate, endDate });
 
-  if (hotel) {
-    console.log("Hotel Info:", hotel);
-    console.log("Rooms Info:", rooms);
-    setDebugData({ hotel, rooms }); 
-  }
-};
-
-
+        if (hotel) {
+            console.log("Hotel Info:", hotel);
+            console.log("Rooms Info:", rooms);
+            setDebugData({ hotel, rooms });
+        }
+    };
 
     if (isDetailPage && isLoadingHotelDetail) {
         return (
@@ -202,52 +207,58 @@ regulation: firstHotel.regulation || "",
         );
     }
 
-   const transformedHotel =
-  isDetailPage && hotelDetail
-    ? {
-        name: hotelDetail.name || "Tên khách sạn",
-        address: hotelDetail.location || "Địa chỉ không có",
-        description: stripHtml(hotelDetail.description) || "",
-        images: hotelDetail.images || [],
-        facilities: extractFacilities(hotelDetail.facilities),
-        avgStar: hotelDetail.avg_star || 0,
-        point: hotelDetail.point || 0,
-        mostFeature: hotelDetail.mostFeature || "",
-        lat: hotelDetail.lat,
-        lng: hotelDetail.lng,
-        cityName: hotelDetail.city?.name || "",
-        city_id: hotelDetail.city_id || null,
-        min_price: hotelDetail.min_price || 0,
-        regulation: hotelDetail.regulation || "",
-        amenitiesAndFacilities: hotelDetail.amenitiesAndFacilities || "",
-        usefulInformation: stripHtml(hotelDetail.usefulInformation) || "",
-        locationInfo: stripHtml(hotelDetail.locationInfo) || "",
-        nearbyLocation: hotelDetail.nearbyLocation || "",
-        withUs: stripHtml(hotelDetail.withUs) || "",
-        room_type: hotelDetail.room_type || "Tiêu chuẩn",
-        rooms: hotelDetail.rooms || [],
-        owner: hotelDetail.owner
-          ? {
-              name: `${hotelDetail.owner.first_name || ""} ${
-                hotelDetail.owner.last_name || ""
-              }`.trim() || "Chủ nhà chưa cập nhật",
-              avatar: hotelDetail.owner.avatar
-                ? `${process.env.REACT_APP_BE_URL}${hotelDetail.owner.avatar}`
-                : "/images/hotel/ic_avatar.png",
-              email: hotelDetail.owner.email || "Chưa cập nhật",
-              phone: hotelDetail.owner.phone_number || "Chưa cập nhật",
-              gender: hotelDetail.owner.gender || "Không rõ",
-              birthday: hotelDetail.owner.birthday || "Chưa cập nhật",
-              role: hotelDetail.owner.role || "Không rõ",
-              joinedAt: hotelDetail.owner.date_joined
-                ? new Date(hotelDetail.owner.date_joined).toLocaleDateString("vi-VN")
-                : "Chưa cập nhật",
-            }
-          : null,
-      }
-    : null;
-
-
+    const transformedHotel =
+        isDetailPage && hotelDetail
+            ? {
+                  name: hotelDetail.name || "Tên khách sạn",
+                  address: hotelDetail.location || "Địa chỉ không có",
+                  description: stripHtml(hotelDetail.description) || "",
+                  images: hotelDetail.images || [],
+                  facilities: extractFacilities(hotelDetail.facilities),
+                  avgStar: hotelDetail.avg_star || 0,
+                  point: hotelDetail.point || 0,
+                  mostFeature: hotelDetail.mostFeature || "",
+                  lat: hotelDetail.lat,
+                  lng: hotelDetail.lng,
+                  cityName: hotelDetail.city?.name || "",
+                  city_id: hotelDetail.city_id || null,
+                  min_price: hotelDetail.min_price || 0,
+                  regulation: hotelDetail.regulation || "",
+                  amenitiesAndFacilities:
+                      hotelDetail.amenitiesAndFacilities || "",
+                  usefulInformation:
+                      stripHtml(hotelDetail.usefulInformation) || "",
+                  locationInfo: stripHtml(hotelDetail.locationInfo) || "",
+                  nearbyLocation: hotelDetail.nearbyLocation || "",
+                  withUs: stripHtml(hotelDetail.withUs) || "",
+                  room_type: hotelDetail.room_type || "Tiêu chuẩn",
+                  rooms: hotelDetail.rooms || [],
+                  owner: hotelDetail.owner
+                      ? {
+                            name:
+                                `${hotelDetail.owner.first_name || ""} ${
+                                    hotelDetail.owner.last_name || ""
+                                }`.trim() || "Chủ nhà chưa cập nhật",
+                            avatar: hotelDetail.owner.avatar
+                                ? `${process.env.REACT_APP_BE_URL}${hotelDetail.owner.avatar}`
+                                : "/images/hotel/ic_avatar.png",
+                            email: hotelDetail.owner.email || "Chưa cập nhật",
+                            phone:
+                                hotelDetail.owner.phone_number ||
+                                "Chưa cập nhật",
+                            gender: hotelDetail.owner.gender || "Không rõ",
+                            birthday:
+                                hotelDetail.owner.birthday || "Chưa cập nhật",
+                            role: hotelDetail.owner.role || "Không rõ",
+                            joinedAt: hotelDetail.owner.date_joined
+                                ? new Date(
+                                      hotelDetail.owner.date_joined
+                                  ).toLocaleDateString("vi-VN")
+                                : "Chưa cập nhật",
+                        }
+                      : null,
+              }
+            : null;
 
     const defaultHotelData =
         !isDetailPage && hotels.length > 0
@@ -344,13 +355,12 @@ regulation: firstHotel.regulation || "",
         }
     };
 
-   const highlights = hotelData?.mostFeature
-  ? hotelData.mostFeature.split(",").map((item) => ({
-      icon: icTable, // icon bạn muốn hiển thị cho mỗi tính năng
-      text: item.trim(),
-    }))
-  : [];
-
+    const highlights = hotelData?.mostFeature
+        ? hotelData.mostFeature.split(",").map((item) => ({
+              icon: icTable, // icon bạn muốn hiển thị cho mỗi tính năng
+              text: item.trim(),
+          }))
+        : [];
 
     const promotionCategories = [
         {
@@ -401,7 +411,10 @@ regulation: firstHotel.regulation || "",
                 />
             </div>
             <GallerySection images={hotelData?.images} />
-<NavigationBar scrollToSection={scrollToSection} hotel={hotelData} />
+            <NavigationBar
+                scrollToSection={scrollToSection}
+                hotel={hotelData}
+            />
             <div className="w-full max-w-6xl mx-auto px-4">
                 <div
                     id="overview"
@@ -434,8 +447,7 @@ regulation: firstHotel.regulation || "",
                             highlights={highlights}
                             roomDetails={
                                 isDetailPage
-                                    ? [
-                                      ]
+                                    ? []
                                     : [
                                           {
                                               title: "Phòng 1",
@@ -486,86 +498,97 @@ regulation: firstHotel.regulation || "",
                             />
                         </div>
                         <div className="w-full">
-<HostProfileLink host={hotelData?.owner} />
+                            <HostProfileLink host={hotelData?.owner} />
                         </div>
                     </div>
                 </div>
-                <div id="rooms" className="section">
-<FilterSection hotelId={hotelId} />                    
-{isDetailPage && (
-  <RoomOptionsSection
-    title={`Phòng tại ${hotelData?.name || ""}`}
-    room_type={`Phòng tiêu chuẩn ${hotelData?.room_type || ""}`}
-    roomImage={getImageUrl(hotelData?.images?.[0]?.image)}
-    roomDetails={[
-      "Phòng tiện nghi đầy đủ",
-      hotelData?.mostFeature || "Tiện ích cơ bản",
-      "Dịch vụ chất lượng cao",
-      "Wi-Fi miễn phí",
-      "Dịch vụ phòng 24/7",
-    ]}
-    cancellationPolicy="Chính sách hủy theo quy định của khách sạn"
-    perks={["Bãi đậu xe", "WiFi miễn phí"]}
-    price="Liên hệ"
-    bookingInfo="Đặt phòng ngay"
-    additionalInfo={[
-      {
-        text: `Điểm đánh giá: ${hotelData?.avgStar?.toFixed(1) || 0}`,
-        highlight: true,
-      },
-      {
-        text: "Chất lượng phục vụ tốt!",
-        highlight: false,
-      },
-    ]}
-    hotelId={hotelId}
-    capacity={searchParams.capacity}
-    startDate={searchParams.startDate}
-    endDate={searchParams.endDate}
-  />
-)}
-
+                <div id="rooms" className="section mt-5">
+                    <FilterSection hotelId={hotelId} />
+                    {isDetailPage && (
+                        <div className="section mt-3">
+                            <RoomOptionsSection
+                                title={`Phòng tại ${hotelData?.name || ""}`}
+                                room_type={`Phòng tiêu chuẩn ${
+                                    hotelData?.room_type || ""
+                                }`}
+                                roomImage={getImageUrl(
+                                    hotelData?.images?.[0]?.image
+                                )}
+                                roomDetails={[
+                                    "Phòng tiện nghi đầy đủ",
+                                    hotelData?.mostFeature || "Tiện ích cơ bản",
+                                    "Dịch vụ chất lượng cao",
+                                    "Wi-Fi miễn phí",
+                                    "Dịch vụ phòng 24/7",
+                                ]}
+                                cancellationPolicy="Chính sách hủy theo quy định của khách sạn"
+                                perks={["Bãi đậu xe", "WiFi miễn phí"]}
+                                price="Liên hệ"
+                                bookingInfo="Đặt phòng ngay"
+                                additionalInfo={[
+                                    {
+                                        text: `Điểm đánh giá: ${
+                                            hotelData?.avgStar?.toFixed(1) || 0
+                                        }`,
+                                        highlight: true,
+                                    },
+                                    {
+                                        text: "Chất lượng phục vụ tốt!",
+                                        highlight: false,
+                                    },
+                                ]}
+                                hotelId={hotelId}
+                                capacity={searchParams.capacity}
+                                startDate={searchParams.startDate}
+                                endDate={searchParams.endDate}
+                            />
+                        </div>
+                    )}
                 </div>
-                <ActivitySlider
-                    cityId={hotelData?.city_id}
-                    cityName={hotelData?.name}
-                />
+                <div id="activity" className="section mt-5">
+                    <ActivitySlider
+                        cityId={hotelData?.city_id}
+                        cityName={hotelData?.name}
+                    />
+                </div>
 
-                <div id="host" className="section">
+                <div id="host" className="section mt-5">
                     <HostAndAmenitiesSection />
                 </div>
-                <div id="facilities" className="section">
-    <ExperienceSection hotelId={hotelId} />
-</div>
-
-
-<div id="facilities-ami" className="section">
-<Facilities
-  facilitiesString={hotelData?.amenitiesAndFacilities}
-  usefulInformation={hotelData?.usefulInformation}
-  withUs={hotelData?.withUs}
-/>
+                <div id="facilities" className="section mt-5">
+                    <ExperienceSection hotelId={hotelId} />
                 </div>
-             <div id="nearby" className="section">
-  {hotelDetail && hotelDetail.nearbyLocation && (
-    <NearbyPlaces
-      locations={hotelDetail.nearbyLocation
-        .split(",")
-        .map((item) => item.trim())
-        .filter(Boolean)}
-    />
-  )}
-</div>
 
+                <div id="facilities-ami" className="section mt-5">
+                    <Facilities
+                        facilitiesString={hotelData?.amenitiesAndFacilities}
+                        usefulInformation={hotelData?.usefulInformation}
+                        withUs={hotelData?.withUs}
+                    />
+                </div>
+                <div id="nearby" className="section mt-5">
+                    {hotelDetail && hotelDetail.nearbyLocation && (
+                        <NearbyPlaces
+                            locations={hotelDetail.nearbyLocation
+                                .split(",")
+                                .map((item) => item.trim())
+                                .filter(Boolean)}
+                        />
+                    )}
+                </div>
 
-               <div id="rules" className="section">
-{hotelData ? <HotelRules regulation={hotelData.regulation} /> : "Loading..."}
-</div>
+                <div id="rules" className="section mt-5">
+                    {hotelData ? (
+                        <HotelRules regulation={hotelData.regulation} />
+                    ) : (
+                        "Loading..."
+                    )}
+                </div>
 
-                <div id="policy" className="section">
+                <div id="policy" className="section mt-5">
                     <FlightBookingSection />
                 </div>
-                <div id="reviews" className="section">
+                <div id="reviews" className="section mt-5">
                     <ReviewTabView hotelId={isDetailPage ? hotelId : null} />
                 </div>
             </div>

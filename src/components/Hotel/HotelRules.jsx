@@ -71,41 +71,45 @@
 import { Info } from "lucide-react";
 
 export default function HotelRules({ regulation }) {
-  // Xử lý nội dung quy định
-  const parseRegulation = (html) => {
-    if (!html) return [];
+    // Xử lý nội dung quy định
+    const parseRegulation = (html) => {
+        if (!html) return [];
 
-    let text = html
-      .replace(/<[^>]*>/g, "") // loại bỏ thẻ HTML
-      .replace(/;/g, ",") // đổi dấu ; thành ,
-      .replace(/\s*,\s*/g, ", ") // chuẩn hóa dấu phẩy
-      .trim();
+        let text = html
+            .replace(/<[^>]*>/g, "") // loại bỏ thẻ HTML
+            .replace(/;/g, ",") // đổi dấu ; thành ,
+            .replace(/\s*,\s*/g, ", ") // chuẩn hóa dấu phẩy
+            .trim();
 
-    return text.split(",").map((item) => item.trim()).filter(Boolean);
-  };
+        return text
+            .split(",")
+            .map((item) => item.trim())
+            .filter(Boolean);
+    };
 
-  const regulationList = parseRegulation(regulation);
+    const regulationList = parseRegulation(regulation);
 
-  return (
-<div className="max-w-4xl mx-auto bg-white shadow-md rounded-2xl p-6 text-gray-800">
-  <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
-    <Info size={20} />
-    Quy định của chỗ nghỉ
-  </h2>
+    return (
+        <div className="mx-auto bg-white shadow-md rounded-2xl p-6 text-gray-800">
+            <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+                <Info size={20} />
+                Quy định của chỗ nghỉ
+            </h2>
 
-  {regulationList.length > 0 ? (
-    <ul className="space-y-1 text-sm text-gray-700">
-      {regulationList.map((rule, index) => (
-        <li key={index} className="flex items-start gap-2">
-          <Info size={16} className="text-blue-500 mt-1" />
-          <span>{rule}</span>
-        </li>
-      ))}
-    </ul>
-  ) : (
-    <p className="text-gray-500">Chưa có quy định nào được cung cấp.</p>
-  )}
-</div>
-
-  );
+            {regulationList.length > 0 ? (
+                <ul className="space-y-1 text-sm text-gray-700">
+                    {regulationList.map((rule, index) => (
+                        <li key={index} className="flex items-start gap-2">
+                            <Info size={16} className="text-blue-500 mt-1" />
+                            <span>{rule}</span>
+                        </li>
+                    ))}
+                </ul>
+            ) : (
+                <p className="text-gray-500">
+                    Chưa có quy định nào được cung cấp.
+                </p>
+            )}
+        </div>
+    );
 }

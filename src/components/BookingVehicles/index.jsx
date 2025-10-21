@@ -56,6 +56,9 @@ import dayjs from "dayjs";
 import { toast } from "react-toastify";
 import { callFetchCar } from "config/api";
 import { formatCurrency } from "utils/formatCurrency";
+import { useAppSelector } from "../../redux/hooks";
+import { SERVICE_TYPE } from "constants/booking";
+import { callBook } from "config/api";
 
 const { Option } = Select;
 const { RangePicker } = DatePicker;
@@ -92,10 +95,11 @@ export default function BookingVehicles() {
             capacity: 4,
         },
     };
-    const nagivate = useNavigate();
+    const navigate = useNavigate();
     const { state } = useLocation();
     const { option, formFromAirportIn, formFromLocationIn } =
         state || defaultFakeState;
+    const user = useAppSelector((state) => state.account.user);
     const [vehicleData, setVehicleData] = useState([]);
     const [selectedItem, setSelectedItem] = useState(vehicleData[0]);
     const [openExtra, setOpenExtra] = useState(false);
@@ -326,22 +330,97 @@ export default function BookingVehicles() {
     };
 
     const handleSubmit = async () => {
+        console.log(
+            "formFromAirportIn.timeStart",
+            dayjs(formFromAirportIn.timeStart).toISOString()
+        );
+
         if (option === "from-airport") {
-            nagivate(`/booking-contact-information`, {
-                state: {
-                    option,
-                    formFromAirportIn,
-                    car: selectedItem,
+            // navigate(`/booking-contact-information`, {
+            //     state: {
+            //         option,
+            //         formFromAirportIn,
+            //         car: selectedItem,
+            //     },
+            // });
+
+            const body = {
+                user: user?.id,
+                service_type: SERVICE_TYPE.CAR,
+                total_price: Math.round(
+                    selectedItem.price_per_km * distance * selectedItem.capacity
+                ),
+                car_detail: {
+                    car: selectedItem.id,
+                    pickup_location: formFromAirportIn.airportIn.name,
+                    dropoff_location: formFromAirportIn.locationTo.name,
+                    lat1: lat1,
+                    lng1: long1,
+                    lat2: lat2,
+                    lng2: long2,
+                    pickup_datetime: dayjs(
+                        formFromAirportIn.timeStart
+                    ).toISOString(),
+                    driver_required: true,
+                    distance_km: distance,
+                    total_time_estimate: distance / selectedItem.avg_speed,
+                    passenger_quantity_booking: formFromAirportIn.capacity,
                 },
-            });
+            };
+
+            const res = await callBook(body);
+
+            if (res.isSuccess) {
+                navigate(
+                    `/book?booking_id=${res.booking_id}&type=${body.service_type}&ref=${res.data.id}`,
+                    {
+                        state: {
+                            option,
+                            formFromAirportIn,
+                            car: selectedItem,
+                        },
+                    }
+                );
+            }
         } else {
-            nagivate(`/booking-contact-information`, {
-                state: {
-                    option,
-                    formFromLocationIn,
-                    car: selectedItem,
+            const body = {
+                user: user?.id,
+                service_type: SERVICE_TYPE.CAR,
+                total_price: Math.round(
+                    selectedItem.price_per_km * distance * selectedItem.capacity
+                ),
+                car_detail: {
+                    car: selectedItem.id,
+                    pickup_location: formFromLocationIn.locationIn.name,
+                    dropoff_location: formFromLocationIn.airportTo.name,
+                    lat1: lat1,
+                    lng1: long1,
+                    lat2: lat2,
+                    lng2: long2,
+                    pickup_datetime: dayjs(
+                        formFromLocationIn.timeStart
+                    ).toISOString(),
+                    driver_required: true,
+                    distance_km: distance,
+                    total_time_estimate: distance / selectedItem.avg_speed,
+                    passenger_quantity_booking: formFromLocationIn.capacity,
                 },
-            });
+            };
+
+            const res = await callBook(body);
+
+            if (res.isSuccess) {
+                navigate(
+                    `/book?booking_id=${res.booking_id}&type=${body.service_type}&ref=${res.data.id}`,
+                    {
+                        state: {
+                            option,
+                            formFromLocationIn,
+                            car: selectedItem,
+                        },
+                    }
+                );
+            }
         }
     };
 

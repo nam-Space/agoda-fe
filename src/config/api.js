@@ -145,6 +145,11 @@ export const callDeleteCar = (id) => {
     return axios.delete(`/api/cars/cars/${id}/delete/`);
 };
 
+// Car booking detail
+export const callFetchDetailCarBooking = (id) => {
+    return axios.get(`/api/cars/cars-booking/${id}/`);
+};
+
 /* Get location Map in all world */
 export const callFetchLocationMapInAllWorld = (query) => {
     return axiosBase.get(`https://photon.komoot.io/api/?q=${query}`);
