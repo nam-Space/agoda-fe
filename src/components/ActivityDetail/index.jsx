@@ -36,6 +36,7 @@ import { useAppSelector } from "../../redux/hooks";
 import { callBook } from "config/api";
 import { toast } from "react-toastify";
 import { SERVICE_TYPE } from "constants/booking";
+import ReviewActivity from "./ReivewActivity";
 const { Panel } = Collapse;
 const { Text } = Typography;
 
@@ -978,6 +979,8 @@ export default function ActivityDetail() {
                                 </div>
                             </Panel>
                         </Collapse>
+
+                        <ReviewActivity activity={activity} />
                     </div>
 
                     {/* Booking Sidebar */}
