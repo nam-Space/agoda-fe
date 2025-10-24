@@ -309,3 +309,26 @@ export const callGetRoomDetail = (roomId) => {
 export const callSearchRoomQuery = (query) => {
     return axios.get(`/api/rooms/rooms/search/?${query}`);
 }
+
+
+// Review
+export const callFetchReview = (query) => {
+    return axios.get(`/api/reviews/reviews/?${query}`);
+};
+
+export const callFetchDetailReview = (id) => {
+    return axios.get(`/api/reviews/reviews/${id}/`);
+};
+
+
+export const callCreateReview = (data) => {
+    return axios.post("/api/reviews/reviews/create/", { ...data });
+};
+
+export const callUpdateReview = (id, data) => {
+    return axios.put(`/api/reviews/reviews/${id}/update/`, { ...data });
+};
+
+export const callDeleteReview = (id) => {
+    return axios.delete(`/api/reviews/reviews/${id}/delete/`);
+};

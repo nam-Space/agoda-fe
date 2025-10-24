@@ -11,12 +11,7 @@ import {
     Pagination,
     Spin,
 } from "antd";
-import {
-    SendOutlined,
-    UserOutlined,
-    EditOutlined,
-    DeleteOutlined,
-} from "@ant-design/icons";
+import { SendOutlined, EditOutlined, DeleteOutlined } from "@ant-design/icons";
 import { callFetchReview } from "config/api";
 import { ServiceType } from "constants/serviceType";
 import { useAppSelector } from "../../redux/hooks";
@@ -26,9 +21,10 @@ import { callDeleteReview } from "config/api";
 import { callUpdateReview } from "config/api";
 import { callCreateReview } from "config/api";
 import { getUserAvatar } from "utils/imageUrl";
+import { useParams } from "react-router-dom";
 
-export default function ReviewTabView({ hotelId }) {
-    const hotel = useAppSelector((state) => state.hotel.hotelDetail);
+export default function ReviewActivity({ activity }) {
+    const { activityId } = useParams();
     const user = useAppSelector((state) => state.account.user);
     const [reviews, setReviews] = useState([]);
 
@@ -53,7 +49,7 @@ export default function ReviewTabView({ hotelId }) {
     const handleGetReviews = async () => {
         setLoadingReviews(true);
         const res = await callFetchReview(
-            `current=${meta.current}&pageSize=${meta.pageSize}&service_type=${ServiceType.HOTEL}&service_ref_id=${hotelId}`
+            `current=${meta.current}&pageSize=${meta.pageSize}&service_type=${ServiceType.ACTIVITY}&service_ref_id=${activityId}`
         );
         setLoadingReviews(false);
         setMeta({
@@ -67,10 +63,10 @@ export default function ReviewTabView({ hotelId }) {
     };
 
     useEffect(() => {
-        if (hotelId) {
+        if (activityId) {
             handleGetReviews();
         }
-    }, [hotelId, meta.current, meta.pageSize]);
+    }, [activityId, meta.current, meta.pageSize]);
 
     const handleSubmitReview = async () => {
         if (!comment.trim() || rating === 0) {
@@ -81,8 +77,8 @@ export default function ReviewTabView({ hotelId }) {
         }
         setLoadingSubmit(true);
         const res = await callCreateReview({
-            service_type: ServiceType.HOTEL,
-            service_ref_id: hotelId,
+            service_type: ServiceType.ACTIVITY,
+            service_ref_id: activityId,
             rating,
             comment,
         });
@@ -158,12 +154,12 @@ export default function ReviewTabView({ hotelId }) {
                     <div className="flex items-center gap-4">
                         <div className="flex items-center gap-2">
                             <span className="text-2xl font-bold text-blue-600">
-                                {hotel?.avg_star?.toFixed(1)}
+                                {activity?.avg_star?.toFixed(1)}
                             </span>
                             <div>
                                 <Rate
                                     disabled
-                                    value={Math.round(hotel?.avg_star)}
+                                    value={Math.round(activity?.avg_star)}
                                 />
                                 <p className="text-sm text-gray-600">
                                     Dựa trên {meta.total} đánh giá
