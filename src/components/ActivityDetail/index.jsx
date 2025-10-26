@@ -37,6 +37,8 @@ import { callBook } from "config/api";
 import { toast } from "react-toastify";
 import { SERVICE_TYPE } from "constants/booking";
 import ReviewActivity from "./ReivewActivity";
+import { callFetchDetailUserActivityInteractionByActivityId } from "config/api";
+import { callUpsertUserActivityInteraction } from "config/api";
 const { Panel } = Collapse;
 const { Text } = Typography;
 
@@ -108,6 +110,30 @@ export default function ActivityDetail() {
     });
     const [selectedIndexTicket, setSelectedIndexTicket] = useState(-1);
 
+    const handleUpdateTotalClick = async () => {
+        const res = await callFetchDetailUserActivityInteractionByActivityId(
+            activity.id
+        );
+        if (res.isSuccess) {
+            const userActivityInteraction = res.data;
+            await callUpsertUserActivityInteraction({
+                activity_id: activity.id,
+                click_count: userActivityInteraction.click_count + 1,
+                positive_count: userActivityInteraction.positive_count,
+                negative_count: userActivityInteraction.negative_count,
+                neutral_count: userActivityInteraction.neutral_count,
+            });
+        } else {
+            await callUpsertUserActivityInteraction({
+                activity_id: activity.id,
+                click_count: 0,
+                positive_count: 0,
+                negative_count: 0,
+                neutral_count: 0,
+            });
+        }
+    };
+
     useEffect(() => {
         window.scrollTo(0, 0);
         if (activityId) {
@@ -122,6 +148,12 @@ export default function ActivityDetail() {
             );
         }
     }, [activityId, dateSelectedGeneral]);
+
+    useEffect(() => {
+        if (activity?.id) {
+            handleUpdateTotalClick();
+        }
+    }, [activity]);
 
     useEffect(() => {
         setAdultTickets(groupById(activityPackages).map((item) => 1));

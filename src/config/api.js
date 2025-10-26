@@ -103,6 +103,19 @@ export const callUpdateHotel = (id, data) => {
     return axios.put(`/api/hotels/hotels/${id}/update/`, { ...data });
 };
 
+export const callUpdateHotelNotImage = (id, data) => {
+    return axios.put(`/api/hotels/hotels/${id}/update/not-image/`, { ...data });
+};
+
+export const callFetchDetailUserHotelInteractionByHotelId = (hotelId) => {
+    return axios.get(`/api/hotels/user-hotel-interaction/${hotelId}/`);
+};
+
+export const callUpsertUserHotelInteraction = (data) => {
+    return axios.post(`/api/hotels/user-hotel-interaction/upsert/`, { ...data });
+};
+
+
 export const callDeleteHotel = (id) => {
     return axios.delete(`/api/hotels/hotels/${id}/delete/`);
 };
@@ -171,6 +184,14 @@ export const callCreateActivity = (data) => {
 
 export const callUpdateActivity = (id, data) => {
     return axios.put(`/api/activities/activities/${id}/update/`, { ...data });
+};
+
+export const callFetchDetailUserActivityInteractionByActivityId = (activity) => {
+    return axios.get(`/api/activities/user-activity-interaction/${activity}/`);
+};
+
+export const callUpsertUserActivityInteraction = (data) => {
+    return axios.post(`/api/activities/user-activity-interaction/upsert/`, { ...data });
 };
 
 export const callDeleteActivity = (id) => {

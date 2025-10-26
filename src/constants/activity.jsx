@@ -8,3 +8,4 @@ export const ACTIVITY_TYPE = {
 };
 
 export const INF = 99999999999999999;
+export const RANGE_PRICE = 1600000;
