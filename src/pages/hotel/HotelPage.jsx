@@ -29,6 +29,10 @@ import RoomOptionsSection from "components/Hotel/RoomOptionsSection";
 import SearchBar from "components/Hotel/SearchBarSection";
 
 import icTable from "../../images/hotel/ic_table.png";
+import { callUpdateHotel } from "config/api";
+import { callUpdateHotelNotImage } from "config/api";
+import { callFetchDetailUserHotelInteractionByHotelId } from "config/api";
+import { callUpsertUserHotelInteraction } from "config/api";
 
 const HotelPage = () => {
     const { hotelSlug } = useParams();
@@ -133,6 +137,30 @@ const HotelPage = () => {
         };
     };
 
+    const handleUpdateTotalClick = async () => {
+        const res = await callFetchDetailUserHotelInteractionByHotelId(
+            hotelDetail.id
+        );
+        if (res.isSuccess) {
+            const userHotelInteraction = res.data;
+            await callUpsertUserHotelInteraction({
+                hotel_id: hotelDetail.id,
+                click_count: userHotelInteraction.click_count + 1,
+                positive_count: userHotelInteraction.positive_count,
+                negative_count: userHotelInteraction.negative_count,
+                neutral_count: userHotelInteraction.neutral_count,
+            });
+        } else {
+            await callUpsertUserHotelInteraction({
+                hotel_id: hotelDetail.id,
+                click_count: 0,
+                positive_count: 0,
+                negative_count: 0,
+                neutral_count: 0,
+            });
+        }
+    };
+
     useEffect(() => {
         if (isDetailPage && hotelId) {
             dispatch(fetchHotelDetail(hotelId));
@@ -152,6 +180,12 @@ const HotelPage = () => {
             }
         };
     }, [dispatch, hotelId, isDetailPage]);
+
+    useEffect(() => {
+        if (hotelDetail?.id) {
+            handleUpdateTotalClick();
+        }
+    }, [hotelDetail]);
 
     useEffect(() => {
         if (error) {

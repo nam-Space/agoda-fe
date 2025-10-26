@@ -32,15 +32,15 @@
 //     currentPage: 1,
 //     pageSize: 10,
 //     totalPages: 0,
-    
+
 //     // Hotel detail
 //     hotelDetail: null,
 //     isLoadingHotelDetail: false,
-    
+
 //     // Filters & Sort
 //     filters: {},
 //     sortBy: 0,
-    
+
 //     // Error handling
 //     error: null,
 // };
@@ -53,32 +53,32 @@
 //         setFilters: (state, action) => {
 //             state.filters = { ...state.filters, ...action.payload };
 //         },
-        
+
 //         // Clear filters
 //         clearFilters: (state) => {
 //             state.filters = {};
 //         },
-        
+
 //         // Set sort option
 //         setSortBy: (state, action) => {
 //             state.sortBy = action.payload;
 //         },
-        
+
 //         // Set current page
 //         setCurrentPage: (state, action) => {
 //             state.currentPage = action.payload;
 //         },
-        
+
 //         // Set page size
 //         setPageSize: (state, action) => {
 //             state.pageSize = action.payload;
 //         },
-        
+
 //         // Clear hotel detail
 //         clearHotelDetail: (state) => {
 //             state.hotelDetail = null;
 //         },
-        
+
 //         // Clear error
 //         clearError: (state) => {
 //             state.error = null;
@@ -108,7 +108,7 @@
 //                 state.error = action.error?.message || "Failed to fetch hotels";
 //                 state.hotels = [];
 //             });
-            
+
 //         // Fetch hotel detail
 //         builder
 //             .addCase(fetchHotelDetail.pending, (state) => {
@@ -150,11 +150,11 @@ import { callGetHotels, callGetHotelDetail } from "config/api";
 export const fetchHotelsByCity = createAsyncThunk(
     "hotel/fetchHotelsByCity",
     async ({ cityId, currentPage = 1, pageSize = 10, filters = {} }) => {
-        const response = await callGetHotels({ 
-            cityId, 
-            currentPage, 
-            pageSize, 
-            filters 
+        const response = await callGetHotels({
+            cityId,
+            currentPage,
+            pageSize,
+            filters
         });
         return response;
     }
@@ -177,15 +177,15 @@ const initialState = {
     currentPage: 1,
     pageSize: 10,
     totalPages: 0,
-    
+
     // Hotel detail
     hotelDetail: null,
     isLoadingHotelDetail: false,
-    
+
     // Filters & Sort
     filters: {},
     sortBy: 0,
-    
+
     // Error handling
     error: null,
 };
@@ -198,32 +198,32 @@ export const hotelSlice = createSlice({
         setFilters: (state, action) => {
             state.filters = { ...state.filters, ...action.payload };
         },
-        
+
         // Clear filters
         clearFilters: (state) => {
             state.filters = {};
         },
-        
+
         // Set sort option
         setSortBy: (state, action) => {
             state.sortBy = action.payload;
         },
-        
+
         // Set current page
         setCurrentPage: (state, action) => {
             state.currentPage = action.payload;
         },
-        
+
         // Set page size
         setPageSize: (state, action) => {
             state.pageSize = action.payload;
         },
-        
+
         // Clear hotel detail
         clearHotelDetail: (state) => {
             state.hotelDetail = null;
         },
-        
+
         // Clear error
         clearError: (state) => {
             state.error = null;
@@ -253,7 +253,7 @@ export const hotelSlice = createSlice({
                 state.error = action.error?.message || "Failed to fetch hotels";
                 state.hotels = [];
             });
-            
+
         // Fetch hotel detail
         builder
             .addCase(fetchHotelDetail.pending, (state) => {

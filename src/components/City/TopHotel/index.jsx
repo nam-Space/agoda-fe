@@ -164,7 +164,15 @@ const TopHotel = () => {
     useEffect(() => {
         if (cityId) {
             dispatch(
-                fetchHotelsByCity({ cityId, currentPage, pageSize, filters })
+                fetchHotelsByCity({
+                    cityId,
+                    currentPage,
+                    pageSize,
+                    filters: {
+                        ...filters,
+                        recommended: true,
+                    },
+                })
             );
         }
     }, [dispatch, cityId, currentPage, pageSize, filters]);

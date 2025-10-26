@@ -14,7 +14,9 @@ const TopActivity = () => {
     const activities = useAppSelector((state) => state.activity.data);
 
     useEffect(() => {
-        dispatch(fetchActivity({ query: "current=1&pageSize=10" }));
+        dispatch(
+            fetchActivity({ query: "current=1&pageSize=10&recommended=true" })
+        );
     }, []);
 
     return (
