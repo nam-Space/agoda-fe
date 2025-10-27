@@ -1,0 +1,1 @@
+export const RANGE_PRICE_HOTEL = 2000000;
