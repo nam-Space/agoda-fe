@@ -174,61 +174,64 @@ export default function ReviewTabView({ hotelId }) {
                 </div>
 
                 {/* Review Form */}
-                <div className="bg-white rounded-lg shadow-md p-6 mb-8">
-                    <h2 className="text-xl font-bold text-gray-900 mb-6">
-                        Chia sẻ trải nghiệm của bạn
-                    </h2>
+                {user?.id > 0 && (
+                    <div className="bg-white rounded-lg shadow-md p-6 mb-8">
+                        <h2 className="text-xl font-bold text-gray-900 mb-6">
+                            Chia sẻ trải nghiệm của bạn
+                        </h2>
 
-                    <div className="space-y-4">
-                        {/* Rating */}
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                Đánh giá <span className="text-red-500">*</span>
-                            </label>
-                            <div className="flex items-center gap-2">
-                                <Rate
-                                    value={rating}
-                                    onChange={setRating}
-                                    size="large"
-                                    style={{ fontSize: 32 }}
+                        <div className="space-y-4">
+                            {/* Rating */}
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Đánh giá{" "}
+                                    <span className="text-red-500">*</span>
+                                </label>
+                                <div className="flex items-center gap-2">
+                                    <Rate
+                                        value={rating}
+                                        onChange={setRating}
+                                        size="large"
+                                        style={{ fontSize: 32 }}
+                                    />
+                                    <span className="text-sm text-gray-600">
+                                        {rating > 0 && `${rating} sao`}
+                                    </span>
+                                </div>
+                            </div>
+
+                            {/* Comment */}
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Bình luận{" "}
+                                    <span className="text-red-500">*</span>
+                                </label>
+                                <Input.TextArea
+                                    placeholder="Chia sẻ trải nghiệm của bạn về khách sạn..."
+                                    value={comment}
+                                    onChange={(e) => setComment(e.target.value)}
+                                    rows={4}
+                                    maxLength={500}
+                                    showCount
+                                    className="rounded-lg"
                                 />
-                                <span className="text-sm text-gray-600">
-                                    {rating > 0 && `${rating} sao`}
-                                </span>
                             </div>
                         </div>
-
-                        {/* Comment */}
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                Bình luận{" "}
-                                <span className="text-red-500">*</span>
-                            </label>
-                            <Input.TextArea
-                                placeholder="Chia sẻ trải nghiệm của bạn về khách sạn..."
-                                value={comment}
-                                onChange={(e) => setComment(e.target.value)}
-                                rows={4}
-                                maxLength={500}
-                                showCount
-                                className="rounded-lg"
-                            />
+                        {/* Submit Button */}
+                        <div className="flex justify-end mt-6">
+                            <Button
+                                type="primary"
+                                size="large"
+                                icon={<SendOutlined />}
+                                onClick={handleSubmitReview}
+                                loading={loadingSubmit}
+                                className="bg-blue-600 hover:bg-blue-700 rounded-lg"
+                            >
+                                Gửi đánh giá
+                            </Button>
                         </div>
                     </div>
-                    {/* Submit Button */}
-                    <div className="flex justify-end mt-6">
-                        <Button
-                            type="primary"
-                            size="large"
-                            icon={<SendOutlined />}
-                            onClick={handleSubmitReview}
-                            loading={loadingSubmit}
-                            className="bg-blue-600 hover:bg-blue-700 rounded-lg"
-                        >
-                            Gửi đánh giá
-                        </Button>
-                    </div>
-                </div>
+                )}
 
                 {/* Reviews List */}
                 <div className="bg-white rounded-lg shadow-md p-6">
