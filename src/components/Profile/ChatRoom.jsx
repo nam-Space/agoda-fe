@@ -143,6 +143,51 @@ const ChatRoom = ({ conversation, otherUser }) => {
                                             </p>
                                         </div>
                                     </>
+                                ) : getOtherUser(conversation, user)?.role ===
+                                  ROLE.STAFF ? (
+                                    <>
+                                        <img
+                                            src={`${
+                                                process.env.REACT_APP_BE_URL
+                                            }${
+                                                getOtherUser(conversation, user)
+                                                    ?.avatar
+                                            }`}
+                                            className="min-w-[50px] h-[50px] object-cover rounded-[50%]"
+                                        />
+                                        <div>
+                                            <div>
+                                                <span className="font-bold">
+                                                    {
+                                                        getOtherUser(
+                                                            conversation,
+                                                            user
+                                                        )?.first_name
+                                                    }{" "}
+                                                    {
+                                                        getOtherUser(
+                                                            conversation,
+                                                            user
+                                                        )?.last_name
+                                                    }
+                                                </span>
+                                                {" - Nhân viên của "}
+                                                <span className="font-bold">
+                                                    {
+                                                        getOtherUser(
+                                                            conversation,
+                                                            user
+                                                        )?.manager?.hotel?.name
+                                                    }
+                                                </span>
+                                            </div>
+                                            <p className="font-semibold text-[13px]">
+                                                {dayjs(
+                                                    conversation.created_at
+                                                ).format("DD-MM-YYYY HH:mm:ss")}
+                                            </p>
+                                        </div>
+                                    </>
                                 ) : (
                                     <>
                                         <img
@@ -177,8 +222,10 @@ const ChatRoom = ({ conversation, otherUser }) => {
                             </div>
                         </div>
                         <div className="col-start-3 col-span-1">
-                            {getOtherUser(conversation, user)?.role ===
-                                ROLE.OWNER && (
+                            {(getOtherUser(conversation, user)?.role ===
+                                ROLE.OWNER ||
+                                getOtherUser(conversation, user)?.role ===
+                                    ROLE.STAFF) && (
                                 <div>
                                     <div className="text-[12px] text-[#5392f9] flex gap-[3px] items-center">
                                         <IoIosMail className="text-[13px]" />

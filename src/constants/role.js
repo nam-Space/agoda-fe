@@ -4,4 +4,5 @@ export const ROLE = {
     CUSTOMER: 'customer',
     DRIVER: 'driver',
     OWNER: 'owner',
+    EVENT_ORGANIZER: "event_organizer",
 }

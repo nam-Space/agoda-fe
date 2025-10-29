@@ -277,7 +277,7 @@ export default function ActivityDetail() {
                     selectedTickerOption,
                     selectedIndexTicket
                 ),
-                activity_detail: {
+                activity_date_detail: {
                     activity_date: getActivityDate(
                         selectedTickerOption,
                         selectedIndexTicket

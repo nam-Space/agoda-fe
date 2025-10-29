@@ -723,7 +723,7 @@ export default function BookingContactActivityStep3() {
                                         </span>
                                         <span className="text-sm text-gray-900 line-through">
                                             {formatCurrency(
-                                                activityDateBooking?.total_price
+                                                booking?.total_price
                                             )}
                                         </span>
                                     </div>

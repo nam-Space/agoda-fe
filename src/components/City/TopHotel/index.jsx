@@ -230,7 +230,13 @@ const TopHotel = () => {
                 },
             });
         }
-    }, [cityId, filterSearch, JSON.stringify(valuePrices), valueSort]);
+    }, [
+        cityId,
+        filterSearch,
+        JSON.stringify(valuePrices),
+        meta.current,
+        meta.pageSize,
+    ]);
 
     // const handleSortChange = (idx) => dispatch(setSortBy(idx));
     // const handlePageChange = (page) => dispatch(setCurrentPage(page));
