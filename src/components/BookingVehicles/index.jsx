@@ -64,41 +64,9 @@ const { Option } = Select;
 const { RangePicker } = DatePicker;
 
 export default function BookingVehicles() {
-    const defaultFakeState = {
-        option: "from-airport", // hoặc "from-location"
-        formFromAirportIn: {
-            airportIn: {
-                lat: 21.2187,
-                lng: 105.8041,
-                name: "Sân bay Nội Bài",
-            },
-            locationTo: {
-                lat: 21.0285,
-                lng: 105.8542,
-                name: "Trung tâm Hà Nội",
-            },
-            timeStart: new Date().toISOString(),
-            capacity: 4,
-        },
-        formFromLocationIn: {
-            locationIn: {
-                lat: 21.0285,
-                lng: 105.8542,
-                name: "Trung tâm Hà Nội",
-            },
-            airportTo: {
-                lat: 21.2187,
-                lng: 105.8041,
-                name: "Sân bay Nội Bài",
-            },
-            timeStart: new Date().toISOString(),
-            capacity: 4,
-        },
-    };
     const navigate = useNavigate();
     const { state } = useLocation();
-    const { option, formFromAirportIn, formFromLocationIn } =
-        state || defaultFakeState;
+    const { option, formFromAirportIn, formFromLocationIn } = state;
     const user = useAppSelector((state) => state.account.user);
     const [vehicleData, setVehicleData] = useState([]);
     const [selectedItem, setSelectedItem] = useState(vehicleData[0]);
@@ -330,10 +298,10 @@ export default function BookingVehicles() {
     };
 
     const handleSubmit = async () => {
-        console.log(
-            "formFromAirportIn.timeStart",
-            dayjs(formFromAirportIn.timeStart).toISOString()
-        );
+        // console.log(
+        //     "formFromAirportIn.timeStart",
+        //     dayjs(formFromAirportIn.timeStart).toISOString()
+        // );
 
         if (option === "from-airport") {
             // navigate(`/booking-contact-information`, {
