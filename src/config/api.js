@@ -251,6 +251,11 @@ export const getRoomDetail = (id) => {
     return axios.get(`/api/rooms/rooms/${id}/`);
 };
 
+// room booking detail
+export const callFetchDetailRoomBooking = (id) => {
+    return axios.get(`/api/rooms/rooms-booking/${id}/`);
+};
+
 // Booking
 export const callBook = (data) => {
     return axios.post("/api/bookings/", data);

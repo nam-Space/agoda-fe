@@ -26,6 +26,7 @@ import {
     capturePayment,
     callFetchDetailActivityDateBooking,
     callFetchDetailCarBooking,
+    callFetchDetailRoomBooking,
 } from "../../config/api";
 import { SERVICE_TYPE } from "constants/booking";
 import dayjs from "dayjs";
@@ -63,11 +64,11 @@ export default function BookingContactActivityStep3() {
 
                 // Lấy thông tin phòng
                 if (bookingResponse.service_type === ServiceType.HOTEL) {
-                    const roomResponse = await getRoomDetail(
+                    const res = await callFetchDetailRoomBooking(
                         bookingResponse.service_ref_id
                     );
-                    if (roomResponse.isSuccess) {
-                        setRoom(roomResponse.data);
+                    if (res.isSuccess) {
+                        setRoom(res.data?.room);
                     }
                 }
 
@@ -301,7 +302,8 @@ export default function BookingContactActivityStep3() {
                                                 {room?.hotel?.avg_star}
                                             </span>
                                             <span className="text-gray-500">
-                                                (1,128 bài đánh giá)
+                                                ({room?.hotel?.review_count}{" "}
+                                                lượt đánh giá)
                                             </span>
                                         </div>
                                         <p className="text-sm text-gray-600">
@@ -393,7 +395,11 @@ export default function BookingContactActivityStep3() {
                                                 {activityDateBooking?.avg_star}
                                             </span>
                                             <span className="text-gray-500">
-                                                1,130 bài đánh giá
+                                                {activityDateBooking
+                                                    ?.activity_date
+                                                    ?.activity_package?.activity
+                                                    ?.review_count || 0}{" "}
+                                                lượt đánh giá
                                             </span>
                                         </div>
                                         <p className="text-sm text-gray-600">
