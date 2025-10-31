@@ -23,6 +23,7 @@ import {
     getRoomDetail,
     callFetchDetailActivityDateBooking,
     callFetchDetailCarBooking,
+    callFetchDetailRoomBooking,
 } from "../../config/api";
 import dayjs from "dayjs";
 import { Button, Card, Divider } from "antd";
@@ -73,9 +74,9 @@ export default function BookingContactActivity() {
 
                 // Fetch room details if service_type is HOTEL
                 if (service_type === ServiceType.HOTEL && ref_id) {
-                    const roomResponse = await getRoomDetail(ref_id);
-                    if (roomResponse.isSuccess) {
-                        setRoom(roomResponse.data);
+                    const res = await callFetchDetailRoomBooking(ref_id);
+                    if (res.isSuccess) {
+                        setRoom(res.data?.room);
                     }
                 }
 
@@ -443,7 +444,11 @@ export default function BookingContactActivity() {
                                                         {room?.hotel?.avg_star}
                                                     </span>
                                                     <span className="text-gray-500">
-                                                        1,000 bài đánh giá
+                                                        {
+                                                            room?.hotel
+                                                                ?.review_count
+                                                        }{" "}
+                                                        lượt đánh giá
                                                     </span>
                                                 </div>
                                             </div>
@@ -518,7 +523,13 @@ export default function BookingContactActivity() {
                                                         }
                                                     </span>
                                                     <span className="text-gray-500">
-                                                        1,128 bài đánh giá
+                                                        {activityDateBooking
+                                                            ?.activity_date
+                                                            ?.activity_package
+                                                            ?.activity
+                                                            ?.review_count ||
+                                                            0}{" "}
+                                                        lượt đánh giá
                                                     </span>
                                                 </div>
                                             </div>

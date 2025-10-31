@@ -9,6 +9,7 @@ import 'swiper/css';
 import 'swiper/css/pagination';
 import 'swiper/css/navigation';
 import "leaflet/dist/leaflet.css";
+import 'react-loading-skeleton/dist/skeleton.css'
 import { Provider } from 'react-redux';
 import { store } from './redux/store'
 import { CookiesProvider } from 'react-cookie';
