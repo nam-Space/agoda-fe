@@ -59,6 +59,8 @@ import { formatCurrency } from "utils/formatCurrency";
 import { useAppSelector } from "../../redux/hooks";
 import { SERVICE_TYPE } from "constants/booking";
 import { callBook } from "config/api";
+import { callFetchDetailUserCarInteractionByCarId } from "config/api";
+import { callUpsertUserCarInteraction } from "config/api";
 
 const { Option } = Select;
 const { RangePicker } = DatePicker;
@@ -147,7 +149,9 @@ export default function BookingVehicles() {
 
     const handleGetCars = async () => {
         try {
-            const res = await callFetchCar(`current=1&pageSize=10`);
+            const res = await callFetchCar(
+                `current=1&pageSize=10&recommended=true`
+            );
             if (res.isSuccess) {
                 setVehicleData(res.data);
             }
@@ -339,6 +343,23 @@ export default function BookingVehicles() {
             const res = await callBook(body);
 
             if (res.isSuccess) {
+                const resFetchUserCarInteraction =
+                    await callFetchDetailUserCarInteractionByCarId(
+                        selectedItem.id
+                    );
+                if (resFetchUserCarInteraction.isSuccess) {
+                    const userCarInteraction = resFetchUserCarInteraction.data;
+                    await callUpsertUserCarInteraction({
+                        car_id: selectedItem.id,
+                        booking_count: userCarInteraction.booking_count + 1,
+                    });
+                } else {
+                    await callUpsertUserCarInteraction({
+                        car_id: selectedItem.id,
+                        booking_count: 1,
+                    });
+                }
+
                 navigate(
                     `/book?booking_id=${res.booking_id}&type=${body.service_type}&ref=${res.data.id}`,
                     {
@@ -378,6 +399,23 @@ export default function BookingVehicles() {
             const res = await callBook(body);
 
             if (res.isSuccess) {
+                const resFetchUserCarInteraction =
+                    await callFetchDetailUserCarInteractionByCarId(
+                        selectedItem.id
+                    );
+                if (resFetchUserCarInteraction.isSuccess) {
+                    const userCarInteraction = resFetchUserCarInteraction.data;
+                    await callUpsertUserCarInteraction({
+                        car_id: selectedItem.id,
+                        booking_count: userCarInteraction.booking_count + 1,
+                    });
+                } else {
+                    await callUpsertUserCarInteraction({
+                        car_id: selectedItem.id,
+                        booking_count: 1,
+                    });
+                }
+
                 navigate(
                     `/book?booking_id=${res.booking_id}&type=${body.service_type}&ref=${res.data.id}`,
                     {
@@ -1318,8 +1356,8 @@ export default function BookingVehicles() {
                                 <div className="flex items-center justify-between rounded-[8px] p-[16px] bg-[#e6f4f8]">
                                     <div className="flex items-center gap-[4px]">
                                         <BsFillLightningChargeFill className="text-[#0083A8] text-[20px]" />
-                                        Do you need extras like a child seat or
-                                        special luggage? We got you covered!
+                                        Bạn có cần thêm ghế trẻ em hay hành lý
+                                        đặc biệt không? Chúng tôi sẽ đáp ứng!
                                     </div>
                                     <Button
                                         type="link"
@@ -1342,7 +1380,7 @@ export default function BookingVehicles() {
                                     size="large"
                                     className="bg-purple-600 px-8"
                                 >
-                                    Continue →
+                                    Tiếp tục →
                                 </Button>
                             </div>
                         </div>

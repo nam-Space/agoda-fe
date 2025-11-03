@@ -131,7 +131,7 @@ export default function ActivityDetail() {
         } else {
             await callUpsertUserActivityInteraction({
                 activity_id: activity.id,
-                click_count: 0,
+                click_count: 1,
                 positive_count: 0,
                 negative_count: 0,
                 neutral_count: 0,
