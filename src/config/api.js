@@ -158,6 +158,14 @@ export const callDeleteCar = (id) => {
     return axios.delete(`/api/cars/cars/${id}/delete/`);
 };
 
+export const callFetchDetailUserCarInteractionByCarId = (carId) => {
+    return axios.get(`/api/cars/user-car-interaction/${carId}/`);
+};
+
+export const callUpsertUserCarInteraction = (data) => {
+    return axios.post(`/api/cars/user-car-interaction/upsert/`, { ...data });
+};
+
 // Car booking detail
 export const callFetchDetailCarBooking = (id) => {
     return axios.get(`/api/cars/cars-booking/${id}/`);

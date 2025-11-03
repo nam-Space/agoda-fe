@@ -10,9 +10,9 @@ const VietnamDestination = () => {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const res = await getTopVietNamHotel({ limit: 10 });
+                const res = await getTopVietNamHotel({ limit: 30 });
                 if (res.isSuccess) {
-                    setCities(res.data|| []);
+                    setCities(res.data || []);
                 }
             } catch (error) {
                 console.error("Failed to fetch top VN cities:", error);
@@ -38,7 +38,11 @@ const VietnamDestination = () => {
                         <SwiperSlide key={city.id}>
                             <Link to={`/city/${city.id}`}>
                                 <img
-                                    src={city?.image? `http://localhost:8000${city.image}` : "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSYR83krjU8bD9NkDRlV3iGwsdCsAmyzAPSdg&s"}
+                                    src={
+                                        city?.image
+                                            ? `http://localhost:8000${city.image}`
+                                            : "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSYR83krjU8bD9NkDRlV3iGwsdCsAmyzAPSdg&s"
+                                    }
                                     alt={city.name}
                                     className="w-full h-[200px] rounded-[16px]"
                                 />
