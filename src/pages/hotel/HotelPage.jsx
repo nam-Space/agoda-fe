@@ -129,11 +129,9 @@ const HotelPage = () => {
                 stripHtml(firstHotel.amenitiesAndFacilities) || "",
             locationInfo: stripHtml(firstHotel.locationInfo) || "",
             regulation: firstHotel.regulation || "",
-            point: firstHotel.point || 0,
             cityName: firstHotel.city?.name || "",
             city_id: firstHotel.city_id,
             min_price: firstHotel.min_price || 0,
-            point: firstHotel.point || 0,
         };
     };
 
@@ -250,7 +248,6 @@ const HotelPage = () => {
                   images: hotelDetail.images || [],
                   facilities: extractFacilities(hotelDetail.facilities),
                   avgStar: hotelDetail.avg_star || 0,
-                  point: hotelDetail.point || 0,
                   mostFeature: hotelDetail.mostFeature || "",
                   lat: hotelDetail.lat,
                   lng: hotelDetail.lng,
