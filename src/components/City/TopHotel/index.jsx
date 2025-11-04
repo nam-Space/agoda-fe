@@ -100,7 +100,6 @@ const transformHotelData = (apiHotel) => {
         price: "" + (apiHotel.min_price || 0).toLocaleString("vi-VN") + " đ",
         url: `/hotel/${createHotelSlug(apiHotel.name, apiHotel.id)}`,
         cityName: apiHotel.city?.name || "",
-        point: apiHotel.point || 0,
         withUs: stripHtml(apiHotel.withUs) || "",
         slug: createHotelSlug(apiHotel.name, apiHotel.id),
     };

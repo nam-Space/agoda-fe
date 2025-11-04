@@ -98,7 +98,6 @@ const List = ({ cityId }) => {
                             name={hotel.name}
                             link="#"
                             stars={hotel.avg_star}
-                            score={hotel.point.toFixed(1)}
                             reviewText="Tuyệt vời"
                             reviewCount={`${hotel.review_count} nhận xét`}
                             snippet={hotel.description}
