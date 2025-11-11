@@ -115,7 +115,9 @@ const HeaderClient = () => {
                                         <Link>eSim</Link>
                                     </div>
                                     <div className="py-[20px]">
-                                        <Link>Cẩm nang du lịch</Link>
+                                        <Link to={"/travel-guide"}>
+                                            Cẩm nang du lịch
+                                        </Link>
                                     </div>
                                 </div>
                             }

@@ -32,6 +32,10 @@ import BookingContactActivityPage from 'pages/BookingContactActivityPage';
 import BookingContactActivityStep2Page from 'pages/BookingContactActivityStep2Page';
 import BookingContactActivityStep3Page from 'pages/BookingContactActivityStep3Page';
 import BookingContactActivityStep4Page from 'pages/BookingContactActivityStep4Page';
+import TravelGuidePage from 'pages/TravelGuidePage';
+import TravelGuideCountryPage from 'pages/TravelGuideCountryPage';
+import TravelGuideCityPage from 'pages/TravelGuideCityPage';
+import TravelGuideDetailPage from 'pages/TravelGuideDetailPage';
 
 function App() {
   const dispatch = useAppDispatch();
@@ -158,6 +162,26 @@ function App() {
           path: "booking-contact-information",
           element:
             <BookingContactInfomationPage /> // Add HotelPage route
+        },
+        {
+          path: "travel-guide",
+          element:
+            <TravelGuidePage /> // Add HotelPage route
+        },
+        {
+          path: "travel-guide/:countryId",
+          element:
+            <TravelGuideCountryPage /> // Add HotelPage route
+        },
+        {
+          path: "travel-guide/:countryId/:cityId",
+          element:
+            <TravelGuideCityPage /> // Add HotelPage route
+        },
+        {
+          path: "travel-guide/:countryId/:cityId/:travelId",
+          element:
+            <TravelGuideDetailPage /> // Add HotelPage route
         },
       ],
     },
