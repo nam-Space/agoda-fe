@@ -225,8 +225,8 @@ const TravelGuide = () => {
                 {/* Title */}
                 <div className="mb-8 flex items-center justify-between">
                     <h2 className="text-2xl font-bold">
-                        Những nơi phải ghé thăm: {recommendations.length} Cẩm
-                        nang du lịch mới nhất
+                        Những nơi phải ghé thăm: {meta.total} Cẩm nang du lịch
+                        mới nhất
                     </h2>
                     <Select
                         value={category}
