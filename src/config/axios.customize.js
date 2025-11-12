@@ -45,16 +45,22 @@ instance.interceptors.response.use(
 
         if (error.response.status === 401 && error.config.url !== "/api/accounts/login/") {
             const refresh_token_agoda = Cookies.get("refresh_token_agoda");
-            const res = await callRefreshToken({
-                refresh: refresh_token_agoda
-            });
-            if (res.isSuccess) {
-                error.config.headers[
-                    "Authorization"
-                ] = `Bearer ${res.data.access}`;
-                localStorage.setItem("access_token_agoda", res.data.access);
-                return instance.request(error.config);
+            
+            // Only try to refresh if we have a refresh token
+            if (refresh_token_agoda) {
+                const res = await callRefreshToken({
+                    refresh: refresh_token_agoda
+                });
+                if (res.isSuccess) {
+                    error.config.headers[
+                        "Authorization"
+                    ] = `Bearer ${res.data.access}`;
+                    localStorage.setItem("access_token_agoda", res.data.access);
+                    return instance.request(error.config);
+                }
             }
+            // If no refresh token, just reject silently
+            return Promise.reject(error);
         }
 
         if (

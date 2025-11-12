@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { useSearchParams } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
+import CreditCardForm from "components/Payment/CreditCardForm";
 import { formatCurrency } from "utils/formatCurrency";
 import {
     ServiceType,
@@ -26,6 +27,7 @@ import {
     getPayment,
     callFetchDetailActivityDateBooking,
     callFetchDetailCarBooking,
+    callFetchDetailRoomBooking,
 } from "../../config/api";
 import dayjs from "dayjs";
 import { haversine } from "utils/googleMap";
@@ -52,6 +54,16 @@ export default function BookingContactActivityStep2() {
     const [zoomLevel, setZoomLevel] = useState(0);
     const [paymentMethod, setPaymentMethod] = useState(PaymentMethod.ONLINE);
     const [paymentId, setPaymentId] = useState(null);
+    const [isCardValidated, setIsCardValidated] = useState(false);
+    const [cardInfo, setCardInfo] = useState(null);
+
+    // Reset card validation when switching payment method
+    useEffect(() => {
+        if (paymentMethod !== PaymentMethod.ONLINE) {
+            setIsCardValidated(false);
+            setCardInfo(null);
+        }
+    }, [paymentMethod]);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -63,11 +75,11 @@ export default function BookingContactActivityStep2() {
 
                 // Lấy thông tin phòng
                 if (bookingResponse.service_type === ServiceType.HOTEL) {
-                    const roomResponse = await getRoomDetail(
+                    const res = await callFetchDetailRoomBooking(
                         bookingResponse.service_ref_id
                     );
-                    if (roomResponse.isSuccess) {
-                        setRoom(roomResponse.data);
+                    if (res.isSuccess) {
+                        setRoom(res.data?.room);
                     }
                 }
 
@@ -123,13 +135,25 @@ export default function BookingContactActivityStep2() {
         window.scrollTo(0, 0);
     }, [bookingId]);
 
-    const handleNextStep = async () => {
-        const successUrl = `${window.location.origin}/book/confirmation?isSuccess=true&booking_id=${bookingId}&type=${service_type}&ref=${ref_id}`;
-        const cancelUrl = `${window.location.origin}/book/confirmation?isSuccess=false&booking_id=${bookingId}&type=${service_type}&ref=${ref_id}`;
-        if (!bookingId) {
-            alert("Không tìm thấy booking!");
+    const handleCardValidated = (cardData) => {
+        setIsCardValidated(true);
+        setCardInfo(cardData);
+    };
+
+    const handlePayment = async () => {
+        if (!booking) {
+            alert("Không tìm thấy thông tin booking!");
             return;
         }
+
+        // Check card validation for online payment
+        if (paymentMethod === PaymentMethod.ONLINE && !isCardValidated) {
+            alert("Vui lòng xác thực thẻ trước khi thanh toán!");
+            return;
+        }
+
+        const successUrl = `${window.location.origin}/book/confirmation?isSuccess=true&booking_id=${bookingId}&type=${service_type}&ref=${ref_id}`;
+        const cancelUrl = `${window.location.origin}/book/confirmation?isSuccess=false&booking_id=${bookingId}&type=${service_type}&ref=${ref_id}`;
 
         try {
             //Tạo payment nếu chưa có
@@ -283,10 +307,7 @@ export default function BookingContactActivityStep2() {
                             </div>
                             {paymentMethod === PaymentMethod.ONLINE && (
                                 <div className="p-6">
-                                    <p className="text-sm text-gray-600">
-                                        Quý khách sẽ sớm hoàn tất thanh toán an
-                                        toàn bằng Stripe.
-                                    </p>
+                                    <CreditCardForm onCardValidated={handleCardValidated} />
                                 </div>
                             )}
                         </div>
@@ -329,14 +350,13 @@ export default function BookingContactActivityStep2() {
                             <p className="text-sm text-blue-900">
                                 Chúng tôi sẽ gửi xác nhận đặt phòng đến{" "}
                                 <span className="font-semibold">
-                                    {booking.guest_info?.email ||
-                                        "email khách hàng"}
+                                    {booking.guest_info?.email || "email khách hàng"}
                                 </span>
                             </p>
                         </div>
 
                         <button
-                            onClick={handleNextStep}
+                            onClick={handlePayment}
                             className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3.5 px-6 rounded-lg transition-colors shadow-sm flex items-center justify-center gap-2"
                         >
                             <span>
@@ -344,7 +364,6 @@ export default function BookingContactActivityStep2() {
                                     ? "THANH TOÁN NGAY"
                                     : "XÁC NHẬN ĐẶT PHÒNG"}
                             </span>
-                            <Lock className="w-5 h-5" />
                         </button>
                     </div>
 
@@ -395,7 +414,11 @@ export default function BookingContactActivityStep2() {
                                                         {room?.hotel?.avg_star}
                                                     </span>
                                                     <span className="text-gray-500">
-                                                        1,000 bài đánh giá
+                                                        {
+                                                            room?.hotel
+                                                                ?.review_count
+                                                        }{" "}
+                                                        lượt đánh giá
                                                     </span>
                                                 </div>
                                             </div>
@@ -470,7 +493,13 @@ export default function BookingContactActivityStep2() {
                                                         }
                                                     </span>
                                                     <span className="text-gray-500">
-                                                        1,128 bài đánh giá
+                                                        {activityDateBooking
+                                                            ?.activity_date
+                                                            ?.activity_package
+                                                            ?.activity
+                                                            ?.review_count ||
+                                                            0}{" "}
+                                                        lượt đánh giá
                                                     </span>
                                                 </div>
                                             </div>

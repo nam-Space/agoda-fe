@@ -1,0 +1,29 @@
+/* HotelSearchPage.css */
+.hotel-search-page {
+  min-height: 100vh;
+  background-color: #f5f5f5;
+}
+
+.hotel-search-page .ant-layout {
+  background: transparent;
+}
+
+.hotel-search-page .ant-layout-sider {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.hotel-search-page .ant-rate {
+  font-size: 14px;
+}
+
+.hotel-search-page .ant-checkbox-wrapper {
+  display: flex;
+  align-items: center;
+}
+
+.hotel-search-page .ant-slider {
+  margin-top: 8px;
+  margin-bottom: 8px;
+}

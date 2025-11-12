@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
-import { Card, Row, Col, DatePicker, Button, Input, Popover, InputNumber, Divider } from 'antd';
-import { SearchOutlined, EnvironmentOutlined, UserOutlined, PlusOutlined, MinusOutlined } from '@ant-design/icons';
-import dayjs from 'dayjs';
+import { EnvironmentOutlined, SearchOutlined, UserOutlined } from '@ant-design/icons';
+import { Button, Card, Col, DatePicker, Divider, Input, Popover, Row } from 'antd';
+import { useEffect, useRef, useState } from 'react';
+import { callGetSearchSuggestions } from '../../config/api';
 
 const { RangePicker } = DatePicker;
 
@@ -9,161 +9,114 @@ const SearchForm = ({ onSearch }) => {
   const [searchValues, setSearchValues] = useState({
     location: '',
     dates: [null, null],
-    rooms: 0,
-    adults: 0,
+    rooms: 1,
+    adults: 1,
     children: 0,
   });
 
-  const [locationPopoverOpen, setLocationPopoverOpen] = useState(false);
   const [guestPopoverOpen, setGuestPopoverOpen] = useState(false);
   const [datePickerOpen, setDatePickerOpen] = useState(false);
 
+  // 🔹 Autocomplete state
+  const [suggestions, setSuggestions] = useState([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const inputRef = useRef();
+
   const handleSearch = () => {
     onSearch(searchValues);
+    setShowSuggestions(false);
   };
 
-  const handleBackdropClick = () => {
-    setLocationPopoverOpen(false);
-    setGuestPopoverOpen(false);
-    setDatePickerOpen(false);
+  // 🔹 Lấy gợi ý từ API khi người dùng gõ
+  useEffect(() => {
+    const fetchSuggestions = async () => {
+      const query = searchValues.location.trim();
+      if (!query) {
+        setSuggestions([]);
+        return;
+      }
+
+      try {
+        const response = await callGetSearchSuggestions(`q=${encodeURIComponent(query)}`);
+        setSuggestions(response.data.data.filtered_suggestions || []);
+      } catch (err) {
+        console.error('Fetch suggestions failed:', err);
+      }
+    };
+
+    const debounce = setTimeout(fetchSuggestions, 300);
+    return () => clearTimeout(debounce);
+  }, [searchValues.location]);
+
+  // 🔹 Chọn suggestion
+  const handleSelectSuggestion = (item) => {
+    setSearchValues({ ...searchValues, location: item.name });
+    setShowSuggestions(false);
   };
 
-  // Popular destinations for location popover
-  const popularDestinations = [
-    'Nha Trang',
-    'Hà Nội',
-    'Hồ Chí Minh',
-    'Đà Nẵng',
-    'Hội An',
-    'Phú Quốc',
-    'Đà Lạt',
-    'Sapa'
-  ];
-
-  const LocationPopoverContent = () => (
-    <div className="w-64">
-      <div className="text-sm font-medium text-gray-600 mb-3">Điểm đến phổ biến</div>
-      <div className="space-y-1">
-        {popularDestinations.slice(0, 5).map(destination => (
-          <div
-            key={destination}
-            className="p-2 hover:bg-gray-50 cursor-pointer rounded flex items-center"
-            onClick={() => {
-              setSearchValues({ ...searchValues, location: destination });
-              setLocationPopoverOpen(false);
-            }}
-          >
-            <EnvironmentOutlined className="text-gray-400 mr-2" />
-            <span>{destination}</span>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
+  // 🔹 Đóng autocomplete khi click ra ngoài
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (inputRef.current && !inputRef.current.contains(event.target)) {
+        setShowSuggestions(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const GuestPopoverContent = () => (
     <div className="w-72 p-2">
-      {/* Rooms */}
-      <div className="flex items-center justify-between py-3">
-        <div>
-          <div className="font-medium">Phòng</div>
+      {['rooms', 'adults', 'children'].map((type) => (
+        <div key={type}>
+          <div className="flex items-center justify-between py-3">
+            <div>
+              <div className="font-medium">
+                {type === 'rooms' ? 'Phòng' : type === 'adults' ? 'Người lớn' : 'Trẻ em'}
+              </div>
+              {type === 'adults' && <div className="text-sm text-gray-500">18 tuổi trở lên</div>}
+              {type === 'children' && <div className="text-sm text-gray-500">0-17 tuổi</div>}
+            </div>
+            <div className="flex items-center space-x-3">
+              <Button
+                type="text"
+                shape="circle"
+                onClick={() =>
+                  setSearchValues({
+                    ...searchValues,
+                    [type]:
+                      type === 'children'
+                        ? Math.max(0, searchValues[type] - 1)
+                        : Math.max(1, searchValues[type] - 1),
+                  })
+                }
+                disabled={
+                  (type === 'rooms' && searchValues.rooms <= 1) ||
+                  (type === 'adults' && searchValues.adults <= 1) ||
+                  (type === 'children' && searchValues.children <= 0)
+                }
+              >
+                -
+              </Button>
+              <span className="w-8 text-center font-medium">{searchValues[type]}</span>
+              <Button
+                type="text"
+                shape="circle"
+                onClick={() =>
+                  setSearchValues({
+                    ...searchValues,
+                    [type]: Math.min(10, searchValues[type] + 1),
+                  })
+                }
+                disabled={searchValues[type] >= 10}
+              >
+                +
+              </Button>
+            </div>
+          </div>
+          {type !== 'children' && <Divider className="my-2" />}
         </div>
-        <div className="flex items-center space-x-3">
-          <Button
-            type="text"
-            shape="circle"
-            icon={<MinusOutlined />}
-            onClick={() => setSearchValues({ 
-              ...searchValues, 
-              rooms: Math.max(1, searchValues.rooms - 1) 
-            })}
-            disabled={searchValues.rooms <= 1}
-            className="border border-gray-300"
-          />
-          <span className="w-8 text-center font-medium">{searchValues.rooms}</span>
-          <Button
-            type="text"
-            shape="circle"
-            icon={<PlusOutlined />}
-            onClick={() => setSearchValues({ 
-              ...searchValues, 
-              rooms: Math.min(10, searchValues.rooms + 1) 
-            })}
-            disabled={searchValues.rooms >= 10}
-            className="border border-gray-300"
-          />
-        </div>
-      </div>
-
-      <Divider className="my-2" />
-
-      {/* Adults */}
-      <div className="flex items-center justify-between py-3">
-        <div>
-          <div className="font-medium">Người lớn</div>
-          <div className="text-sm text-gray-500">18 tuổi trở lên</div>
-        </div>
-        <div className="flex items-center space-x-3">
-          <Button
-            type="text"
-            shape="circle"
-            icon={<MinusOutlined />}
-            onClick={() => setSearchValues({ 
-              ...searchValues, 
-              adults: Math.max(1, searchValues.adults - 1) 
-            })}
-            disabled={searchValues.adults <= 1}
-            className="border border-gray-300"
-          />
-          <span className="w-8 text-center font-medium">{searchValues.adults}</span>
-          <Button
-            type="text"
-            shape="circle"
-            icon={<PlusOutlined />}
-            onClick={() => setSearchValues({ 
-              ...searchValues, 
-              adults: Math.min(10, searchValues.adults + 1) 
-            })}
-            disabled={searchValues.adults >= 10}
-            className="border border-gray-300"
-          />
-        </div>
-      </div>
-
-      <Divider className="my-2" />
-
-      {/* Children */}
-      <div className="flex items-center justify-between py-3">
-        <div>
-          <div className="font-medium">Trẻ em</div>
-          <div className="text-sm text-gray-500">0-17 tuổi</div>
-        </div>
-        <div className="flex items-center space-x-3">
-          <Button
-            type="text"
-            shape="circle"
-            icon={<MinusOutlined />}
-            onClick={() => setSearchValues({ 
-              ...searchValues, 
-              children: Math.max(0, searchValues.children - 1) 
-            })}
-            disabled={searchValues.children <= 0}
-            className="border border-gray-300"
-          />
-          <span className="w-8 text-center font-medium">{searchValues.children}</span>
-          <Button
-            type="text"
-            shape="circle"
-            icon={<PlusOutlined />}
-            onClick={() => setSearchValues({ 
-              ...searchValues, 
-              children: Math.min(10, searchValues.children + 1) 
-            })}
-            disabled={searchValues.children >= 10}
-            className="border border-gray-300"
-          />
-        </div>
-      </div>
+      ))}
     </div>
   );
 
@@ -174,77 +127,81 @@ const SearchForm = ({ onSearch }) => {
 
   return (
     <>
-      {(locationPopoverOpen || guestPopoverOpen || datePickerOpen) && (
+      {(guestPopoverOpen || datePickerOpen) && (
         <div
           className="fixed inset-0 bg-black opacity-35 z-10"
-          data-selenium="backdrop"
-          onClick={handleBackdropClick}
+          onClick={() => {
+            setGuestPopoverOpen(false);
+            setDatePickerOpen(false);
+          }}
         />
       )}
-      
+
       <Card className="mb-6 shadow-lg relative z-20">
         <Row gutter={[16, 16]} align="middle">
-          {/* Destination */}
+          {/* Location with autocomplete */}
           <Col xs={24} md={6}>
-            <div className="space-y-2">
-              <Popover
-                content={<LocationPopoverContent />}
-                trigger="click"
-                open={locationPopoverOpen}
-                onOpenChange={setLocationPopoverOpen}
-                placement="bottomLeft"
-                overlayClassName="z-30"
-              >
-                <Input
-                  size="large"
-                  prefix={<EnvironmentOutlined className="text-gray-400" />}
-                  value={searchValues.location}
-                  readOnly
-                  className="cursor-pointer"
-                  placeholder="Chọn điểm đến"
-                />
-              </Popover>
+            <div className="relative" ref={inputRef}>
+              <Input
+                size="large"
+                prefix={<EnvironmentOutlined className="text-gray-400" />}
+                placeholder="Nhập thành phố hoặc khách sạn"
+                value={searchValues.location}
+                onChange={(e) => {
+                  setSearchValues({ ...searchValues, location: e.target.value });
+                  setShowSuggestions(true);
+                }}
+                onFocus={() => setShowSuggestions(true)}
+              />
+              {showSuggestions && suggestions.length > 0 && (
+                <div className="absolute top-full left-0 right-0 bg-white shadow-lg rounded z-50 max-h-64 overflow-auto">
+                  {suggestions.map((item, idx) => (
+                    <div
+                      key={idx}
+                      className="p-2 cursor-pointer hover:bg-gray-100"
+                      onClick={() => handleSelectSuggestion(item)}
+                    >
+                      {item.type === 'city' ? `Thành phố: ${item.name}` : `Khách sạn: ${item.name}`}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </Col>
 
           {/* Date Range */}
           <Col xs={24} md={8}>
-            <div className="space-y-2">
-              <RangePicker
-                size="large"
-                className="w-full"
-                value={searchValues.dates}
-                onChange={(dates) => setSearchValues({ ...searchValues, dates: dates || [] })}
-                format="DD/MM/YYYY"
-                open={datePickerOpen}
-                onOpenChange={setDatePickerOpen}
-                dropdownClassName="z-30"
-                placeholder={['Nhận phòng', 'Trả phòng']}
-              />
-            </div>
+            <RangePicker
+              size="large"
+              className="w-full"
+              value={searchValues.dates}
+              onChange={(dates) => setSearchValues({ ...searchValues, dates: dates || [] })}
+              format="DD/MM/YYYY"
+              open={datePickerOpen}
+              onOpenChange={setDatePickerOpen}
+              placeholder={['Nhận phòng', 'Trả phòng']}
+            />
           </Col>
 
-          {/* Guests & Rooms */}
+          {/* Guests */}
           <Col xs={24} md={6}>
-            <div className="space-y-2">
-              <Popover
-                content={<GuestPopoverContent />}
-                trigger="click"
-                open={guestPopoverOpen}
-                onOpenChange={setGuestPopoverOpen}
-                placement="bottomLeft"
-                overlayClassName="z-30"
-              >
-                <Input
-                  size="large"
-                  prefix={<UserOutlined className="text-gray-400" />}
-                  value={getGuestSummary()}
-                  readOnly
-                  className="cursor-pointer"
-                  placeholder="Chọn số khách"
-                />
-              </Popover>
-            </div>
+            <Popover
+              content={<GuestPopoverContent />}
+              trigger="click"
+              open={guestPopoverOpen}
+              onOpenChange={setGuestPopoverOpen}
+              placement="bottomLeft"
+              overlayClassName="z-30"
+            >
+              <Input
+                size="large"
+                prefix={<UserOutlined className="text-gray-400" />}
+                value={getGuestSummary()}
+                readOnly
+                className="cursor-pointer"
+                placeholder="Chọn số khách"
+              />
+            </Popover>
           </Col>
 
           {/* Search Button */}

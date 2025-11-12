@@ -10,11 +10,13 @@ import CityPage from 'pages/CityPage';
 import FavouritePage from 'pages/FavouritePage';
 import FavouriteRoomPage from 'pages/FavouriteRoomPage';
 import FlightPage from 'pages/flight/FlightPage';
+import FlightBookingPage from 'pages/flight/FlightBookingPage';
 import ForgotPasswordPage from 'pages/ForgotPasswordPage';
 import HomeApartPage from 'pages/home&Apartment/HomeApartPage';
 import HomePage from 'pages/HomePage';
 import HotelPage from 'pages/hotel/HotelPage';
 import HotelPageBooking from 'pages/hotel/HotelPageBooking';
+import HotelSearchPage from 'pages/hotel/HotelSearchPage';
 import LoginPage from 'pages/LoginPage';
 import ProfileActivityPage from 'pages/ProfileActivityPage';
 import ProfileChatPage from 'pages/ProfileChatPage';
@@ -38,7 +40,11 @@ function App() {
   const isLoading = useAppSelector(state => state.account.isLoading);
 
   useEffect(() => {
-    dispatch(fetchAccount())
+    // Only fetch account if user has access token
+    const accessToken = localStorage.getItem('access_token_agoda');
+    if (accessToken) {
+      dispatch(fetchAccount());
+    }
   }, [])
 
   // if (isLoading) {
@@ -140,6 +146,11 @@ function App() {
             <FlightPage /> // Add FlightPage route
         },
         {
+          path: "flight/booking",
+          element:
+            <FlightBookingPage /> // Add FlightBookingPage route
+        },
+        {
           path: "home-apartment",
           element:
             <HomeApartPage />
@@ -147,7 +158,7 @@ function App() {
         {
           path: "search",
           element:
-            <SearchHouseAndApartment />
+            <HotelSearchPage /> // Hotel search results page
         },
         {
           path: "booking-vehicles",

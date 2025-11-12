@@ -27,8 +27,13 @@ import NearbyPlaces from "components/Hotel/NearbyPlaces";
 import ReviewTabView from "components/Hotel/ReviewTabView";
 import RoomOptionsSection from "components/Hotel/RoomOptionsSection";
 import SearchBar from "components/Hotel/SearchBarSection";
+import RoomAvailabilitySearch from "components/Hotel/RoomAvailabilitySearch";
 
 import icTable from "../../images/hotel/ic_table.png";
+import { callUpdateHotel } from "config/api";
+import { callUpdateHotelNotImage } from "config/api";
+import { callFetchDetailUserHotelInteractionByHotelId } from "config/api";
+import { callUpsertUserHotelInteraction } from "config/api";
 
 const HotelPage = () => {
     const { hotelSlug } = useParams();
@@ -46,6 +51,7 @@ const HotelPage = () => {
         (state) => state.hotel
     );
     const { hotels, isLoadingHotels } = useAppSelector((state) => state.hotel);
+    const user = useAppSelector((state) => state.account.user);
 
     const isDetailPage = !!hotelSlug;
 
@@ -133,6 +139,36 @@ const HotelPage = () => {
         };
     };
 
+    const handleUpdateTotalClick = async () => {
+        // Only track interaction for logged-in users; skip to avoid 401
+        if (!user || !hotelDetail?.id) return;
+        try {
+            const res = await callFetchDetailUserHotelInteractionByHotelId(
+                hotelDetail.id
+            );
+            if (res?.isSuccess) {
+                const userHotelInteraction = res.data;
+                await callUpsertUserHotelInteraction({
+                    hotel_id: hotelDetail.id,
+                    click_count: (userHotelInteraction.click_count || 0) + 1,
+                    positive_count: userHotelInteraction.positive_count || 0,
+                    negative_count: userHotelInteraction.negative_count || 0,
+                    neutral_count: userHotelInteraction.neutral_count || 0,
+                });
+            } else {
+                await callUpsertUserHotelInteraction({
+                    hotel_id: hotelDetail.id,
+                    click_count: 1,
+                    positive_count: 0,
+                    negative_count: 0,
+                    neutral_count: 0,
+                });
+            }
+        } catch (e) {
+            // Ignore unauthorized errors silently on detail page
+        }
+    };
+
     useEffect(() => {
         if (isDetailPage && hotelId) {
             dispatch(fetchHotelDetail(hotelId));
@@ -152,6 +188,12 @@ const HotelPage = () => {
             }
         };
     }, [dispatch, hotelId, isDetailPage]);
+
+    useEffect(() => {
+        if (hotelDetail?.id) {
+            handleUpdateTotalClick();
+        }
+    }, [hotelDetail]);
 
     useEffect(() => {
         if (error) {
@@ -503,6 +545,13 @@ const HotelPage = () => {
                     </div>
                 </div>
                 <div id="rooms" className="section mt-5">
+                    {/* Room Availability Search */}
+                    {isDetailPage && (
+                        <div className="mb-6">
+                            <RoomAvailabilitySearch />
+                        </div>
+                    )}
+                    
                     <FilterSection hotelId={hotelId} />
                     {isDetailPage && (
                         <div className="section mt-3">

@@ -1,0 +1,333 @@
+/* HotelSearchModal.css */
+
+.hotel-search-modal {
+  max-width: 960px;
+}
+
+.hotel-search-modal .ant-modal-body {
+  padding: 0;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.hotel-search-modal .ant-modal-content {
+  border-radius: 16px;
+}
+
+/* Main Tabs */
+.main-tabs .ant-tabs-nav {
+  background: #f5f5f5;
+  padding: 8px 16px 0;
+  margin: 0;
+}
+
+.main-tabs .ant-tabs-tab {
+  font-size: 14px;
+  padding: 12px 16px;
+}
+
+.main-tabs .ant-tabs-tab-active {
+  background: white;
+  border-radius: 8px 8px 0 0;
+}
+
+.tab-badge {
+  background: #ff6b6b;
+  color: white;
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  margin-right: 6px;
+  font-weight: bold;
+}
+
+/* Search Content */
+.search-content {
+  padding: 24px;
+}
+
+/* Stay Type Toggle */
+.stay-type-toggle .ant-radio-button-wrapper {
+  border-radius: 50px !important;
+  border: 1px solid #d9d9d9;
+  padding: 8px 24px;
+}
+
+.stay-type-toggle .ant-radio-button-wrapper-checked {
+  background: #e6f2ff;
+  border-color: #1890ff;
+  color: #1890ff;
+}
+
+/* Destination Input */
+.destination-input-wrapper {
+  position: relative;
+}
+
+.destination-input {
+  border: 2px solid #1890ff;
+  border-radius: 8px;
+  font-size: 16px;
+  padding: 12px 16px;
+}
+
+.destination-input:focus {
+  box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
+}
+
+/* Destination Dropdown */
+.destination-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: white;
+  border: 1px solid #e8e8e8;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  margin-top: 8px;
+  max-height: 500px;
+  overflow-y: auto;
+  z-index: 1000;
+  padding: 16px;
+}
+
+.dropdown-section {
+  margin-bottom: 20px;
+}
+
+.section-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #666;
+  margin-bottom: 12px;
+}
+
+/* Recent Search Item */
+.recent-search-item {
+  padding: 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.recent-search-item:hover {
+  background: #f5f5f5;
+}
+
+/* Featured Properties */
+.featured-property-card {
+  flex: 1;
+  padding: 16px;
+  border: 1px solid #e8e8e8;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.featured-property-card:hover {
+  border-color: #1890ff;
+  box-shadow: 0 2px 8px rgba(24, 144, 255, 0.15);
+}
+
+.property-icon {
+  font-size: 32px;
+  margin-bottom: 8px;
+}
+
+.property-name {
+  font-size: 14px;
+  margin-bottom: 4px;
+}
+
+.property-tags {
+  font-size: 12px;
+  color: #1890ff;
+}
+
+/* Destinations Grid */
+.destinations-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  margin-top: 16px;
+}
+
+.destination-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.2s;
+  margin-bottom: 8px;
+}
+
+.destination-item:hover {
+  background: #f5f5f5;
+}
+
+.dest-image {
+  width: 48px;
+  height: 48px;
+  border-radius: 8px;
+  background: #f0f0f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  flex-shrink: 0;
+}
+
+.dest-info {
+  flex: 1;
+}
+
+.dest-name {
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+
+.dest-count {
+  color: #999;
+  font-weight: normal;
+  font-size: 13px;
+}
+
+.dest-tags {
+  font-size: 12px;
+  color: #666;
+}
+
+/* Date Tabs */
+.date-tabs .ant-tabs-nav {
+  margin-bottom: 16px;
+}
+
+/* Dual Calendar */
+.dual-calendar {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.calendar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px;
+  font-weight: 600;
+}
+
+.calendar-cell {
+  text-align: center;
+  padding: 4px;
+}
+
+.date-number {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.date-price {
+  font-size: 11px;
+  color: #1890ff;
+  margin-top: 2px;
+}
+
+.ant-picker-calendar-date-today {
+  border-color: #1890ff !important;
+}
+
+.ant-picker-calendar-date-selected {
+  background: #e6f2ff !important;
+}
+
+/* Flexible Options */
+.flexible-options {
+  padding: 16px 0;
+}
+
+.month-card {
+  min-width: 100px;
+  padding: 16px;
+  border: 2px solid #e8e8e8;
+  border-radius: 8px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: white;
+}
+
+.month-card:hover {
+  border-color: #1890ff;
+}
+
+.month-card.selected {
+  border-color: #1890ff;
+  background: #e6f2ff;
+  color: #1890ff;
+}
+
+/* Guests & Rooms */
+.guests-rooms {
+  background: #f9f9f9;
+  padding: 16px;
+  border-radius: 8px;
+}
+
+/* Search Button */
+.search-button {
+  background: #1890ff;
+  border: none;
+  border-radius: 8px;
+  padding: 12px 64px;
+  height: auto;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.search-button:hover {
+  background: #40a9ff;
+}
+
+.search-button:disabled {
+  background: #d9d9d9;
+  color: #999;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .dual-calendar {
+    grid-template-columns: 1fr;
+  }
+  
+  .destinations-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .hotel-search-modal {
+    max-width: 100%;
+  }
+}
+
+/* Scrollbar Styling */
+.destination-dropdown::-webkit-scrollbar {
+  width: 6px;
+}
+
+.destination-dropdown::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.destination-dropdown::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+.destination-dropdown::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}

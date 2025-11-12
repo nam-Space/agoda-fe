@@ -1,0 +1,157 @@
+/* Custom checkbox with SVG checkmark - 100% reliable across all browsers */
+input[type="checkbox"].filter-checkbox {
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  -moz-appearance: none !important;
+  width: 18px !important;
+  height: 18px !important;
+  min-width: 18px !important;
+  min-height: 18px !important;
+  border: 2px solid #9ca3af !important;
+  border-radius: 4px !important;
+  background: white !important;
+  cursor: pointer !important;
+  position: relative !important;
+  margin: 0 !important;
+  flex-shrink: 0 !important;
+  transition: all 0.2s ease !important;
+  display: inline-block !important;
+}
+
+input[type="checkbox"].filter-checkbox:hover {
+  border-color: #2563eb !important;
+  background: #eff6ff !important;
+}
+
+input[type="checkbox"].filter-checkbox:checked {
+  background: #2563eb !important;
+  border-color: #2563eb !important;
+}
+
+input[type="checkbox"].filter-checkbox:checked::after {
+  content: '' !important;
+  position: absolute !important;
+  display: block !important;
+  left: 5px !important;
+  top: 2px !important;
+  width: 5px !important;
+  height: 9px !important;
+  border: solid white !important;
+  border-width: 0 2px 2px 0 !important;
+  transform: rotate(45deg) !important;
+}
+
+input[type="checkbox"].filter-checkbox:focus {
+  outline: 2px solid #93c5fd;
+  outline-offset: 2px;
+  border-color: #2563eb;
+}
+
+input[type="checkbox"].filter-checkbox:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Toggle switch styles */
+.toggle-switch {
+  position: relative;
+  display: inline-block;
+  width: 44px;
+  height: 24px;
+}
+
+.toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.toggle-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #d1d5db;
+  transition: 0.3s;
+  border-radius: 24px;
+}
+
+.toggle-slider:before {
+  position: absolute;
+  content: "";
+  height: 20px;
+  width: 20px;
+  left: 2px;
+  bottom: 2px;
+  background-color: white;
+  transition: 0.3s;
+  border-radius: 50%;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+input:checked + .toggle-slider {
+  background-color: #2563eb;
+}
+
+input:checked + .toggle-slider:before {
+  transform: translateX(20px);
+}
+
+/* Dual range slider styles */
+.dual-range-slider {
+  position: relative;
+  height: 8px;
+}
+
+.dual-range-track {
+  position: absolute;
+  width: 100%;
+  height: 8px;
+  background-color: #e5e7eb;
+  border-radius: 4px;
+}
+
+.dual-range-active {
+  position: absolute;
+  height: 8px;
+  background-color: #2563eb;
+  border-radius: 4px;
+}
+
+.dual-range-input {
+  position: absolute;
+  width: 100%;
+  height: 8px;
+  background: transparent;
+  appearance: none;
+  pointer-events: none;
+  outline: none;
+}
+
+.dual-range-input::-webkit-slider-thumb {
+  appearance: none;
+  height: 16px;
+  width: 16px;
+  border-radius: 50%;
+  background: #2563eb;
+  cursor: pointer;
+  border: 2px solid white;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  pointer-events: auto;
+  position: relative;
+  z-index: 2;
+}
+
+.dual-range-input::-moz-range-thumb {
+  appearance: none;
+  height: 16px;
+  width: 16px;
+  border-radius: 50%;
+  background: #2563eb;
+  cursor: pointer;
+  border: 2px solid white;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  pointer-events: auto;
+}

@@ -1,6 +1,7 @@
 import { SearchOutlined } from "@ant-design/icons";
 import { Checkbox, Collapse, Input, Radio, Slider, Tag } from "antd";
 import { callFetchActivity } from "config/api";
+import { RANGE_PRICE } from "constants/activity";
 import React, { useEffect, useState } from "react";
 import { BsLightningChargeFill } from "react-icons/bs";
 import { FaCar, FaStar } from "react-icons/fa";
@@ -38,8 +39,14 @@ const ActivityCity = () => {
         searchParams.get("category") || "all"
     );
 
-    const [value, setValue] = useState(1);
+    const [sortValue, setSortValue] = useState("recommended=true");
+    const [categoryValue, setCategoryValue] = useState(
+        searchParams.get("category") || "all"
+    );
     const [valuePrices, setValuePrices] = useState([0, 100]);
+    const [valueStar, setValueStar] = useState(-1);
+
+    const [valueTotalTime, setValueTotalTime] = useState("min_total_time=0");
 
     const handleGetActivities = async (query) => {
         const res = await callFetchActivity(query);
@@ -53,18 +60,72 @@ const ActivityCity = () => {
         window.scrollTo(0, 0);
         if (cityId) {
             let query = `current=${pageQuery.current}&pageSize=${pageQuery.pageSize}&city_id=${cityId}`;
+
             if (selectedItem !== "all") {
                 query += `&category=${selectedItem}`;
+            }
+            if (selectedItem !== categoryValue) {
+                setCategoryValue(selectedItem);
             }
             if (keyword) {
                 query += `&name=${keyword}`;
             }
+            if (sortValue) {
+                switch (sortValue) {
+                    case "recommended=true":
+                        query += `&recommended=true`;
+                        break;
+                    case "avg_price=desc":
+                        query += `&sort=avg_price-desc`;
+                        break;
+                    case "avg_price=asc":
+                        query += `&sort=avg_price-asc`;
+                        break;
+                    case "avg_star=desc":
+                        query += `&sort=avg_star-desc`;
+                        break;
+                    case "avg_star=asc":
+                        query += `&sort=avg_star-asc`;
+                        break;
+                }
+            }
+            if (valueStar !== -1) {
+                query += `&avg_star=${valueStar}`;
+            }
+            if (valuePrices.length == 2) {
+                query += `&min_avg_price=${
+                    RANGE_PRICE * valuePrices[0]
+                }&max_avg_price=${RANGE_PRICE * valuePrices[1]}`;
+            }
+            query += `&${valueTotalTime}`;
             handleGetActivities(query);
         }
-    }, [cityId, pageQuery, selectedItem, keyword]);
+    }, [
+        cityId,
+        pageQuery,
+        selectedItem,
+        keyword,
+        valueStar,
+        sortValue,
+        JSON.stringify(valuePrices),
+        valueTotalTime,
+    ]);
 
-    const onChange = (e) => {
-        setValue(e.target.value);
+    const onSortChange = (e) => {
+        setSortValue(e.target.value);
+    };
+
+    const onCategoryChange = (e) => {
+        setSearchParams({
+            ...searchParams,
+            category: e.target.value,
+        });
+        setCategoryValue(e.target.value);
+        setSelectedItem(e.target.value);
+    };
+
+    const onChangeTotalTime = (e) => {
+        setValueTotalTime(e.target.value);
     };
 
     const categories = [
@@ -126,14 +187,7 @@ const ActivityCity = () => {
                     )}
                 </div>
             ),
-            children: (
-                <div>
-                    <Checkbox onChange={(val) => console.log(val)}>
-                        Checkbox
-                    </Checkbox>
-                    aaa
-                </div>
-            ),
+            children: <div></div>,
         };
     });
 
@@ -148,66 +202,18 @@ const ActivityCity = () => {
             children: (
                 <Radio.Group
                     className="flex flex-col gap-[12px] mt-[16px]"
-                    onChange={onChange}
-                    value={value}
-                    options={[
-                        {
-                            value: 1,
+                    onChange={onCategoryChange}
+                    value={categoryValue}
+                    options={categories.map((category) => {
+                        return {
+                            value: category.value,
                             label: (
                                 <p className="text-[16px] leading-[20px]">
-                                    Tất cả
+                                    {category.label}
                                 </p>
                             ),
-                        },
-                        {
-                            value: 2,
-                            label: (
-                                <p className="text-[16px] leading-[20px]">
-                                    Chuyến tham quan
-                                </p>
-                            ),
-                        },
-                        {
-                            value: 3,
-                            label: (
-                                <p className="text-[16px] leading-[20px]">
-                                    Trải nghiệm
-                                </p>
-                            ),
-                        },
-                        {
-                            value: 4,
-                            label: (
-                                <p className="text-[16px] leading-[20px]">
-                                    Di chuyển
-                                </p>
-                            ),
-                        },
-                        {
-                            value: 5,
-                            label: (
-                                <p className="text-[16px] leading-[20px]">
-                                    Đồ ăn & Thức uống
-                                </p>
-                            ),
-                        },
-                        {
-                            value: 6,
-                            label: (
-                                <p className="text-[16px] leading-[20px]">
-                                    Điểm tham quan
-                                </p>
-                            ),
-                        },
-                        {
-                            value: 7,
-                            label: (
-                                <p className="text-[16px] leading-[20px]">
-                                    Hành trang du lịch
-                                </p>
-                            ),
-                        },
-                    ]}
+                        };
+                    })}
                 />
             ),
         },
@@ -266,11 +272,11 @@ const ActivityCity = () => {
                             <p className="text-[20px] font-semibold">Sắp xếp</p>
                             <Radio.Group
                                 className="flex flex-col gap-[12px] mt-[16px]"
-                                onChange={onChange}
-                                value={value}
+                                onChange={onSortChange}
+                                value={sortValue}
                                 options={[
                                     {
-                                        value: 1,
+                                        value: "recommended=true",
                                         label: (
                                             <p className="text-[16px] leading-[20px]">
                                                 Được ưa chuộng
@@ -278,7 +284,15 @@ const ActivityCity = () => {
                                         ),
                                     },
                                     {
-                                        value: 2,
+                                        value: "avg_price=desc",
+                                        label: (
+                                            <p className="text-[16px] leading-[20px]">
+                                                Giá cao nhất trước
+                                            </p>
+                                        ),
+                                    },
+                                    {
+                                        value: "avg_price=asc",
                                         label: (
                                             <p className="text-[16px] leading-[20px]">
                                                 Giá thấp nhất trước
@@ -286,10 +300,18 @@ const ActivityCity = () => {
                                         ),
                                     },
                                     {
-                                        value: 3,
+                                        value: "avg_star=desc",
                                         label: (
                                             <p className="text-[16px] leading-[20px]">
-                                                Xếp hạng cao nhất trước
+                                                Số sao cao nhất trước
+                                            </p>
+                                        ),
+                                    },
+                                    {
+                                        value: "avg_star=asc",
+                                        label: (
+                                            <p className="text-[16px] leading-[20px]">
+                                                Số sao thấp nhất trước
                                             </p>
                                         ),
                                     },
@@ -303,13 +325,13 @@ const ActivityCity = () => {
                                     {new Intl.NumberFormat("vi-VN", {
                                         style: "currency",
                                         currency: "VND",
-                                    }).format(160000 * valuePrices[0])}
+                                    }).format(RANGE_PRICE * valuePrices[0])}
                                 </p>
                                 <p>
                                     {new Intl.NumberFormat("vi-VN", {
                                         style: "currency",
                                         currency: "VND",
-                                    }).format(160000 * valuePrices[1])}
+                                    }).format(RANGE_PRICE * valuePrices[1])}
                                 </p>
                             </div>
                             <Slider
@@ -328,93 +350,73 @@ const ActivityCity = () => {
                             </p>
                             <div className="mt-[16px]">
                                 <div>
-                                    <Checkbox
-                                        onChange={(val) => console.log(val)}
-                                    >
-                                        <div className="flex items-center gap-[2px]">
-                                            <FaStar className="text-[#b54c01] text-[14px]" />
-                                            <FaStar className="text-[#b54c01] text-[14px]" />
-                                            <FaStar className="text-[#b54c01] text-[14px]" />
-                                            <FaStar className="text-[#b54c01] text-[14px]" />
-                                            <FaStar className="text-[#b54c01] text-[14px]" />
-                                        </div>
-                                    </Checkbox>
-                                </div>
-                                <div>
-                                    <Checkbox
-                                        onChange={(val) => console.log(val)}
-                                    >
-                                        <div className="flex items-center gap-[2px]">
-                                            <FaStar className="text-[#b54c01] text-[14px]" />
-                                            <FaStar className="text-[#b54c01] text-[14px]" />
-                                            <FaStar className="text-[#b54c01] text-[14px]" />
-                                            <FaStar className="text-[#b54c01] text-[14px]" />
-                                        </div>
-                                    </Checkbox>
-                                </div>
-                                <div>
-                                    <Checkbox
-                                        onChange={(val) => console.log(val)}
-                                    >
-                                        <div className="flex items-center gap-[2px]">
-                                            <FaStar className="text-[#b54c01] text-[14px]" />
-                                            <FaStar className="text-[#b54c01] text-[14px]" />
-                                            <FaStar className="text-[#b54c01] text-[14px]" />
-                                        </div>
-                                    </Checkbox>
-                                </div>
-                                <div>
-                                    <Checkbox
-                                        onChange={(val) => console.log(val)}
-                                    >
-                                        <div className="flex items-center gap-[2px]">
-                                            <FaStar className="text-[#b54c01] text-[14px]" />
-                                            <FaStar className="text-[#b54c01] text-[14px]" />
-                                        </div>
-                                    </Checkbox>
-                                </div>
-                                <div>
-                                    <Checkbox
-                                        onChange={(val) => console.log(val)}
-                                    >
-                                        <div className="flex items-center gap-[2px]">
-                                            <FaStar className="text-[#b54c01] text-[14px]" />
-                                        </div>
-                                    </Checkbox>
-                                </div>
-                                <div>
-                                    <Checkbox
-                                        onChange={(val) => console.log(val)}
-                                    >
-                                        <div className="flex items-center gap-[2px] text-[16px]">
-                                            Không có đánh giá
-                                        </div>
-                                    </Checkbox>
-                                </div>
-                            </div>
-                        </div>
-                        <div className="mt-[24px]">
-                            <p className="text-[20px] font-semibold leading-[24px]">
-                                Đặc điểm của đơn đặt chỗ
-                            </p>
-                            <div className="mt-[16px]">
-                                <div>
-                                    <Checkbox
-                                        onChange={(val) => console.log(val)}
-                                    >
-                                        <div className="flex items-center gap-[2px] text-[16px]">
-                                            Hủy miễn phí
-                                        </div>
-                                    </Checkbox>
-                                </div>
-                                <div>
-                                    <Checkbox
-                                        onChange={(val) => console.log(val)}
-                                    >
-                                        <div className="flex items-center gap-[2px] text-[16px]">
-                                            Xác nhận ngay lập tức
-                                        </div>
-                                    </Checkbox>
+                                    <Radio.Group
+                                        className="flex flex-col"
+                                        onChange={(e) =>
+                                            setValueStar(e.target.value)
+                                        }
+                                        value={valueStar}
+                                        options={[
+                                            {
+                                                value: 5,
+                                                label: (
+                                                    <div className="flex items-center gap-[2px]">
+                                                        <FaStar className="text-[#b54c01] text-[14px]" />
+                                                        <FaStar className="text-[#b54c01] text-[14px]" />
+                                                        <FaStar className="text-[#b54c01] text-[14px]" />
+                                                        <FaStar className="text-[#b54c01] text-[14px]" />
+                                                        <FaStar className="text-[#b54c01] text-[14px]" />
+                                                    </div>
+                                                ),
+                                            },
+                                            {
+                                                value: 4,
+                                                label: (
+                                                    <div className="flex items-center gap-[2px]">
+                                                        <FaStar className="text-[#b54c01] text-[14px]" />
+                                                        <FaStar className="text-[#b54c01] text-[14px]" />
+                                                        <FaStar className="text-[#b54c01] text-[14px]" />
+                                                        <FaStar className="text-[#b54c01] text-[14px]" />
+                                                    </div>
+                                                ),
+                                            },
+                                            {
+                                                value: 3,
+                                                label: (
+                                                    <div className="flex items-center gap-[2px]">
+                                                        <FaStar className="text-[#b54c01] text-[14px]" />
+                                                        <FaStar className="text-[#b54c01] text-[14px]" />
+                                                        <FaStar className="text-[#b54c01] text-[14px]" />
+                                                    </div>
+                                                ),
+                                            },
+                                            {
+                                                value: 2,
+                                                label: (
+                                                    <div className="flex items-center gap-[2px]">
+                                                        <FaStar className="text-[#b54c01] text-[14px]" />
+                                                        <FaStar className="text-[#b54c01] text-[14px]" />
+                                                    </div>
+                                                ),
+                                            },
+                                            {
+                                                value: 1,
+                                                label: (
+                                                    <div className="flex items-center gap-[2px]">
+                                                        <FaStar className="text-[#b54c01] text-[14px]" />
+                                                    </div>
+                                                ),
+                                            },
+                                            {
+                                                value: -1,
+                                                label: (
+                                                    <div className="flex items-center gap-[2px]">
+                                                        Không có đánh giá
+                                                    </div>
+                                                ),
+                                            },
+                                        ]}
+                                    />
                                 </div>
                             </div>
                         </div>
@@ -423,33 +425,28 @@ const ActivityCity = () => {
                                 Thời gian
                             </p>
                             <div className="mt-[16px]">
-                                <div>
-                                    <Checkbox
-                                        onChange={(val) => console.log(val)}
-                                    >
-                                        <div className="flex items-center gap-[2px] text-[16px]">
-                                            Tối đa 1 tiếng
-                                        </div>
-                                    </Checkbox>
-                                </div>
-                                <div>
-                                    <Checkbox
-                                        onChange={(val) => console.log(val)}
-                                    >
-                                        <div className="flex items-center gap-[2px] text-[16px]">
-                                            1-4 tiếng
-                                        </div>
-                                    </Checkbox>
-                                </div>
-                                <div>
-                                    <Checkbox
-                                        onChange={(val) => console.log(val)}
-                                    >
-                                        <div className="flex items-center gap-[2px] text-[16px]">
-                                            Hơn 4 tiếng
-                                        </div>
-                                    </Checkbox>
-                                </div>
+                                <Radio.Group
+                                    onChange={onChangeTotalTime}
+                                    value={valueTotalTime}
+                                    options={[
+                                        {
+                                            value: "max_total_time=1",
+                                            label: <div>Tối đa 1 tiếng</div>,
+                                        },
+                                        {
+                                            value: "min_total_time=1&max_total_time=4",
+                                            label: <div>1-4 tiếng</div>,
+                                        },
+                                        {
+                                            value: "min_total_time=4",
+                                            label: <div>Hơn 4 tiếng</div>,
+                                        },
+                                        {
+                                            value: "min_total_time=0",
+                                            label: <div>Tất cả thời gian</div>,
+                                        },
+                                    ]}
+                                />
                             </div>
                         </div>
                         <div className="mt-[24px]">
@@ -481,7 +478,7 @@ const ActivityCity = () => {
                                         <div className="flex items-center gap-[4px]">
                                             <IoIosStar className="text-[#b54c01] text-[12px]" />
                                             <p className="font-semibold">
-                                                {item.avg_star}
+                                                {item.avg_star.toFixed(1)}
                                             </p>
                                             <p className="text-[13px] text-[#5e6b82]">
                                                 (49)

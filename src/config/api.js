@@ -103,6 +103,19 @@ export const callUpdateHotel = (id, data) => {
     return axios.put(`/api/hotels/hotels/${id}/update/`, { ...data });
 };
 
+export const callUpdateHotelNotImage = (id, data) => {
+    return axios.put(`/api/hotels/hotels/${id}/update/not-image/`, { ...data });
+};
+
+export const callFetchDetailUserHotelInteractionByHotelId = (hotelId) => {
+    return axios.get(`/api/hotels/user-hotel-interaction/${hotelId}/`);
+};
+
+export const callUpsertUserHotelInteraction = (data) => {
+    return axios.post(`/api/hotels/user-hotel-interaction/upsert/`, { ...data });
+};
+
+
 export const callDeleteHotel = (id) => {
     return axios.delete(`/api/hotels/hotels/${id}/delete/`);
 };
@@ -173,6 +186,14 @@ export const callUpdateActivity = (id, data) => {
     return axios.put(`/api/activities/activities/${id}/update/`, { ...data });
 };
 
+export const callFetchDetailUserActivityInteractionByActivityId = (activity) => {
+    return axios.get(`/api/activities/user-activity-interaction/${activity}/`);
+};
+
+export const callUpsertUserActivityInteraction = (data) => {
+    return axios.post(`/api/activities/user-activity-interaction/upsert/`, { ...data });
+};
+
 export const callDeleteActivity = (id) => {
     return axios.delete(`/api/activities/activities/${id}/delete/`);
 };
@@ -228,6 +249,11 @@ export const getCities = (params) => {
 // Get room detail
 export const getRoomDetail = (id) => {
     return axios.get(`/api/rooms/rooms/${id}/`);
+};
+
+// room booking detail
+export const callFetchDetailRoomBooking = (id) => {
+    return axios.get(`/api/rooms/rooms-booking/${id}/`);
 };
 
 // Booking
@@ -309,3 +335,90 @@ export const callGetRoomDetail = (roomId) => {
 export const callSearchRoomQuery = (query) => {
     return axios.get(`/api/rooms/rooms/search/?${query}`);
 }
+
+
+// Review
+export const callFetchReview = (query) => {
+    return axios.get(`/api/reviews/reviews/?${query}`);
+};
+
+export const callFetchDetailReview = (id) => {
+    return axios.get(`/api/reviews/reviews/${id}/`);
+};
+
+
+export const callCreateReview = (data) => {
+    return axios.post("/api/reviews/reviews/create/", { ...data });
+};
+
+export const callUpdateReview = (id, data) => {
+    return axios.put(`/api/reviews/reviews/${id}/update/`, { ...data });
+};
+
+export const callDeleteReview = (id) => {
+    return axios.delete(`/api/reviews/reviews/${id}/delete/`);
+};
+
+// Flight APIs
+export const callSearchFlights = (params) => {
+    return axios.get("/api/flights/", { params });
+};
+
+export const callGetFlightDetail = (flightId) => {
+    return axios.get(`/api/flights/${flightId}/`);
+};
+
+export const callFetchFlightQuery = (query) => {
+    return axios.get(`/api/flights/?${query}`);
+};
+
+// Flight Booking Detail
+export const callFetchDetailFlightBooking = (id) => {
+    return axios.get(`/api/flights/flight-booking/${id}/`);
+};
+
+export const callSearchHotels = (params) => {
+    const { destination, check_in, check_out, adults, rooms } = params;
+    return axios.get(`/api/hotels/hotels/search/`, {
+        params: {
+            destination,
+            check_in,
+            check_out,
+            adults,
+            rooms
+        }
+    });
+};
+
+// API: Get available rooms for a specific hotel
+export const callGetRoomAvailability = (hotelId, params) => {
+    const { check_in, check_out, adults } = params;
+    return axios.get(`/api/hotels/hotels/${hotelId}/rooms/availability/`, {
+        params: {
+            check_in,
+            check_out,
+            adults
+        }
+    });
+};
+
+// API: Get search suggestions (autocomplete)
+export const callGetSearchSuggestions = (query = '') => {
+    return axios.get(`/api/hotels/search-suggestions/`, {
+        params: {
+            q: query
+        }
+    });
+};
+
+// API: Save search history
+export const callSaveSearchHistory = (data) => {
+    return axios.post(`/api/hotels/save-search-history/`, {
+        destination: data.destination,
+        check_in: data.check_in,
+        check_out: data.check_out,
+        adults: data.adults,
+        children: data.children || 0,
+        rooms: data.rooms
+    });
+};

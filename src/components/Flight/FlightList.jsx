@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { FaChevronDown, FaChevronUp } from 'react-icons/fa';
+import { useNavigate } from 'react-router-dom';
 import ChinaEA from '../../images/flight/China Eastern Airlines.png';
 import ChinaSA from '../../images/flight/China Southern Airlines.jpg';
 import VNA from '../../images/flight/Vietnam Airlines.jpg';
 
-const FlightList = () => {
+const FlightList = ({ flights = [] }) => {
+  const navigate = useNavigate();
   const [openIndexes, setOpenIndexes] = useState([]);
 
   const toggleOpen = (index) => {
@@ -15,72 +17,54 @@ const FlightList = () => {
     );
   };
 
-  const flights = [
-    {
-      airline: 'China Eastern Airlines',
-      logo: ChinaEA,
-      time: '19:30 - 16:30',
-      route: 'SGN - RIZ',
-      price: '10.104.858 đ',
-      oldPrice: '12.500.000 đ',
-      stops: 2,
-      totalDuration: '20h 0m',
-    },
-    {
-      airline: 'Vietnam Airlines',
-      logo: VNA,
-      time: '19:30 - 16:30',
-      route: 'SGN - RIZ',
-      price: '10.104.858 đ',
-      oldPrice: '12.500.000 đ',
-      stops: 2,
-      totalDuration: '20h 0m',
-    },
-    {
-      airline: 'China Eastern Airlines',
-      logo: ChinaSA,
-      time: '19:30 - 16:30',
-      route: 'SGN - RIZ',
-      price: '10.104.858 đ',
-      oldPrice: '12.500.000 đ',
-      stops: 2,
-      totalDuration: '20h 0m',
-    },
-  ];
-
-  const details = {
-    '19:30 - 16:30': {
-      segments: [
-        {
-          depTime: '19:30',
-          depAirport: 'Hồ Chí Minh (SGN) - Sân bay Quốc tế Tân Sơn Nhất',
-          arrTime: '23:30',
-          arrAirport: 'Côn Minh (KMG)',
-          duration: '4h 0m',
-          aircraft: 'China Eastern Airlines - Boeing 737-500',
-          class: 'Economy',
-        },
-        {
-          depTime: '23:30',
-          depAirport: 'Côn Minh (KMG)',
-          arrTime: '01:35',
-          arrAirport: 'Vị Hản (WEH)',
-          duration: '2h 5m',
-          aircraft: 'China Eastern Airlines - Boeing 737-500',
-          class: 'Economy',
-        },
-        {
-          depTime: '15:05',
-          depAirport: 'Vị Hản (WEH)',
-          arrTime: '16:30',
-          arrAirport: 'Nhật Chiêu (RIZ)',
-          duration: '1h 25m',
-          aircraft: 'China Eastern Airlines - Boeing 737-500',
-          class: 'Economy',
-        },
-      ],
-    },
+  const formatPrice = (price) => {
+    return new Intl.NumberFormat('vi-VN', { 
+      style: 'currency', 
+      currency: 'VND' 
+    }).format(price);
   };
+
+  const formatTime = (datetime) => {
+    return new Date(datetime).toLocaleTimeString('vi-VN', {
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  const formatDuration = (minutes) => {
+    const hours = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+    return `${hours}h ${mins}m`;
+  };
+
+  const getAirlineLogo = (airline) => {
+    if (airline.toLowerCase().includes('vietnam')) return VNA;
+    if (airline.toLowerCase().includes('eastern')) return ChinaEA;
+    return ChinaSA;
+  };
+
+  const handleBookFlight = (flight) => {
+    // Navigate to flight booking page
+    navigate('/flight/booking', { 
+      state: { 
+        flight,
+        serviceType: 'flight'
+      } 
+    });
+  };
+
+  const handleAddToCart = (flight) => {
+    // Add to cart logic
+    alert('Thêm vào giỏ hàng thành công!');
+  };
+
+  if (flights.length === 0) {
+    return (
+      <div className="text-center py-10 text-gray-500">
+        Không tìm thấy chuyến bay phù hợp
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4 p-2">
@@ -100,30 +84,35 @@ const FlightList = () => {
               {/* Logo + Airline */}
               <div className="col-span-3 flex items-center space-x-3">
                 <img
-                  src={flight.logo}
+                  src={getAirlineLogo(flight.airline)}
                   alt="Airline Logo"
                   className="w-12 h-12 object-contain"
                 />
                 <div>
                   <p className="font-semibold text-base">{flight.airline}</p>
-                  <p className="text-sm text-gray-500">{flight.route}</p>
+                  <p className="text-sm text-gray-500">
+                    {flight.origin_name} - {flight.destination_name}
+                  </p>
+                  <p className="text-xs text-gray-400">{flight.flight_number}</p>
                 </div>
               </div>
 
-              {/* Time + stops */}
+              {/* Time + duration */}
               <div className="col-span-5 text-center">
-                <p className="text-xl font-bold">{flight.time}</p>
+                <p className="text-xl font-bold">
+                  {formatTime(flight.departure_datetime)} - {formatTime(flight.arrival_datetime)}
+                </p>
                 <p className="text-sm text-gray-600">
-                  {flight.stops} điểm dừng • {flight.totalDuration}
+                  Bay thẳng • {formatDuration(flight.duration_minutes)}
                 </p>
               </div>
 
               {/* Price */}
               <div className="col-span-3 text-right">
-                <p className="text-2xl font-bold text-red-600">{flight.price}</p>
-                <p className="text-sm text-gray-500 line-through">
-                  {flight.oldPrice}
+                <p className="text-2xl font-bold text-red-600">
+                  {formatPrice(flight.price)}
                 </p>
+                <p className="text-xs text-gray-500">Mỗi khách</p>
               </div>
 
               {/* Icon */}
@@ -139,31 +128,43 @@ const FlightList = () => {
             {/* Details */}
             {isOpen && (
               <div className="bg-gray-50 px-6 py-4 space-y-4 text-sm">
-                {details[flight.time]?.segments.map((seg, i) => (
-                  <div
-                    key={i}
-                    className="border rounded p-3 bg-white space-y-1"
-                  >
-                    <p className="font-semibold text-base">
-                      {seg.depTime} → {seg.arrTime}
-                    </p>
-                    <p className="text-gray-700">
-                      <strong>{seg.depAirport}</strong> →{' '}
-                      <strong>{seg.arrAirport}</strong>
-                    </p>
-                    <p className="text-gray-600">⏱ Thời gian: {seg.duration}</p>
-                    <p className="text-gray-600">🛫 Máy bay: {seg.aircraft}</p>
-                    <p className="text-gray-600">💺 Hạng ghế: {seg.class}</p>
+                <div className="border rounded p-4 bg-white space-y-2">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <p className="font-semibold text-lg">
+                        {formatTime(flight.departure_datetime)} → {formatTime(flight.arrival_datetime)}
+                      </p>
+                      <p className="text-gray-700 mt-1">
+                        <strong>{flight.origin_name}</strong> ({flight.origin_city})
+                      </p>
+                      <p className="text-gray-700">
+                        <strong>{flight.destination_name}</strong> ({flight.destination_city})
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-gray-600">⏱ Thời gian bay: {formatDuration(flight.duration_minutes)}</p>
+                      <p className="text-gray-600">🛫 Số hiệu: {flight.flight_number}</p>
+                    </div>
                   </div>
-                ))}
+                  <div className="pt-2 border-t">
+                    <p className="text-gray-600">✈️ Hãng: {flight.airline}</p>
+                    <p className="text-gray-600">💺 Số chỗ còn lại: {flight.seat_capacity}</p>
+                  </div>
+                </div>
 
                 {/* Action Buttons */}
                 <div className="flex gap-4 pt-2">
-                  <button className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
-                    Chọn
+                  <button 
+                    onClick={() => handleBookFlight(flight)}
+                    className="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 font-semibold"
+                  >
+                    Chọn chuyến bay này
                   </button>
-                  <button className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">
-                    Thêm vào xe đẩy hàng
+                  <button 
+                    onClick={() => handleAddToCart(flight)}
+                    className="px-6 py-2 bg-green-600 text-white rounded hover:bg-green-700 font-semibold"
+                  >
+                    Thêm vào giỏ hàng
                   </button>
                 </div>
               </div>

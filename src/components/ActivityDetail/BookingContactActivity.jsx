@@ -23,6 +23,7 @@ import {
     getRoomDetail,
     callFetchDetailActivityDateBooking,
     callFetchDetailCarBooking,
+    callFetchDetailRoomBooking,
 } from "../../config/api";
 import dayjs from "dayjs";
 import { Button, Card, Divider } from "antd";
@@ -45,6 +46,7 @@ export default function BookingContactActivity() {
     const [room, setRoom] = useState(null);
     const [activityDateBooking, setActivityDateBooking] = useState(null);
     const [carBooking, setCarBooking] = useState(null);
+    const [flightBooking, setFlightBooking] = useState(null);
     const [center, setCenter] = useState([0, 0]);
     const [loading, setLoading] = useState(true);
     const [distance, setDistance] = useState(0);
@@ -73,9 +75,9 @@ export default function BookingContactActivity() {
 
                 // Fetch room details if service_type is HOTEL
                 if (service_type === ServiceType.HOTEL && ref_id) {
-                    const roomResponse = await getRoomDetail(ref_id);
-                    if (roomResponse.isSuccess) {
-                        setRoom(roomResponse.data);
+                    const res = await callFetchDetailRoomBooking(ref_id);
+                    if (res.isSuccess) {
+                        setRoom(res.data?.room);
                     }
                 }
 
@@ -114,6 +116,12 @@ export default function BookingContactActivity() {
                             setZoomLevel(3); // Cách xa nhau nhiều, zoom thấp
                         }
                     }
+                }
+
+                if (service_type === ServiceType.FLIGHT && ref_id) {
+                    // For flight, ref_id is the FlightBookingDetail ID
+                    // We can get flight info from booking.flight_detail
+                    setFlightBooking(bookingResponse.flight_detail);
                 }
 
                 // Fetch countries
@@ -403,6 +411,11 @@ export default function BookingContactActivity() {
                                 <h3 className="text-lg font-bold text-gray-900 mb-4">
                                     Tóm tắt đơn đặt
                                 </h3>
+                                {booking?.created_at && (
+                                    <div className="text-xs text-gray-500 mb-3">
+                                        Đặt lúc: {dayjs(booking.created_at).format("DD/MM/YYYY HH:mm:ss")}
+                                    </div>
+                                )}
 
                                 {/* Service Type Badge */}
                                 <div className="flex items-center gap-2 mb-3">
@@ -443,7 +456,11 @@ export default function BookingContactActivity() {
                                                         {room?.hotel?.avg_star}
                                                     </span>
                                                     <span className="text-gray-500">
-                                                        1,000 bài đánh giá
+                                                        {
+                                                            room?.hotel
+                                                                ?.review_count
+                                                        }{" "}
+                                                        lượt đánh giá
                                                     </span>
                                                 </div>
                                             </div>
@@ -518,7 +535,13 @@ export default function BookingContactActivity() {
                                                         }
                                                     </span>
                                                     <span className="text-gray-500">
-                                                        1,128 bài đánh giá
+                                                        {activityDateBooking
+                                                            ?.activity_date
+                                                            ?.activity_package
+                                                            ?.activity
+                                                            ?.review_count ||
+                                                            0}{" "}
+                                                        lượt đánh giá
                                                     </span>
                                                 </div>
                                             </div>
@@ -767,6 +790,47 @@ export default function BookingContactActivity() {
                                             </div>
                                             <div className="text-sm">
                                                 Chào đón và đưa đón
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+                                
+                                {service_type === ServiceType.FLIGHT && flightBooking && (
+                                    <div className="border border-gray-200 rounded-lg overflow-hidden mb-4">
+                                        <div className="p-4 space-y-3">
+                                            <div className="flex items-center gap-2 text-sm">
+                                                <Calendar className="w-4 h-4 text-gray-500" />
+                                                <span className="font-medium">
+                                                    {flightBooking.flight?.departure_datetime ? 
+                                                        dayjs(flightBooking.flight.departure_datetime).format("DD/MM/YYYY") : 
+                                                        "N/A"}
+                                                </span>
+                                            </div>
+
+                                            <div className="text-sm space-y-1">
+                                                <div className="flex justify-between">
+                                                    <span className="text-gray-600">Chuyến bay:</span>
+                                                    <span className="font-semibold">{flightBooking.flight?.flight_number || "N/A"}</span>
+                                                </div>
+                                                <div className="flex justify-between">
+                                                    <span className="text-gray-600">Hãng bay:</span>
+                                                    <span className="font-semibold">{flightBooking.flight?.airline || "N/A"}</span>
+                                                </div>
+                                                <div className="flex justify-between">
+                                                    <span className="text-gray-600">Hạng ghế:</span>
+                                                    <span className="font-semibold">{flightBooking.seat_class || "Economy"}</span>
+                                                </div>
+                                                <div className="flex justify-between">
+                                                    <span className="text-gray-600">Số hành khách:</span>
+                                                    <span className="font-semibold">{flightBooking.num_passengers || 1}</span>
+                                                </div>
+                                            </div>
+
+                                            <div className="flex items-start gap-2 text-xs pt-2 border-t">
+                                                <Zap className="w-3 h-3 text-yellow-500 flex-shrink-0 mt-0.5" />
+                                                <span className="text-gray-600">
+                                                    Xác nhận ngay lập tức
+                                                </span>
                                             </div>
                                         </div>
                                     </div>

@@ -12,7 +12,7 @@ export const fetchAccount = createAsyncThunk(
 
 const initialState = {
     isAuthenticated: false,
-    isLoading: true,
+    isLoading: false, // Changed to false - only set to true when actually fetching
     isRefreshToken: false,
     errorRefreshToken: "",
     user: {

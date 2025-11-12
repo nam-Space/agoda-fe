@@ -143,7 +143,7 @@
 
 import { useEffect, useRef, useState } from "react";
 
-const FlightSortFilter = ({ onSortChange }) => {
+const FlightSortFilter = ({ filters, setFilters }) => {
   const [activeTab, setActiveTab] = useState("cheapest");
   const [showDropdown, setShowDropdown] = useState(false);
   const [dropdownSelected, setDropdownSelected] = useState(null);
@@ -210,7 +210,17 @@ const FlightSortFilter = ({ onSortChange }) => {
   const handleTabClick = (key) => {
     setActiveTab(key);
     setDropdownSelected(null);
-    if (onSortChange) onSortChange(key);
+    
+    // Map tab keys to API sort params
+    const sortMapping = {
+      cheapest: { sort_by: 'price', sort_order: 'asc' },
+      best: { sort_by: 'price', sort_order: 'asc' }, // Can be customized
+      fastest: { sort_by: 'duration', sort_order: 'asc' },
+    };
+    
+    if (setFilters && sortMapping[key]) {
+      setFilters(prev => ({ ...prev, ...sortMapping[key] }));
+    }
   };
 
   const handleDropdownSelect = (key) => {
@@ -219,7 +229,17 @@ const FlightSortFilter = ({ onSortChange }) => {
       handleTabClick(key);
     } else {
       setDropdownSelected(key);
-      if (onSortChange) onSortChange(key);
+      
+      // Map dropdown keys to API sort params
+      const sortMapping = {
+        departure: { sort_by: 'departure_time', sort_order: 'asc' },
+        arrival: { sort_by: 'arrival_time', sort_order: 'asc' },
+        stops: { sort_by: 'stops', sort_order: 'asc' },
+      };
+      
+      if (setFilters && sortMapping[key]) {
+        setFilters(prev => ({ ...prev, ...sortMapping[key] }));
+      }
     }
   };
 

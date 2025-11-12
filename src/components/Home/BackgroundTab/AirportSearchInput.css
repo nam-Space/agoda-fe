@@ -1,0 +1,80 @@
+/* AirportSearchInput Styles */
+
+/* Remove default input border and styling */
+.airport-search-input .ant-select-selector {
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  background: transparent !important;
+}
+
+.airport-search-input .ant-select-selection-search-input {
+  font-size: 14px;
+  font-weight: 500;
+  color: #111827;
+}
+
+.airport-search-input .ant-select-selection-placeholder {
+  color: #9CA3AF;
+  font-weight: 500;
+}
+
+/* Dropdown styling - Match Agoda */
+.airport-search-dropdown.ant-select-dropdown {
+  border-radius: 8px !important;
+  overflow: hidden;
+  padding: 0 !important;
+  max-height: 450px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+  border: 1px solid #E5E7EB !important;
+}
+
+.airport-search-dropdown .ant-select-item {
+  padding: 0 !important;
+  border-radius: 0 !important;
+}
+
+.airport-search-dropdown .ant-select-item-option {
+  min-height: auto !important;
+  padding: 0 !important;
+}
+
+.airport-search-dropdown .ant-select-item-option-active {
+  background-color: #F3F4F6 !important;
+}
+
+.airport-search-dropdown .ant-select-item-option-selected {
+  background-color: #EFF6FF !important;
+  font-weight: 500;
+}
+
+/* Hover effects */
+.airport-search-dropdown .ant-select-item-option:hover {
+  background-color: #F9FAFB !important;
+}
+
+/* City "All airports" option styling */
+.airport-search-dropdown .ant-select-item-option:first-child {
+  border-bottom: 1px solid #E5E7EB;
+}
+
+/* Loading state */
+.airport-search-dropdown .ant-spin-container {
+  padding: 0;
+}
+
+/* Empty state */
+.airport-search-dropdown .ant-empty {
+  margin: 0;
+  padding: 24px 16px;
+}
+
+/* Scrollbar styling */
+.airport-search-dropdown .rc-virtual-list-scrollbar {
+  width: 6px !important;
+}
+
+.airport-search-dropdown .rc-virtual-list-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.2) !important;
+  border-radius: 3px !important;
+}

@@ -36,6 +36,10 @@ import { useAppSelector } from "../../redux/hooks";
 import { callBook } from "config/api";
 import { toast } from "react-toastify";
 import { SERVICE_TYPE } from "constants/booking";
+import ReviewActivity from "./ReivewActivity";
+import { callFetchDetailUserActivityInteractionByActivityId } from "config/api";
+import { callUpsertUserActivityInteraction } from "config/api";
+import Skeleton from "react-loading-skeleton";
 const { Panel } = Collapse;
 const { Text } = Typography;
 
@@ -51,6 +55,8 @@ export default function ActivityDetail() {
     const [activityPackages, setActivityPackages] = useState([]);
     const [minPrice, setMinPrice] = useState(INF);
     const [activeKey, setActiveKey] = useState(["1"]);
+    const [loadingActivityPackages, setLoadingActivityPackages] =
+        useState(false);
 
     const handleGetListActivities = async (query) => {
         const res = await callFetchActivity(query);
@@ -72,9 +78,11 @@ export default function ActivityDetail() {
     };
 
     const handleGetActivityPackageByActivityIdAndDateLaunch = async (query) => {
+        setLoadingActivityPackages(true);
         const res = await callFetchActivityPackageByActivityIdAndDateLaunch(
             query
         );
+        setLoadingActivityPackages(false);
         if (res.isSuccess) {
             setActivityPackages(res.data);
         }
@@ -107,6 +115,30 @@ export default function ActivityDetail() {
     });
     const [selectedIndexTicket, setSelectedIndexTicket] = useState(-1);
 
+    const handleUpdateTotalClick = async () => {
+        const res = await callFetchDetailUserActivityInteractionByActivityId(
+            activity.id
+        );
+        if (res.isSuccess) {
+            const userActivityInteraction = res.data;
+            await callUpsertUserActivityInteraction({
+                activity_id: activity.id,
+                click_count: userActivityInteraction.click_count + 1,
+                positive_count: userActivityInteraction.positive_count,
+                negative_count: userActivityInteraction.negative_count,
+                neutral_count: userActivityInteraction.neutral_count,
+            });
+        } else {
+            await callUpsertUserActivityInteraction({
+                activity_id: activity.id,
+                click_count: 0,
+                positive_count: 0,
+                negative_count: 0,
+                neutral_count: 0,
+            });
+        }
+    };
+
     useEffect(() => {
         window.scrollTo(0, 0);
         if (activityId) {
@@ -116,11 +148,20 @@ export default function ActivityDetail() {
 
     useEffect(() => {
         if (activityId) {
+            const newYear = dayjs(new Date())
+                .add(1, "year")
+                .format("YYYY-MM-DD");
             handleGetActivityPackageByActivityIdAndDateLaunch(
-                `activity_id=${activityId}&date_launch=${dateSelectedGeneral}`
+                `activity_id=${activityId}&min_date_launch=${dateSelectedGeneral}&max_date_launch=${newYear}`
             );
         }
     }, [activityId, dateSelectedGeneral]);
+
+    useEffect(() => {
+        if (activity?.id) {
+            handleUpdateTotalClick();
+        }
+    }, [activity]);
 
     useEffect(() => {
         setAdultTickets(groupById(activityPackages).map((item) => 1));
@@ -128,6 +169,7 @@ export default function ActivityDetail() {
         setDateTickets(
             groupById(activityPackages).map((item) => dateSelectedGeneral)
         );
+        setMinPrice(INF);
     }, [activityPackages]);
 
     const handleChange = (key) => {
@@ -244,7 +286,7 @@ export default function ActivityDetail() {
                     selectedTickerOption,
                     selectedIndexTicket
                 ),
-                activity_detail: {
+                activity_date_detail: {
                     activity_date: getActivityDate(
                         selectedTickerOption,
                         selectedIndexTicket
@@ -420,48 +462,327 @@ export default function ActivityDetail() {
                             className="space-y-4"
                             ref={activityPackageWrapperRef}
                         >
-                            {groupById(activityPackages).map((item, index) => (
-                                <Card
-                                    key={item.id}
-                                    className={`hover:shadow-md cursor-pointer ${
-                                        selectedTickerOption.id === item.id
-                                            ? "border border-[2px] border-blue-500"
-                                            : ""
-                                    }`}
-                                    onClick={() => {
-                                        setSelectedTickerOption(item);
-                                        setSelectedIndexTicket(index);
-                                    }}
-                                >
-                                    <div className="flex justify-between items-start">
-                                        <div className="flex-1">
-                                            <div className="flex justify-between items-center">
-                                                <h4 className="font-medium mb-1 text-[24px]">
-                                                    {item.activity_package.name}
-                                                </h4>
-                                                <div className="flex items-center gap-1 text-blue-500 font-semibold">
-                                                    <p className="w-max">
-                                                        Xem chi tiết
-                                                    </p>
-                                                    <MdOutlineKeyboardArrowRight className="text-[22px]" />
+                            {loadingActivityPackages ? (
+                                <div className="flex flex-col gap-4">
+                                    <Skeleton height={130} />
+                                    <Skeleton height={130} />
+                                    <Skeleton height={130} />
+                                </div>
+                            ) : (
+                                groupById(activityPackages).map(
+                                    (item, index) => (
+                                        <Card
+                                            key={item.id}
+                                            className={`hover:shadow-md cursor-pointer ${
+                                                selectedTickerOption.id ===
+                                                item.id
+                                                    ? "border border-[2px] border-blue-500"
+                                                    : ""
+                                            }`}
+                                            onClick={() => {
+                                                setSelectedTickerOption(item);
+                                                setSelectedIndexTicket(index);
+                                            }}
+                                        >
+                                            <div className="flex justify-between items-start">
+                                                <div className="flex-1">
+                                                    <div className="flex justify-between items-center">
+                                                        <h4 className="font-medium mb-1 text-[24px]">
+                                                            {
+                                                                item
+                                                                    .activity_package
+                                                                    .name
+                                                            }
+                                                        </h4>
+                                                        <div className="flex items-center gap-1 text-blue-500 font-semibold">
+                                                            <p className="w-max">
+                                                                Xem chi tiết
+                                                            </p>
+                                                            <MdOutlineKeyboardArrowRight className="text-[22px]" />
+                                                        </div>
+                                                    </div>
+
+                                                    {selectedTickerOption.id !==
+                                                        item.id && (
+                                                        <div className="flex justify-between items-center">
+                                                            <div>
+                                                                <p className="text-sm text-gray-500 line-through">
+                                                                    {formatCurrency(
+                                                                        getPrice(
+                                                                            item,
+                                                                            index
+                                                                        )
+                                                                    )}{" "}
+                                                                    ₫
+                                                                </p>
+                                                                <div className="flex items-center">
+                                                                    <span className="text-red-600 font-semibold text-[22px]">
+                                                                        {formatCurrency(
+                                                                            getPrice(
+                                                                                item,
+                                                                                index
+                                                                            )
+                                                                        )}{" "}
+                                                                        ₫
+                                                                    </span>
+                                                                </div>
+                                                            </div>
+                                                            <Button
+                                                                size="large"
+                                                                className="bg-white text-[#2067da] border-[#050a0f69] rounded-full h-12 font-medium"
+                                                                onClick={() => {}}
+                                                            >
+                                                                Chọn
+                                                            </Button>
+                                                        </div>
+                                                    )}
                                                 </div>
                                             </div>
 
-                                            {selectedTickerOption.id !==
+                                            {selectedTickerOption.id ===
                                                 item.id && (
-                                                <div className="flex justify-between items-center">
-                                                    <div>
-                                                        <p className="text-sm text-gray-500 line-through">
-                                                            {formatCurrency(
-                                                                getPrice(
-                                                                    item,
-                                                                    index
-                                                                )
-                                                            )}{" "}
-                                                            ₫
-                                                        </p>
-                                                        <div className="flex items-center">
-                                                            <span className="text-red-600 font-semibold text-[22px]">
+                                                <div>
+                                                    <Divider className="my-4" />
+
+                                                    {/* Calendar */}
+                                                    <div className="flex justify-between gap-[30px]">
+                                                        <div className="w-[300px]">
+                                                            <span>
+                                                                Chọn ngày
+                                                            </span>
+                                                            <Calendar
+                                                                fullscreen={
+                                                                    false
+                                                                }
+                                                                onSelect={(
+                                                                    val
+                                                                ) => {
+                                                                    setDateTickets(
+                                                                        (
+                                                                            prev
+                                                                        ) => {
+                                                                            const newArr =
+                                                                                [
+                                                                                    ...prev,
+                                                                                ];
+                                                                            newArr[
+                                                                                index
+                                                                            ] =
+                                                                                dayjs(
+                                                                                    new Date(
+                                                                                        val.toString()
+                                                                                    )
+                                                                                ).format(
+                                                                                    "YYYY-MM-DD"
+                                                                                );
+
+                                                                            return newArr;
+                                                                        }
+                                                                    );
+                                                                }}
+                                                                disabledDate={(
+                                                                    currentDate
+                                                                ) =>
+                                                                    handleDisableDate(
+                                                                        currentDate,
+                                                                        item
+                                                                    )
+                                                                }
+                                                            />
+                                                        </div>
+
+                                                        {/* Guest Selection */}
+                                                        <div className="space-y-3 flex-1">
+                                                            <div>
+                                                                <div className="flex justify-between items-center mb-1">
+                                                                    <span>
+                                                                        Du khách
+                                                                    </span>
+                                                                </div>
+                                                                <div className="text-sm text-gray-500 mb-2">
+                                                                    Trẻ nhỏ: 1
+                                                                    người từ
+                                                                    4-11 tuổi
+                                                                </div>
+                                                            </div>
+
+                                                            <div className="flex justify-between items-center">
+                                                                <span>
+                                                                    Người lớn
+                                                                    (từ tuổi
+                                                                    0-99)
+                                                                </span>
+                                                                <div className="flex items-center space-x-2">
+                                                                    <Button
+                                                                        size="small"
+                                                                        disabled={
+                                                                            adultTickets[
+                                                                                index
+                                                                            ] <=
+                                                                            0
+                                                                        }
+                                                                        onClick={() =>
+                                                                            setAdultTickets(
+                                                                                (
+                                                                                    prev
+                                                                                ) => {
+                                                                                    const newArr =
+                                                                                        [
+                                                                                            ...prev,
+                                                                                        ];
+                                                                                    newArr[
+                                                                                        index
+                                                                                    ] =
+                                                                                        Math.max(
+                                                                                            0,
+                                                                                            newArr[
+                                                                                                index
+                                                                                            ] -
+                                                                                                1
+                                                                                        );
+                                                                                    return newArr;
+                                                                                }
+                                                                            )
+                                                                        }
+                                                                    >
+                                                                        <MinusOutlined />
+                                                                    </Button>
+                                                                    <span className="w-8 text-center">
+                                                                        {
+                                                                            adultTickets[
+                                                                                index
+                                                                            ]
+                                                                        }
+                                                                    </span>
+                                                                    <Button
+                                                                        size="small"
+                                                                        onClick={() =>
+                                                                            setAdultTickets(
+                                                                                (
+                                                                                    prev
+                                                                                ) => {
+                                                                                    const newArr =
+                                                                                        [
+                                                                                            ...prev,
+                                                                                        ];
+                                                                                    newArr[
+                                                                                        index
+                                                                                    ] =
+                                                                                        newArr[
+                                                                                            index
+                                                                                        ] +
+                                                                                        1;
+                                                                                    return newArr;
+                                                                                }
+                                                                            )
+                                                                        }
+                                                                    >
+                                                                        <PlusOutlined />
+                                                                    </Button>
+                                                                </div>
+                                                            </div>
+
+                                                            <div className="flex justify-between items-center">
+                                                                <span>
+                                                                    Trẻ em (từ
+                                                                    tuổi 0-99)
+                                                                </span>
+                                                                <div className="flex items-center space-x-2">
+                                                                    <Button
+                                                                        size="small"
+                                                                        disabled={
+                                                                            childTickets[
+                                                                                index
+                                                                            ] <=
+                                                                            0
+                                                                        }
+                                                                        onClick={() =>
+                                                                            setChildTickets(
+                                                                                (
+                                                                                    prev
+                                                                                ) => {
+                                                                                    const newArr =
+                                                                                        [
+                                                                                            ...prev,
+                                                                                        ];
+                                                                                    newArr[
+                                                                                        index
+                                                                                    ] =
+                                                                                        Math.max(
+                                                                                            0,
+                                                                                            newArr[
+                                                                                                index
+                                                                                            ] -
+                                                                                                1
+                                                                                        );
+                                                                                    return newArr;
+                                                                                }
+                                                                            )
+                                                                        }
+                                                                    >
+                                                                        <MinusOutlined />
+                                                                    </Button>
+                                                                    <span className="w-8 text-center">
+                                                                        {
+                                                                            childTickets[
+                                                                                index
+                                                                            ]
+                                                                        }
+                                                                    </span>
+                                                                    <Button
+                                                                        size="small"
+                                                                        onClick={() =>
+                                                                            setChildTickets(
+                                                                                (
+                                                                                    prev
+                                                                                ) => {
+                                                                                    const newArr =
+                                                                                        [
+                                                                                            ...prev,
+                                                                                        ];
+                                                                                    newArr[
+                                                                                        index
+                                                                                    ] =
+                                                                                        newArr[
+                                                                                            index
+                                                                                        ] +
+                                                                                        1;
+                                                                                    return newArr;
+                                                                                }
+                                                                            )
+                                                                        }
+                                                                    >
+                                                                        <PlusOutlined />
+                                                                    </Button>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    <Divider className="my-4" />
+                                                    <div className="flex justify-between">
+                                                        <div className="text-sm text-gray-500">
+                                                            <div className="flex items-center space-x-1 mb-1">
+                                                                <FaClock />
+                                                                <span>
+                                                                    Giá hiển thị
+                                                                    bằng VND
+                                                                </span>
+                                                            </div>
+                                                            <div className="flex items-center space-x-1">
+                                                                <FaTicketAlt />
+                                                                <span>
+                                                                    Giá trên áp
+                                                                    dụng cho số
+                                                                    người tối
+                                                                    thiểu mà đơn
+                                                                    đặt chỗ này
+                                                                    yêu cầu
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                        <div className="flex gap-2 items-center">
+                                                            <p className="text-sm text-gray-500 line-through">
                                                                 {formatCurrency(
                                                                     getPrice(
                                                                         item,
@@ -469,291 +790,45 @@ export default function ActivityDetail() {
                                                                     )
                                                                 )}{" "}
                                                                 ₫
-                                                            </span>
-                                                        </div>
-                                                    </div>
-                                                    <Button
-                                                        size="large"
-                                                        className="bg-white text-[#2067da] border-[#050a0f69] rounded-full h-12 font-medium"
-                                                        onClick={() => {}}
-                                                    >
-                                                        Chọn
-                                                    </Button>
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
-
-                                    {selectedTickerOption.id === item.id && (
-                                        <div>
-                                            <Divider className="my-4" />
-
-                                            {/* Calendar */}
-                                            <div className="flex justify-between gap-[30px]">
-                                                <div className="w-[300px]">
-                                                    <span>Chọn ngày</span>
-                                                    <Calendar
-                                                        fullscreen={false}
-                                                        onSelect={(val) => {
-                                                            setDateTickets(
-                                                                (prev) => {
-                                                                    const newArr =
-                                                                        [
-                                                                            ...prev,
-                                                                        ];
-                                                                    newArr[
-                                                                        index
-                                                                    ] = dayjs(
-                                                                        new Date(
-                                                                            val.toString()
+                                                            </p>
+                                                            <div className="flex items-center">
+                                                                <span className="text-red-600 font-semibold text-[22px]">
+                                                                    {formatCurrency(
+                                                                        getPrice(
+                                                                            item,
+                                                                            index
                                                                         )
-                                                                    ).format(
-                                                                        "YYYY-MM-DD"
-                                                                    );
-
-                                                                    return newArr;
-                                                                }
-                                                            );
-                                                        }}
-                                                        disabledDate={(
-                                                            currentDate
-                                                        ) =>
-                                                            handleDisableDate(
-                                                                currentDate,
-                                                                item
-                                                            )
-                                                        }
-                                                    />
-                                                </div>
-
-                                                {/* Guest Selection */}
-                                                <div className="space-y-3 flex-1">
-                                                    <div>
-                                                        <div className="flex justify-between items-center mb-1">
-                                                            <span>
-                                                                Du khách
-                                                            </span>
-                                                        </div>
-                                                        <div className="text-sm text-gray-500 mb-2">
-                                                            Trẻ nhỏ: 1 người từ
-                                                            4-11 tuổi
+                                                                    )}{" "}
+                                                                    ₫
+                                                                </span>
+                                                            </div>
                                                         </div>
                                                     </div>
-
-                                                    <div className="flex justify-between items-center">
-                                                        <span>
-                                                            Người lớn (từ tuổi
-                                                            0-99)
-                                                        </span>
-                                                        <div className="flex items-center space-x-2">
-                                                            <Button
-                                                                size="small"
-                                                                disabled={
-                                                                    adultTickets[
-                                                                        index
-                                                                    ] <= 0
-                                                                }
-                                                                onClick={() =>
-                                                                    setAdultTickets(
-                                                                        (
-                                                                            prev
-                                                                        ) => {
-                                                                            const newArr =
-                                                                                [
-                                                                                    ...prev,
-                                                                                ];
-                                                                            newArr[
-                                                                                index
-                                                                            ] =
-                                                                                Math.max(
-                                                                                    0,
-                                                                                    newArr[
-                                                                                        index
-                                                                                    ] -
-                                                                                        1
-                                                                                );
-                                                                            return newArr;
-                                                                        }
-                                                                    )
-                                                                }
-                                                            >
-                                                                <MinusOutlined />
-                                                            </Button>
-                                                            <span className="w-8 text-center">
-                                                                {
-                                                                    adultTickets[
-                                                                        index
-                                                                    ]
-                                                                }
-                                                            </span>
-                                                            <Button
-                                                                size="small"
-                                                                onClick={() =>
-                                                                    setAdultTickets(
-                                                                        (
-                                                                            prev
-                                                                        ) => {
-                                                                            const newArr =
-                                                                                [
-                                                                                    ...prev,
-                                                                                ];
-                                                                            newArr[
-                                                                                index
-                                                                            ] =
-                                                                                newArr[
-                                                                                    index
-                                                                                ] +
-                                                                                1;
-                                                                            return newArr;
-                                                                        }
-                                                                    )
-                                                                }
-                                                            >
-                                                                <PlusOutlined />
-                                                            </Button>
-                                                        </div>
-                                                    </div>
-
-                                                    <div className="flex justify-between items-center">
-                                                        <span>
-                                                            Trẻ em (từ tuổi
-                                                            0-99)
-                                                        </span>
-                                                        <div className="flex items-center space-x-2">
-                                                            <Button
-                                                                size="small"
-                                                                disabled={
-                                                                    childTickets[
-                                                                        index
-                                                                    ] <= 0
-                                                                }
-                                                                onClick={() =>
-                                                                    setChildTickets(
-                                                                        (
-                                                                            prev
-                                                                        ) => {
-                                                                            const newArr =
-                                                                                [
-                                                                                    ...prev,
-                                                                                ];
-                                                                            newArr[
-                                                                                index
-                                                                            ] =
-                                                                                Math.max(
-                                                                                    0,
-                                                                                    newArr[
-                                                                                        index
-                                                                                    ] -
-                                                                                        1
-                                                                                );
-                                                                            return newArr;
-                                                                        }
-                                                                    )
-                                                                }
-                                                            >
-                                                                <MinusOutlined />
-                                                            </Button>
-                                                            <span className="w-8 text-center">
-                                                                {
-                                                                    childTickets[
-                                                                        index
-                                                                    ]
-                                                                }
-                                                            </span>
-                                                            <Button
-                                                                size="small"
-                                                                onClick={() =>
-                                                                    setChildTickets(
-                                                                        (
-                                                                            prev
-                                                                        ) => {
-                                                                            const newArr =
-                                                                                [
-                                                                                    ...prev,
-                                                                                ];
-                                                                            newArr[
-                                                                                index
-                                                                            ] =
-                                                                                newArr[
-                                                                                    index
-                                                                                ] +
-                                                                                1;
-                                                                            return newArr;
-                                                                        }
-                                                                    )
-                                                                }
-                                                            >
-                                                                <PlusOutlined />
-                                                            </Button>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            <Divider className="my-4" />
-                                            <div className="flex justify-between">
-                                                <div className="text-sm text-gray-500">
-                                                    <div className="flex items-center space-x-1 mb-1">
-                                                        <FaClock />
-                                                        <span>
-                                                            Giá hiển thị bằng
-                                                            VND
-                                                        </span>
-                                                    </div>
-                                                    <div className="flex items-center space-x-1">
-                                                        <FaTicketAlt />
-                                                        <span>
-                                                            Giá trên áp dụng cho
-                                                            số người tối thiểu
-                                                            mà đơn đặt chỗ này
-                                                            yêu cầu
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                                <div className="flex gap-2 items-center">
-                                                    <p className="text-sm text-gray-500 line-through">
-                                                        {formatCurrency(
-                                                            getPrice(
-                                                                item,
-                                                                index
-                                                            )
-                                                        )}{" "}
-                                                        ₫
-                                                    </p>
-                                                    <div className="flex items-center">
-                                                        <span className="text-red-600 font-semibold text-[22px]">
-                                                            {formatCurrency(
-                                                                getPrice(
-                                                                    item,
-                                                                    index
-                                                                )
-                                                            )}{" "}
-                                                            ₫
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div className="mt-4 flex justify-end items-center gap-3">
-                                                {/* <Button
+                                                    <div className="mt-4 flex justify-end items-center gap-3">
+                                                        {/* <Button
                                                     size="large"
                                                     className="bg-white text-[#2067da] border-[#050a0f69] rounded-full h-12 font-medium"
                                                     onClick={() => {}}
                                                 >
                                                     Thêm vào xe đẩy hàng
                                                 </Button> */}
-                                                <Button
-                                                    type="primary"
-                                                    size="large"
-                                                    className="bg-blue-500 hover:bg-blue-600 border-blue-500 hover:border-blue-600 rounded-full h-12 font-medium"
-                                                    onClick={handleGoToBooking}
-                                                >
-                                                    Bước tiếp theo
-                                                </Button>
-                                            </div>
-                                        </div>
-                                    )}
-                                </Card>
-                            ))}
+                                                        <Button
+                                                            type="primary"
+                                                            size="large"
+                                                            className="bg-blue-500 hover:bg-blue-600 border-blue-500 hover:border-blue-600 rounded-full h-12 font-medium"
+                                                            onClick={
+                                                                handleGoToBooking
+                                                            }
+                                                        >
+                                                            Bước tiếp theo
+                                                        </Button>
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </Card>
+                                    )
+                                )
+                            )}
                         </div>
 
                         {/* Related Activities */}
@@ -978,6 +1053,8 @@ export default function ActivityDetail() {
                                 </div>
                             </Panel>
                         </Collapse>
+
+                        <ReviewActivity activity={activity} />
                     </div>
 
                     {/* Booking Sidebar */}

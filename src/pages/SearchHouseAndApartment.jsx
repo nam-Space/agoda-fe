@@ -1,10 +1,10 @@
-import { Layout, Row, Col, ConfigProvider } from 'antd';
-import React, { useState } from 'react';
-import ClientLayout from "layouts/ClientLayout";
-import SearchBar from "components/Search/SearchBar";
+import { Col, Layout, Row } from 'antd';
 import FilterSidebar from 'components/Search/FilterSidebar';
 import HotelList from 'components/Search/HotelList';
+import SearchBar from "components/Search/SearchBar";
 import { mockHotels } from 'components/Search/data/mockHotels';
+import ClientLayout from "layouts/ClientLayout";
+import { useState } from 'react';
 
 const { Content } = Layout;
 
