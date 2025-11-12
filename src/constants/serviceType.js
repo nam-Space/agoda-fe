@@ -3,21 +3,24 @@ export const ServiceType = Object.freeze({
   HOTEL: 1,
   CAR: 2,
   FLIGHT: 3,
-  ACTIVITY: 4
+  ACTIVITY: 4,
+  HANDBOOK: 5
 });
 
 export const ServiceTypeLabel = {
   [ServiceType.HOTEL]: "room",
   [ServiceType.CAR]: "car",
   [ServiceType.FLIGHT]: "flight",
-  [ServiceType.ACTIVITY]: 'activity'
+  [ServiceType.ACTIVITY]: 'activity',
+  [ServiceType.HANDBOOK]: 'handbook'
 };
 
 export const ServiceTypeLabelVi = {
   [ServiceType.HOTEL]: "Phòng",
   [ServiceType.CAR]: "Xe",
   [ServiceType.FLIGHT]: "Máy bay",
-  [ServiceType.ACTIVITY]: 'Hoạt động'
+  [ServiceType.ACTIVITY]: 'Hoạt động',
+  [ServiceType.HANDBOOK]: 'Cẩm nang'
 };
 
 export const PaymentMethod = Object.freeze({
