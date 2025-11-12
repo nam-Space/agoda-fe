@@ -323,6 +323,7 @@ const TopHotel = () => {
                                 onChange={handlePageChange}
                             /> */}
                             <Pagination
+                                pageSize={meta.pageSize}
                                 showQuickJumper
                                 total={meta.total}
                                 onChange={onChangePagination}

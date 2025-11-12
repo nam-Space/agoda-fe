@@ -1,0 +1,15 @@
+export const HANDBOOK_CATEGORIES = [
+    { label: "Tất cả", value: "all" },
+    { label: "Các hoạt động", value: "activity" },
+    { label: "Ẩm thực", value: "cuisine" },
+    { label: "Chuyến đi trong ngày", value: "day_trip" },
+    { label: "Cuộc sống về đêm", value: "night_life" },
+    { label: "Danh lam thắng cảnh", value: "scenic_spots" },
+    { label: "Hành trình", value: "trip" },
+    { label: "Khách sạn tốt nhất", value: "best_hotel" },
+    { label: "Mua sắm", value: "shopping" },
+    { label: "Ngày lễ và sự kiện", value: "holidays_and_events" },
+    { label: "Nơi lưu trú", value: "accommodation" },
+    { label: "Sân bay", value: "airport" },
+    { label: "Thông tin du lịch", value: "travel_information" },
+];

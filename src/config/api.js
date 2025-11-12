@@ -61,9 +61,34 @@ export const callUploadSingleImage = ({ file, type }) => {
     });
 };
 
+// Country
+export const callFetchCountry = (query) => {
+    return axios.get(`/api/countries/countries/?${query}`);
+};
+
+export const callFetchCountryDetail = (id) => {
+    return axios.get(`/api/countries/countries/${id}/`);
+};
+
+export const callCreateCountry = (data) => {
+    return axios.post("/api/countries/countries/create/", { ...data });
+};
+
+export const callUpdateCountry = (id, data) => {
+    return axios.put(`/api/countries/countries/${id}/update/`, { ...data });
+};
+
+export const callDeleteCountry = (id) => {
+    return axios.delete(`/api/countries/countries/${id}/delete/`);
+};
+
 // City
 export const callFetchCity = (query) => {
     return axios.get(`/api/cities/cities/?${query}`);
+};
+
+export const callFetchCityDetail = (id) => {
+    return axios.get(`/api/cities/cities/${id}/`);
 };
 
 export const getTopVietNamHotel = (params) => {
@@ -365,4 +390,33 @@ export const callUpdateReview = (id, data) => {
 
 export const callDeleteReview = (id) => {
     return axios.delete(`/api/reviews/reviews/${id}/delete/`);
+};
+
+// Handbook
+export const callFetchHandbook = (query) => {
+    return axios.get(`/api/handbooks/handbooks/?${query}`);
+};
+
+export const callFetchHandbookDetail = (id) => {
+    return axios.get(`/api/handbooks/handbooks/${id}/`);
+};
+
+export const callCreateHandbook = (data) => {
+    return axios.post("/api/handbooks/handbooks/create/", { ...data });
+};
+
+export const callUpdateHandbook = (id, data) => {
+    return axios.put(`/api/handbooks/handbooks/${id}/update/`, { ...data });
+};
+
+export const callDeleteHandbook = (id) => {
+    return axios.delete(`/api/handbooks/handbooks/${id}/delete/`);
+};
+
+export const callFetchDetailUserHandbookInteractionByHandbookId = (handbookId) => {
+    return axios.get(`/api/handbooks/user-handbook-interaction/${handbookId}/`);
+};
+
+export const callUpsertUserHandbookInteraction = (data) => {
+    return axios.post(`/api/handbooks/user-handbook-interaction/upsert/`, { ...data });
 };

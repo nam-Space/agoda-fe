@@ -23,8 +23,8 @@ import { callCreateReview } from "config/api";
 import { getUserAvatar } from "utils/imageUrl";
 import { useParams } from "react-router-dom";
 
-export default function ReviewActivity({ activity }) {
-    const { activityId } = useParams();
+export default function ReviewHandbook({ handbook }) {
+    const { travelId } = useParams();
     const user = useAppSelector((state) => state.account.user);
     const [reviews, setReviews] = useState([]);
 
@@ -49,7 +49,7 @@ export default function ReviewActivity({ activity }) {
     const handleGetReviews = async () => {
         setLoadingReviews(true);
         const res = await callFetchReview(
-            `current=${meta.current}&pageSize=${meta.pageSize}&service_type=${ServiceType.ACTIVITY}&service_ref_id=${activityId}`
+            `current=${meta.current}&pageSize=${meta.pageSize}&service_type=${ServiceType.HANDBOOK}&service_ref_id=${travelId}`
         );
         setLoadingReviews(false);
         setMeta({
@@ -63,10 +63,10 @@ export default function ReviewActivity({ activity }) {
     };
 
     useEffect(() => {
-        if (activityId) {
+        if (travelId) {
             handleGetReviews();
         }
-    }, [activityId, meta.current, meta.pageSize]);
+    }, [travelId, meta.current, meta.pageSize]);
 
     const handleSubmitReview = async () => {
         if (!comment.trim() || rating === 0) {
@@ -77,8 +77,8 @@ export default function ReviewActivity({ activity }) {
         }
         setLoadingSubmit(true);
         const res = await callCreateReview({
-            service_type: ServiceType.ACTIVITY,
-            service_ref_id: activityId,
+            service_type: ServiceType.HANDBOOK,
+            service_ref_id: travelId,
             rating,
             comment,
         });
@@ -149,9 +149,9 @@ export default function ReviewActivity({ activity }) {
                 {/* Header */}
                 <div className="mb-8">
                     <h1 className="text-3xl font-bold text-gray-900 mb-2">
-                        Đánh giá khách sạn
+                        Đánh giá cẩm nang
                     </h1>
-                    <div className="flex items-center gap-4">
+                    {/* <div className="flex items-center gap-4">
                         <div className="flex items-center gap-2">
                             <span className="text-2xl font-bold text-blue-600">
                                 {activity?.avg_star?.toFixed(1)}
@@ -166,14 +166,14 @@ export default function ReviewActivity({ activity }) {
                                 </p>
                             </div>
                         </div>
-                    </div>
+                    </div> */}
                 </div>
 
                 {/* Review Form */}
                 {user?.id > 0 && (
                     <div className="bg-white rounded-lg shadow-md p-6 mb-8">
                         <h2 className="text-xl font-bold text-gray-900 mb-6">
-                            Chia sẻ trải nghiệm của bạn
+                            Chia sẻ bình luận của bạn
                         </h2>
 
                         <div className="space-y-4">
@@ -203,7 +203,7 @@ export default function ReviewActivity({ activity }) {
                                     <span className="text-red-500">*</span>
                                 </label>
                                 <Input.TextArea
-                                    placeholder="Chia sẻ trải nghiệm của bạn về khách sạn..."
+                                    placeholder="Chia sẻ trải nghiệm của bạn về cẩm nang..."
                                     value={comment}
                                     onChange={(e) => setComment(e.target.value)}
                                     rows={4}

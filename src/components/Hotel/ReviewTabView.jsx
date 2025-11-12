@@ -347,6 +347,7 @@ export default function ReviewTabView({ hotelId }) {
                                     ))}
                                 </div>
                                 <Pagination
+                                    pageSize={meta.pageSize}
                                     showQuickJumper
                                     total={meta.total}
                                     onChange={onChangePagination}
