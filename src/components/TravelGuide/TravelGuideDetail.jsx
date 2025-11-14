@@ -4,7 +4,7 @@ import { Link, useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { callFetchHandbookDetail } from "config/api";
 import { callFetchHandbook } from "config/api";
-import { getImage } from "utils/imageUrl";
+import { getImage, getUserAvatar } from "utils/imageUrl";
 import ReviewHandbook from "./ReviewHandbook";
 import { callFetchDetailUserHandbookInteractionByHandbookId } from "config/api";
 import { callUpsertUserHandbookInteraction } from "config/api";
@@ -142,7 +142,25 @@ export default function TravelGuideDetail() {
                                 __html: handbookDetail?.description || "",
                             }}
                         ></div>
-                        <div>
+                        {handbookDetail?.author?.id && (
+                            <div class="mt-[88px] border-t border-[#E1E1E1]">
+                                <div class="mx-auto w-[154px] h-[154px]">
+                                    <img
+                                        alt={`${handbookDetail.author.last_name} ${handbookDetail.author.first_name}`}
+                                        class="w-full h-full object-cover rounded-full -mt-[88px] border-[22px] border-white border-solid bg-white"
+                                        src={getUserAvatar(
+                                            handbookDetail.author.avatar
+                                        )}
+                                    />
+                                </div>
+                                <h3 class="text-[#161616] text-[22px] font-bold text-center mt-[-18px]">
+                                    Tác giả: {handbookDetail.author.last_name}{" "}
+                                    {handbookDetail.author.first_name}
+                                </h3>
+                            </div>
+                        )}
+
+                        <div className="mt-[20px]">
                             <ReviewHandbook />
                         </div>
                     </div>
