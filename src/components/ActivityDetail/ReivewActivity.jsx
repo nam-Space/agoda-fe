@@ -149,7 +149,7 @@ export default function ReviewActivity({ activity }) {
                 {/* Header */}
                 <div className="mb-8">
                     <h1 className="text-3xl font-bold text-gray-900 mb-2">
-                        Đánh giá khách sạn
+                        Đánh giá hoạt động
                     </h1>
                     <div className="flex items-center gap-4">
                         <div className="flex items-center gap-2">
