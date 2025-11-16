@@ -1,22 +1,27 @@
-import { Empty, Input, Select } from "antd";
+import { Card, Empty, Input, Select } from "antd";
 import { planForTrips } from "constants/profile";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { FaSort } from "react-icons/fa6";
 import { Link } from "react-router-dom";
+import { useAppSelector } from "../../../redux/hooks";
+import { callFetchPayment } from "config/api";
+import { ServiceType } from "constants/serviceType";
+import dayjs from "dayjs";
+import { PAYMENT_STATUS } from "constants/serviceType";
+import { MessageOutlined } from "@ant-design/icons";
+import { getImage } from "utils/imageUrl";
 
 const ActivitySuccessfulTab = () => {
+    const user = useAppSelector((state) => state.account.user);
+    const [payments, setPayments] = useState([]);
+    const [sortVal, setSortVal] = useState(
+        "sort=booking__activity_date_detail__date_launch"
+    );
+    const [bookingCode, setBookingCode] = useState("");
+
     const sortOptions = [
         {
-            value: "check-in",
-            label: (
-                <div className="flex items-center gap-[4px]">
-                    <FaSort />
-                    Sắp xếp theo: Ngày nhận phòng
-                </div>
-            ),
-        },
-        {
-            value: "reservation",
+            value: "sort=created_at-asc",
             label: (
                 <div className="flex items-center gap-[4px]">
                     <FaSort />
@@ -24,11 +29,43 @@ const ActivitySuccessfulTab = () => {
                 </div>
             ),
         },
+        {
+            value: "sort=booking__activity_date_detail__date_launch",
+            label: (
+                <div className="flex items-center gap-[4px]">
+                    <FaSort />
+                    Sắp xếp theo: Ngày nhận phòng
+                </div>
+            ),
+        },
     ];
 
     const handleChange = (value) => {
-        console.log(`selected ${value}`);
+        setSortVal(value);
     };
+
+    const handleGetPayments = async (query) => {
+        const res = await callFetchPayment(query);
+        if (res.isSuccess) {
+            setPayments(res.data);
+        }
+    };
+
+    useEffect(() => {
+        if (user?.id) {
+            handleGetPayments(
+                `current=1&pageSize=10&booking__user_id=${
+                    user.id
+                }&booking__service_type=${
+                    ServiceType.ACTIVITY
+                }&max_date_launch_activity=${dayjs(Date.now()).format(
+                    "YYYY-MM-DDTHH:mm:ss"
+                )}&status=${
+                    PAYMENT_STATUS.SUCCESS
+                }&${sortVal}&booking__booking_code=${bookingCode}`
+            );
+        }
+    }, [user, sortVal, bookingCode]);
 
     return (
         <div>
@@ -43,15 +80,103 @@ const ActivitySuccessfulTab = () => {
                     />
                     <Input.Search
                         placeholder="Tìm kiếm theo mã đặt phòng"
+                        onChange={(e) => setBookingCode(e.target.value)}
+                        value={bookingCode}
                         style={{
                             width: 260,
                         }}
                     />
                 </div>
-                <Empty
-                    description="Chưa có chuyến đi hoàn thành"
-                    className="bg-[#abb6cb1f] mx-0 mt-[12px] py-[24px] rounded-[16px]"
-                />
+                {payments.length === 0 ? (
+                    <Empty
+                        description="Chưa có chuyến đi hoàn thành"
+                        className="bg-[#abb6cb1f] mx-0 mt-[12px] py-[24px] rounded-[16px]"
+                    />
+                ) : (
+                    <div className="space-y-6 mt-[12px]">
+                        {payments.map((payment) => (
+                            <Card
+                                key={payment.id}
+                                className="overflow-hidden"
+                                bodyStyle={{ padding: 0 }}
+                            >
+                                {/* Header */}
+                                <div className="bg-blue-50 px-6 py-4 border-b flex items-center gap-3">
+                                    <MessageOutlined className="text-blue-600 text-xl" />
+                                    <span className="text-blue-600 font-medium">
+                                        Liên hệ với Dịch vụ Khách hàng Agoda
+                                    </span>
+                                </div>
+
+                                {/* Booking ID */}
+                                <div className="px-6 py-4 border-b flex justify-between items-center">
+                                    <span className="font-semibold">
+                                        Mã: {payment.booking.booking_code}
+                                    </span>
+                                    <span className="text-green-600 font-medium">
+                                        Đã hoàn tất
+                                    </span>
+                                </div>
+
+                                {/* Booking Details */}
+                                <div className="px-6 py-6 flex gap-6">
+                                    {/* Image */}
+                                    <div className="flex-shrink-0">
+                                        <img
+                                            src={getImage(
+                                                payment?.booking
+                                                    ?.activity_date_detail
+                                                    ?.activity_image
+                                            )}
+                                            alt={
+                                                payment?.booking
+                                                    ?.activity_date_detail
+                                                    ?.activity_name
+                                            }
+                                            className="w-24 h-24 object-cover rounded-lg"
+                                        />
+                                    </div>
+
+                                    {/* Info */}
+                                    <div className="flex-grow">
+                                        <h3 className="text-lg text-gray-900 mb-4">
+                                            <span className="font-bold">
+                                                {
+                                                    payment?.booking
+                                                        ?.activity_date_detail
+                                                        ?.activity_name
+                                                }
+                                            </span>{" "}
+                                            -{" "}
+                                            <span>
+                                                {
+                                                    payment?.booking
+                                                        ?.activity_date_detail
+                                                        ?.activity_package_name
+                                                }
+                                            </span>
+                                        </h3>
+
+                                        <div className="flex gap-8">
+                                            <div>
+                                                <p className="text-gray-600 text-sm mb-1">
+                                                    Ngày tổ chức
+                                                </p>
+                                                <p className="font-semibold text-gray-900">
+                                                    {dayjs(
+                                                        payment?.booking
+                                                            ?.activity_date_detail
+                                                            ?.date_launch
+                                                    ).format("YYYY-MM-DD")}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </Card>
+                        ))}
+                    </div>
+                )}
             </div>
             <div className="mt-[8px] p-[16px] bg-white rounded-[16px]">
                 <h1 className="text-[22px] font-bold">

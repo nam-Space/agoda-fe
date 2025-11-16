@@ -1,22 +1,27 @@
-import { Empty, Input, Select } from "antd";
+import { Button, Card, Empty, Input, Select } from "antd";
 import { planForTrips } from "constants/profile";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { FaSort } from "react-icons/fa6";
 import { Link } from "react-router-dom";
+import { useAppSelector } from "../../../redux/hooks";
+import { callFetchPayment } from "config/api";
+import { ServiceType } from "constants/serviceType";
+import dayjs from "dayjs";
+import { PAYMENT_STATUS } from "constants/serviceType";
+import { MessageOutlined } from "@ant-design/icons";
+import { getImage } from "utils/imageUrl";
 
 const HotelCancelledTab = () => {
+    const user = useAppSelector((state) => state.account.user);
+    const [payments, setPayments] = useState([]);
+    const [sortVal, setSortVal] = useState(
+        "sort=booking__hotel_detail__check_in-asc"
+    );
+    const [bookingCode, setBookingCode] = useState("");
+
     const sortOptions = [
         {
-            value: "check-in",
-            label: (
-                <div className="flex items-center gap-[4px]">
-                    <FaSort />
-                    Sắp xếp theo: Ngày nhận phòng
-                </div>
-            ),
-        },
-        {
-            value: "reservation",
+            value: "sort=created_at-asc",
             label: (
                 <div className="flex items-center gap-[4px]">
                     <FaSort />
@@ -24,11 +29,35 @@ const HotelCancelledTab = () => {
                 </div>
             ),
         },
+        {
+            value: "sort=booking__hotel_detail__check_in-asc",
+            label: (
+                <div className="flex items-center gap-[4px]">
+                    <FaSort />
+                    Sắp xếp theo: Ngày nhận phòng
+                </div>
+            ),
+        },
     ];
 
     const handleChange = (value) => {
-        console.log(`selected ${value}`);
+        setSortVal(value);
     };
+
+    const handleGetPayments = async (query) => {
+        const res = await callFetchPayment(query);
+        if (res.isSuccess) {
+            setPayments(res.data);
+        }
+    };
+
+    useEffect(() => {
+        if (user?.id) {
+            handleGetPayments(
+                `current=1&pageSize=10&booking__user_id=${user.id}&booking__service_type=${ServiceType.HOTEL}&status=${PAYMENT_STATUS.CANCELLED}&${sortVal}&booking__booking_code=${bookingCode}`
+            );
+        }
+    }, [user, sortVal, bookingCode]);
 
     return (
         <div>
@@ -43,15 +72,122 @@ const HotelCancelledTab = () => {
                     />
                     <Input.Search
                         placeholder="Tìm kiếm theo mã đặt phòng"
+                        onChange={(e) => setBookingCode(e.target.value)}
+                        value={bookingCode}
                         style={{
                             width: 260,
                         }}
                     />
                 </div>
-                <Empty
-                    description="Chưa có chuyến đi đã hủy"
-                    className="bg-[#abb6cb1f] mx-0 mt-[12px] py-[24px] rounded-[16px]"
-                />
+
+                {payments.length === 0 ? (
+                    <Empty
+                        description="Chưa có chuyến đi đã hủy"
+                        className="bg-[#abb6cb1f] mx-0 mt-[12px] py-[24px] rounded-[16px]"
+                    />
+                ) : (
+                    <div className="space-y-6 mt-[12px]">
+                        {payments.map((payment) => (
+                            <Card
+                                key={payment.id}
+                                className="overflow-hidden"
+                                bodyStyle={{ padding: 0 }}
+                            >
+                                {/* Header */}
+                                <div className="bg-blue-50 px-6 py-4 border-b flex items-center gap-3">
+                                    <MessageOutlined className="text-blue-600 text-xl" />
+                                    <span className="text-blue-600 font-medium">
+                                        Liên hệ với Dịch vụ Khách hàng Agoda
+                                    </span>
+                                </div>
+
+                                {/* Booking ID */}
+                                <div className="px-6 py-4 border-b flex justify-between items-center">
+                                    <span className="font-semibold">
+                                        Mã: {payment.booking.booking_code}
+                                    </span>
+                                    <span className="text-blue-600 font-medium">
+                                        Đã hủy
+                                    </span>
+                                </div>
+
+                                {/* Booking Details */}
+                                <div className="px-6 py-6 flex gap-6">
+                                    {/* Image */}
+                                    <div className="flex-shrink-0">
+                                        <img
+                                            src={getImage(
+                                                payment?.booking?.hotel_detail
+                                                    ?.room?.images?.[0]?.image
+                                            )}
+                                            alt={
+                                                payment?.booking?.hotel_detail
+                                                    ?.room?.room_type
+                                            }
+                                            className="w-24 h-24 object-cover rounded-lg"
+                                        />
+                                    </div>
+
+                                    {/* Info */}
+                                    <div className="flex-grow">
+                                        <h3 className="text-lg font-bold text-gray-900 mb-4">
+                                            {
+                                                payment?.booking?.hotel_detail
+                                                    ?.room?.hotel?.name
+                                            }{" "}
+                                            -{" "}
+                                            {
+                                                payment?.booking?.hotel_detail
+                                                    ?.room?.room_type
+                                            }
+                                        </h3>
+
+                                        <div className="flex gap-8">
+                                            <div>
+                                                <p className="text-gray-600 text-sm mb-1">
+                                                    Nhận phòng
+                                                </p>
+                                                <p className="font-semibold text-gray-900">
+                                                    {dayjs(
+                                                        payment?.booking
+                                                            ?.hotel_detail
+                                                            ?.check_in
+                                                    ).format(
+                                                        "YYYY-MM-DD HH:mm:ss"
+                                                    )}
+                                                </p>
+                                            </div>
+                                            <div>
+                                                <p className="text-gray-600 text-sm mb-1">
+                                                    Trả phòng
+                                                </p>
+                                                <p className="font-semibold text-gray-900">
+                                                    {dayjs(
+                                                        payment?.booking
+                                                            ?.hotel_detail
+                                                            ?.check_out
+                                                    ).format(
+                                                        "YYYY-MM-DD HH:mm:ss"
+                                                    )}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {/* Action Buttons */}
+                                <div className="px-6 py-4 flex gap-4 justify-end border-t">
+                                    <Button
+                                        type="primary"
+                                        size="large"
+                                        className="px-8"
+                                    >
+                                        Đặt lại
+                                    </Button>
+                                </div>
+                            </Card>
+                        ))}
+                    </div>
+                )}
             </div>
             <div className="mt-[8px] p-[16px] bg-white rounded-[16px]">
                 <h1 className="text-[22px] font-bold">
