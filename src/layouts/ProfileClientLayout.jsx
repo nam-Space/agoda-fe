@@ -7,9 +7,19 @@ import { BiSolidPlaneAlt } from "react-icons/bi";
 import { LuFerrisWheel } from "react-icons/lu";
 import { AiFillMessage } from "react-icons/ai";
 import { Link, useLocation, useParams } from "react-router-dom";
+import { useSocket } from "contexts/SocketProvider";
+import { Badge } from "antd";
+import { useAppSelector } from "../redux/hooks";
 
 const ProfileClientLayout = ({ children }) => {
     const location = useLocation();
+    const { conversations } = useSocket();
+    const user = useAppSelector((state) => state.account.user);
+
+    const unseenTotal = conversations.reduce((total, conv) => {
+        if (conv?.latest_message?.sender?.id === user?.id) return total;
+        return total + conv.unseen_count;
+    }, 0);
 
     const menus = [
         {
@@ -38,7 +48,20 @@ const ProfileClientLayout = ({ children }) => {
         },
         {
             link: "/profile/chat",
-            icon: <AiFillMessage className="text-[24px]" />,
+            icon: (
+                <div className="relative">
+                    <AiFillMessage className="text-[24px]" />
+                    {unseenTotal > 0 && (
+                        <Badge
+                            count={unseenTotal}
+                            size="small"
+                            showZero
+                            color="#fa2314"
+                            className="absolute top-[-7px] left-[-4px]"
+                        />
+                    )}
+                </div>
+            ),
             text: "Tin nhắn từ chỗ nghỉ",
             active: location.pathname === "/profile/chat",
         },

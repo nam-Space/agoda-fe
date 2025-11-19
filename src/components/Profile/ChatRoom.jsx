@@ -1,32 +1,22 @@
-import { callFetchMessage } from "config/api";
 import React, { useEffect, useState, useRef } from "react";
-import { useAppDispatch, useAppSelector } from "../../redux/hooks";
+import { useAppSelector } from "../../redux/hooks";
 import { getOtherUser } from "utils/conversation";
 import dayjs from "dayjs";
 import { IoIosMail } from "react-icons/io";
 import { BiSolidBookBookmark } from "react-icons/bi";
-import { fetchConversation } from "../../redux/slice/conversationSlide";
 import { Button, Input } from "antd";
 import { SendOutlined } from "@ant-design/icons";
 import { ROLE } from "constants/role";
 import { getUserAvatar } from "utils/imageUrl";
+import { useSocket } from "contexts/SocketProvider";
 
 const { TextArea } = Input;
 
 const ChatRoom = ({ conversation, otherUser }) => {
-    const dispatch = useAppDispatch();
     const chatRef = useRef(null);
     const user = useAppSelector((state) => state.account.user);
-    const [messages, setMessages] = useState([]);
+    const { onlineUsers, messages, sendMessage } = useSocket();
     const [input, setInput] = useState("");
-    const socketRef = useRef(null);
-
-    const handleGetMessages = async () => {
-        const res = await callFetchMessage(conversation.id);
-        if (res.isSuccess) {
-            setMessages(res.data);
-        }
-    };
 
     const scrollToBottom = () => {
         if (chatRef.current) {
@@ -43,58 +33,14 @@ const ChatRoom = ({ conversation, otherUser }) => {
         scrollToBottom();
     }, [messages]);
 
-    useEffect(() => {
-        if (!conversation?.id) return;
-        handleGetMessages();
-
-        // (2) tạo kết nối WebSocket tới đúng phòng (conversationId là UUID string)
-        const ws = new WebSocket(
-            `ws://localhost:8000/ws/chat/${conversation.id}/`
-        );
-        socketRef.current = ws;
-
-        ws.onopen = () => {
-            console.log(`✅ Connected to conversation ${conversation.id}`);
+    const handleSendMessage = () => {
+        const payload = {
+            sender_id: user.id,
+            receiver_id: otherUser.id,
+            message: input,
         };
-
-        ws.onmessage = (event) => {
-            const data = JSON.parse(event.data);
-            console.log("📩 Message received:", data);
-            setMessages((prev) => [...prev, data]);
-            dispatch(fetchConversation({ query: `current=1&pageSize=100` }));
-        };
-
-        ws.onclose = () => {
-            console.log(`❌ Disconnected from conversation ${conversation.id}`);
-        };
-
-        ws.onerror = (error) => {
-            console.error("⚠️ WebSocket error:", error);
-        };
-
-        return () => {
-            ws.close();
-        };
-    }, [conversation]);
-
-    const sendMessage = () => {
-        if (
-            socketRef.current &&
-            socketRef.current.readyState === WebSocket.OPEN
-        ) {
-            const payload = {
-                sender_id: user.id,
-                receiver_id: otherUser.id, // user id (int)
-                message: input,
-                // optional: conversation_id: conversationId
-            };
-            socketRef.current.send(JSON.stringify(payload));
-            setInput("");
-            // không cần push ngay — server sẽ broadcast lại message cho room (nếu socket đang ở room đúng)
-            // nhưng bạn có thể optimistic-update nếu muốn
-        } else {
-            console.warn("⚠️ Socket chưa sẵn sàng!");
-        }
+        sendMessage(payload);
+        setInput("");
     };
 
     return (
@@ -110,15 +56,34 @@ const ChatRoom = ({ conversation, otherUser }) => {
                                 {getOtherUser(conversation, user)?.role ===
                                 ROLE.OWNER ? (
                                     <>
-                                        <img
-                                            src={`${
-                                                process.env.REACT_APP_BE_URL
-                                            }${
-                                                getOtherUser(conversation, user)
-                                                    ?.hotel?.images?.[0]?.image
-                                            }`}
-                                            className="w-[50px] h-[50px] object-cover rounded-[50%]"
-                                        />
+                                        <div className="relative h-fit">
+                                            <img
+                                                src={getUserAvatar(
+                                                    getOtherUser(
+                                                        conversation,
+                                                        user
+                                                    )?.hotel?.images?.[0]?.image
+                                                )}
+                                                alt={
+                                                    getOtherUser(
+                                                        conversation,
+                                                        user
+                                                    )?.hotel?.name
+                                                }
+                                                className="w-[50px] h-[50px] object-cover rounded-[50%]"
+                                            />
+
+                                            {onlineUsers.find(
+                                                (onlineUser) =>
+                                                    onlineUser.id ===
+                                                    getOtherUser(
+                                                        conversation,
+                                                        user
+                                                    )?.id
+                                            ) && (
+                                                <div className="absolute right-[5px] bottom-[2px] bg-[#52c41a] w-[10px] h-[10px] rounded-[50%]"></div>
+                                            )}
+                                        </div>
                                         <div>
                                             <p className="font-bold">
                                                 {
@@ -146,15 +111,33 @@ const ChatRoom = ({ conversation, otherUser }) => {
                                 ) : getOtherUser(conversation, user)?.role ===
                                   ROLE.STAFF ? (
                                     <>
-                                        <img
-                                            src={`${
-                                                process.env.REACT_APP_BE_URL
-                                            }${
-                                                getOtherUser(conversation, user)
-                                                    ?.avatar
-                                            }`}
-                                            className="min-w-[50px] h-[50px] object-cover rounded-[50%]"
-                                        />
+                                        <div className="relative h-fit">
+                                            <img
+                                                src={getUserAvatar(
+                                                    getOtherUser(
+                                                        conversation,
+                                                        user
+                                                    )?.avatar
+                                                )}
+                                                alt={
+                                                    getOtherUser(
+                                                        conversation,
+                                                        user
+                                                    )?.username
+                                                }
+                                                className="min-w-[50px] h-[50px] object-cover rounded-[50%]"
+                                            />
+                                            {onlineUsers.find(
+                                                (onlineUser) =>
+                                                    onlineUser.id ===
+                                                    getOtherUser(
+                                                        conversation,
+                                                        user
+                                                    )?.id
+                                            ) && (
+                                                <div className="absolute right-[5px] bottom-[2px] bg-[#52c41a] w-[10px] h-[10px] rounded-[50%]"></div>
+                                            )}
+                                        </div>
                                         <div>
                                             <div>
                                                 <span className="font-bold">
@@ -190,13 +173,33 @@ const ChatRoom = ({ conversation, otherUser }) => {
                                     </>
                                 ) : (
                                     <>
-                                        <img
-                                            src={`${getUserAvatar(
-                                                getOtherUser(conversation, user)
-                                                    ?.avatar
-                                            )}`}
-                                            className="w-[50px] h-[50px] object-cover rounded-[50%]"
-                                        />
+                                        <div className="relative h-fit">
+                                            <img
+                                                src={`${getUserAvatar(
+                                                    getOtherUser(
+                                                        conversation,
+                                                        user
+                                                    )?.avatar
+                                                )}`}
+                                                alt={
+                                                    getOtherUser(
+                                                        conversation,
+                                                        user
+                                                    )?.username
+                                                }
+                                                className="w-[50px] h-[50px] object-cover rounded-[50%]"
+                                            />
+                                            {onlineUsers.find(
+                                                (onlineUser) =>
+                                                    onlineUser.id ===
+                                                    getOtherUser(
+                                                        conversation,
+                                                        user
+                                                    )?.id
+                                            ) && (
+                                                <div className="absolute right-[5px] bottom-[2px] bg-[#52c41a] w-[10px] h-[10px] rounded-[50%]"></div>
+                                            )}
+                                        </div>
                                         <div>
                                             <p className="font-bold">
                                                 {`${
@@ -250,22 +253,24 @@ const ChatRoom = ({ conversation, otherUser }) => {
                             </p>
                             <div
                                 className={`${
-                                    msg.sender.id === user.id
+                                    msg?.sender?.id === user.id
                                         ? "text-right ml-auto"
                                         : "text-left mr-auto"
                                 }
                                 w-fit p-[12px] flex items-center gap-[6px]`}
                             >
-                                {msg.sender.id !== user.id &&
+                                {msg?.sender?.id !== user.id &&
                                     (getOtherUser(conversation, user)?.role ===
                                     ROLE.OWNER ? (
                                         <img
-                                            src={`${
-                                                process.env.REACT_APP_BE_URL
-                                            }${
+                                            src={getUserAvatar(
                                                 getOtherUser(conversation, user)
                                                     ?.hotel?.images?.[0]?.image
-                                            }`}
+                                            )}
+                                            alt={
+                                                getOtherUser(conversation, user)
+                                                    ?.hotel?.name
+                                            }
                                             className="w-[40px] h-[40px] object-cover rounded-[50%]"
                                         />
                                     ) : (
@@ -274,18 +279,30 @@ const ChatRoom = ({ conversation, otherUser }) => {
                                                 getOtherUser(conversation, user)
                                                     ?.avatar
                                             )}`}
+                                            alt={
+                                                getOtherUser(conversation, user)
+                                                    ?.username
+                                            }
                                             className="w-[40px] h-[40px] object-cover rounded-[50%]"
                                         />
                                     ))}
-                                <p
-                                    className={`p-[10px] rounded-[6px] ${
-                                        msg.sender.id === user.id
-                                            ? "bg-[#dde9fd]"
-                                            : "bg-[#e9ebee]"
-                                    }`}
-                                >
-                                    {msg.text}
-                                </p>
+                                <div>
+                                    <p
+                                        className={`p-[10px] rounded-[6px] ${
+                                            msg?.sender?.id === user.id
+                                                ? "bg-[#dde9fd]"
+                                                : "bg-[#e9ebee]"
+                                        }`}
+                                    >
+                                        {msg.text}
+                                    </p>
+                                    {msg.seen &&
+                                        msg?.sender?.id === user.id && (
+                                            <div className="text-[#5e6b82] text-[12px]">
+                                                Đã xem
+                                            </div>
+                                        )}
+                                </div>
                             </div>
                         </div>
                     ))}
@@ -303,14 +320,14 @@ const ChatRoom = ({ conversation, otherUser }) => {
                         onPressEnter={(e) => {
                             if (!e.shiftKey) {
                                 e.preventDefault();
-                                sendMessage();
+                                handleSendMessage();
                             }
                         }}
                     />
                     <Button
                         type="primary"
                         icon={<SendOutlined />}
-                        onClick={sendMessage}
+                        onClick={handleSendMessage}
                         disabled={!input.trim()}
                     />
                 </div>

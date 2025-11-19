@@ -420,3 +420,24 @@ export const callFetchDetailUserHandbookInteractionByHandbookId = (handbookId) =
 export const callUpsertUserHandbookInteraction = (data) => {
     return axios.post(`/api/handbooks/user-handbook-interaction/upsert/`, { ...data });
 };
+
+// Payment
+export const callFetchPayment = (query) => {
+    return axios.get(`/api/payments/payments/?${query}`);
+};
+
+export const callFetchPaymentOverview = (query) => {
+    return axios.get(`/api/payments/payments/overview/?${query}`);
+};
+
+export const callCreatePayment = (data) => {
+    return axios.post("/api/payments/payments/create/", { ...data });
+};
+
+export const callUpdatePayment = (id, data) => {
+    return axios.put(`/api/payments/payments/${id}/update/`, { ...data });
+};
+
+export const callDeletePayment = (id) => {
+    return axios.delete(`/api/payments/payments/${id}/delete/`);
+};

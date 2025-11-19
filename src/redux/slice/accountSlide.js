@@ -21,7 +21,7 @@ const initialState = {
         email: "",
         first_name: "",
         last_name: "",
-        birthDay: null,
+        birthday: null,
         phone_number: "",
         gender: "",
         avatar: "",
@@ -48,7 +48,7 @@ export const accountSlide = createSlice({
             state.user.email = action.payload.email;
             state.user.first_name = action.payload.first_name;
             state.user.last_name = action.payload.last_name;
-            state.user.birthDay = action.payload.birthDay;
+            state.user.birthday = action.payload.birthday;
             state.user.phone_number = action.payload.phone_number;
             state.user.gender = action.payload.gender;
             state.user.avatar = action.payload?.avatar;
@@ -64,7 +64,7 @@ export const accountSlide = createSlice({
                 email: "",
                 first_name: "",
                 last_name: "",
-                birthDay: null,
+                birthday: null,
                 phone_number: "",
                 gender: "",
                 avatar: "",
@@ -92,7 +92,7 @@ export const accountSlide = createSlice({
                 state.user.email = action.payload.data?.email;
                 state.user.first_name = action.payload.data?.first_name;
                 state.user.last_name = action.payload.data?.last_name;
-                state.user.birthDay = action.payload.data?.birthDay;
+                state.user.birthday = action.payload.data?.birthday;
                 state.user.phone_number = action.payload.data?.phone_number;
                 state.user.gender = action.payload.data?.gender;
                 state.user.avatar = action.payload.data?.avatar;
