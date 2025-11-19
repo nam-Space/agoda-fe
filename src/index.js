@@ -13,14 +13,17 @@ import 'react-loading-skeleton/dist/skeleton.css'
 import { Provider } from 'react-redux';
 import { store } from './redux/store'
 import { CookiesProvider } from 'react-cookie';
+import { SocketProvider } from 'contexts/SocketProvider';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   // <React.StrictMode>
   <CookiesProvider>
     <Provider store={store}>
-      <App />
-      <ToastContainer />
+      <SocketProvider>
+        <App />
+        <ToastContainer />
+      </SocketProvider>
     </Provider>
   </CookiesProvider>
   // </React.StrictMode>
