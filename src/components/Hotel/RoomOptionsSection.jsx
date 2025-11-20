@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import {
     callBook,
     callFetchAmenities,
@@ -25,6 +25,7 @@ const RoomOptionsSection = ({
     endDate,
     setRooms,
 }) => {
+    const navigate = useNavigate();
     const user = useAppSelector((state) => state.account.user);
     const [rooms, setLocalRooms] = useState([]);
     const [amenitiesMap, setAmenitiesMap] = useState({});

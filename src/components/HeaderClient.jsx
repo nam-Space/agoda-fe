@@ -3,8 +3,8 @@ import logoImg from "../images/header/logo.svg";
 import viImg from "../images/header/vi.svg";
 import enImg from "../images/header/en.svg";
 import koreanImg from "../images/header/korea.png";
-import { Link } from "react-router-dom";
-import { Avatar, Badge, Card, Modal, Popover } from "antd";
+import { Link, useNavigate } from "react-router-dom";
+import { Avatar, Badge, Modal, Popover, Spin } from "antd";
 import {
     CheckOutlined,
     DownOutlined,
@@ -12,7 +12,7 @@ import {
     MenuOutlined,
     ShoppingCartOutlined,
 } from "@ant-design/icons";
-import { FaBell, FaShoppingCart } from "react-icons/fa";
+import { FaBell } from "react-icons/fa";
 import { useAppDispatch, useAppSelector } from "../redux/hooks";
 import { callLogout } from "config/api";
 import { setLogoutAction } from "../redux/slice/accountSlide";
@@ -21,11 +21,24 @@ import Cookies from "js-cookie";
 import { getUserAvatar } from "utils/imageUrl";
 import { ROLE_VI } from "constants/role";
 import { useSocket } from "contexts/SocketProvider";
-import dayjs from "dayjs";
+import { FaCircleXmark, FaXmark } from "react-icons/fa6";
 
 const HeaderClient = () => {
     const dispatch = useAppDispatch();
-    const { conversations } = useSocket();
+    const navigate = useNavigate();
+    const {
+        setOnlineUsers,
+        conversations,
+        setConversations,
+        setMessages,
+        setSelectedConversation,
+        notifications,
+        notifHasNext,
+        totalUnseenNotif,
+        loadingNotifications,
+        loadMoreNotifications,
+        markNotificationAsRead,
+    } = useSocket();
 
     const user = useAppSelector((state) => state.account.user);
 
@@ -46,6 +59,15 @@ const HeaderClient = () => {
         });
         if (res.isSuccess) {
             dispatch(setLogoutAction({}));
+            setOnlineUsers((prev) => {
+                return [...prev].filter(
+                    (onlineUser) => onlineUser.id !== user.id
+                );
+            });
+            setConversations([]);
+            setMessages([]);
+            setSelectedConversation({});
+
             toast.success("Đăng xuất thành công!", {
                 position: "bottom-right",
             });
@@ -166,308 +188,56 @@ const HeaderClient = () => {
                                 content={
                                     <div>
                                         <div className="w-[400px] max-h-[500px] overflow-y-scroll">
-                                            <div className="border-t-[1px] border-[#f0f0f0] px-[10px] py-[10px] flex gap-[10px]">
-                                                {/* Image */}
-                                                <div className="flex-shrink-0">
-                                                    <img
-                                                        src={
-                                                            "http://localhost:8000/media/activity_images/img1_WLTLSdw.jpg"
-                                                        }
-                                                        alt={"imgBooking"}
-                                                        className="w-[50px] h-[50px] object-cover rounded-lg"
-                                                    />
-                                                </div>
-
-                                                {/* Info */}
-                                                <div className="flex-grow">
-                                                    <h3 className=" text-gray-900 mb-[6px] leading-[18px]">
-                                                        <span className="font-bold">
-                                                            Exploring Ben Thanh
-                                                            Princess Dining
-                                                            Cruise in Ho Chi
-                                                            Minh
-                                                        </span>{" "}
-                                                        -{" "}
-                                                        <span>
-                                                            Experience Dinner in
-                                                            Cruise
-                                                        </span>
-                                                    </h3>
-
-                                                    <div className="flex gap-[20px]">
-                                                        <div>
-                                                            <p className="text-gray-600 text-[12px]">
-                                                                Nhận phòng
-                                                            </p>
-                                                            <p className="font-semibold text-[12px] text-gray-900">
-                                                                2025-10-10
-                                                                07:00:00
-                                                            </p>
-                                                        </div>
-                                                        <div>
-                                                            <p className="text-gray-600 text-[12px]">
-                                                                Trả phòng
-                                                            </p>
-                                                            <p className="font-semibold text-[12px] text-gray-900">
-                                                                2025-10-12
-                                                                07:00:00
-                                                            </p>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div className="border-t-[1px] border-[#f0f0f0] px-[10px] py-[10px] flex gap-[10px]">
-                                                {/* Image */}
-                                                <div className="flex-shrink-0">
-                                                    <img
-                                                        src={
-                                                            "http://localhost:8000/media/activity_images/img1_WLTLSdw.jpg"
-                                                        }
-                                                        alt={"imgBooking"}
-                                                        className="w-[50px] h-[50px] object-cover rounded-lg"
-                                                    />
-                                                </div>
-
-                                                {/* Info */}
-                                                <div className="flex-grow">
-                                                    <h3 className=" text-gray-900 mb-[6px] leading-[18px]">
-                                                        <span className="font-bold">
-                                                            Exploring Ben Thanh
-                                                            Princess Dining
-                                                            Cruise in Ho Chi
-                                                            Minh
-                                                        </span>{" "}
-                                                        -{" "}
-                                                        <span>
-                                                            Experience Dinner in
-                                                            Cruise
-                                                        </span>
-                                                    </h3>
-
-                                                    <div className="flex gap-[20px]">
-                                                        <div>
-                                                            <p className="text-gray-600 text-[12px]">
-                                                                Nhận phòng
-                                                            </p>
-                                                            <p className="font-semibold text-[12px] text-gray-900">
-                                                                2025-10-10
-                                                                07:00:00
-                                                            </p>
-                                                        </div>
-                                                        <div>
-                                                            <p className="text-gray-600 text-[12px]">
-                                                                Trả phòng
-                                                            </p>
-                                                            <p className="font-semibold text-[12px] text-gray-900">
-                                                                2025-10-12
-                                                                07:00:00
-                                                            </p>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div className="border-t-[1px] border-[#f0f0f0] px-[10px] py-[10px] flex gap-[10px]">
-                                                {/* Image */}
-                                                <div className="flex-shrink-0">
-                                                    <img
-                                                        src={
-                                                            "http://localhost:8000/media/activity_images/img1_WLTLSdw.jpg"
-                                                        }
-                                                        alt={"imgBooking"}
-                                                        className="w-[50px] h-[50px] object-cover rounded-lg"
-                                                    />
-                                                </div>
-
-                                                {/* Info */}
-                                                <div className="flex-grow">
-                                                    <h3 className=" text-gray-900 mb-[6px] leading-[18px]">
-                                                        <span className="font-bold">
-                                                            Exploring Ben Thanh
-                                                            Princess Dining
-                                                            Cruise in Ho Chi
-                                                            Minh
-                                                        </span>{" "}
-                                                        -{" "}
-                                                        <span>
-                                                            Experience Dinner in
-                                                            Cruise
-                                                        </span>
-                                                    </h3>
-
-                                                    <div className="flex gap-[20px]">
-                                                        <div>
-                                                            <p className="text-gray-600 text-[12px]">
-                                                                Nhận phòng
-                                                            </p>
-                                                            <p className="font-semibold text-[12px] text-gray-900">
-                                                                2025-10-10
-                                                                07:00:00
-                                                            </p>
-                                                        </div>
-                                                        <div>
-                                                            <p className="text-gray-600 text-[12px]">
-                                                                Trả phòng
-                                                            </p>
-                                                            <p className="font-semibold text-[12px] text-gray-900">
-                                                                2025-10-12
-                                                                07:00:00
-                                                            </p>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div className="border-t-[1px] border-[#f0f0f0] px-[10px] py-[10px] flex gap-[10px]">
-                                                {/* Image */}
-                                                <div className="flex-shrink-0">
-                                                    <img
-                                                        src={
-                                                            "http://localhost:8000/media/activity_images/img1_WLTLSdw.jpg"
-                                                        }
-                                                        alt={"imgBooking"}
-                                                        className="w-[50px] h-[50px] object-cover rounded-lg"
-                                                    />
-                                                </div>
-
-                                                {/* Info */}
-                                                <div className="flex-grow">
-                                                    <h3 className=" text-gray-900 mb-[6px] leading-[18px]">
-                                                        <span className="font-bold">
-                                                            Exploring Ben Thanh
-                                                            Princess Dining
-                                                            Cruise in Ho Chi
-                                                            Minh
-                                                        </span>{" "}
-                                                        -{" "}
-                                                        <span>
-                                                            Experience Dinner in
-                                                            Cruise
-                                                        </span>
-                                                    </h3>
-
-                                                    <div className="flex gap-[20px]">
-                                                        <div>
-                                                            <p className="text-gray-600 text-[12px]">
-                                                                Nhận phòng
-                                                            </p>
-                                                            <p className="font-semibold text-[12px] text-gray-900">
-                                                                2025-10-10
-                                                                07:00:00
-                                                            </p>
-                                                        </div>
-                                                        <div>
-                                                            <p className="text-gray-600 text-[12px]">
-                                                                Trả phòng
-                                                            </p>
-                                                            <p className="font-semibold text-[12px] text-gray-900">
-                                                                2025-10-12
-                                                                07:00:00
-                                                            </p>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div className="border-t-[1px] border-[#f0f0f0] px-[10px] py-[10px] flex gap-[10px]">
-                                                {/* Image */}
-                                                <div className="flex-shrink-0">
-                                                    <img
-                                                        src={
-                                                            "http://localhost:8000/media/activity_images/img1_WLTLSdw.jpg"
-                                                        }
-                                                        alt={"imgBooking"}
-                                                        className="w-[50px] h-[50px] object-cover rounded-lg"
-                                                    />
-                                                </div>
-
-                                                {/* Info */}
-                                                <div className="flex-grow">
-                                                    <h3 className=" text-gray-900 mb-[6px] leading-[18px]">
-                                                        <span className="font-bold">
-                                                            Exploring Ben Thanh
-                                                            Princess Dining
-                                                            Cruise in Ho Chi
-                                                            Minh
-                                                        </span>{" "}
-                                                        -{" "}
-                                                        <span>
-                                                            Experience Dinner in
-                                                            Cruise
-                                                        </span>
-                                                    </h3>
-
-                                                    <div className="flex gap-[20px]">
-                                                        <div>
-                                                            <p className="text-gray-600 text-[12px]">
-                                                                Nhận phòng
-                                                            </p>
-                                                            <p className="font-semibold text-[12px] text-gray-900">
-                                                                2025-10-10
-                                                                07:00:00
-                                                            </p>
-                                                        </div>
-                                                        <div>
-                                                            <p className="text-gray-600 text-[12px]">
-                                                                Trả phòng
-                                                            </p>
-                                                            <p className="font-semibold text-[12px] text-gray-900">
-                                                                2025-10-12
-                                                                07:00:00
-                                                            </p>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div className="border-t-[1px] border-[#f0f0f0] px-[10px] py-[10px] flex gap-[10px]">
-                                                {/* Image */}
-                                                <div className="flex-shrink-0">
-                                                    <img
-                                                        src={
-                                                            "http://localhost:8000/media/activity_images/img1_WLTLSdw.jpg"
-                                                        }
-                                                        alt={"imgBooking"}
-                                                        className="w-[50px] h-[50px] object-cover rounded-lg"
-                                                    />
-                                                </div>
-
-                                                {/* Info */}
-                                                <div className="flex-grow">
-                                                    <h3 className=" text-gray-900 mb-[6px] leading-[18px]">
-                                                        <span className="font-bold">
-                                                            Exploring Ben Thanh
-                                                            Princess Dining
-                                                            Cruise in Ho Chi
-                                                            Minh
-                                                        </span>{" "}
-                                                        -{" "}
-                                                        <span>
-                                                            Experience Dinner in
-                                                            Cruise
-                                                        </span>
-                                                    </h3>
-
-                                                    <div className="flex gap-[20px]">
-                                                        <div>
-                                                            <p className="text-gray-600 text-[12px]">
-                                                                Nhận phòng
-                                                            </p>
-                                                            <p className="font-semibold text-[12px] text-gray-900">
-                                                                2025-10-10
-                                                                07:00:00
-                                                            </p>
-                                                        </div>
-                                                        <div>
-                                                            <p className="text-gray-600 text-[12px]">
-                                                                Trả phòng
-                                                            </p>
-                                                            <p className="font-semibold text-[12px] text-gray-900">
-                                                                2025-10-12
-                                                                07:00:00
-                                                            </p>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
+                                            {notifications.map(
+                                                (noti, index) => (
+                                                    <div
+                                                        onClick={() => {
+                                                            markNotificationAsRead(
+                                                                noti
+                                                            );
+                                                            if (noti.link) {
+                                                                navigate(
+                                                                    noti.link
+                                                                );
+                                                            }
+                                                        }}
+                                                        key={index}
+                                                        className={`
+                                                            ${
+                                                                !noti.is_read
+                                                                    ? "bg-gray-100 hover:bg-gray-200"
+                                                                    : "hover:bg-gray-200"
+                                                            } ${
+                                                            noti.is_error
+                                                                ? "bg-red-100 hover:bg-red-200"
+                                                                : ""
+                                                        } cursor-pointer`}
+                                                        dangerouslySetInnerHTML={{
+                                                            __html:
+                                                                noti?.message ||
+                                                                "",
+                                                        }}
+                                                    ></div>
+                                                )
+                                            )}
                                         </div>
-                                        <div className="text-center pt-[12px] font-semibold cursor-pointer">
+                                        <div
+                                            onClick={() =>
+                                                !loadingNotifications &&
+                                                notifHasNext &&
+                                                loadMoreNotifications()
+                                            }
+                                            className={`${
+                                                loadingNotifications
+                                                    ? "select-none opacity-35"
+                                                    : ""
+                                            } ${
+                                                !notifHasNext
+                                                    ? "opacity-50 select-none"
+                                                    : "cursor-pointer"
+                                            } text-center pt-[12px] font-semibold`}
+                                        >
+                                            {loadingNotifications && <Spin />}
                                             Xem thêm
                                         </div>
                                     </div>
@@ -476,7 +246,7 @@ const HeaderClient = () => {
                                 trigger="click"
                                 placement="bottomRight"
                             >
-                                <Badge count={6} size="small">
+                                <Badge count={totalUnseenNotif} size="small">
                                     <FaBell className="text-[22px] text-[#2067da] cursor-pointer" />
                                 </Badge>
                             </Popover>

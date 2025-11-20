@@ -34,7 +34,7 @@ import { MapContainer, Marker, Popup, TileLayer } from "react-leaflet";
 import MarkerClusterGroup from "react-leaflet-cluster";
 import { Icon } from "leaflet";
 import markerImg from "../../images/booking-vehicles/google-map/marker.webp";
-import { Button, Divider } from "antd";
+import { Button, Divider, Spin } from "antd";
 import { CarOutlined, EditOutlined, UserOutlined } from "@ant-design/icons";
 
 export default function BookingContactActivityStep2() {
@@ -183,7 +183,7 @@ export default function BookingContactActivityStep2() {
     if (loading) {
         return (
             <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-                Đang tải...
+                <Spin size="large" />
             </div>
         );
     }
