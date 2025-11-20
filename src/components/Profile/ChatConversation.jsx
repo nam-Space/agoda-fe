@@ -55,8 +55,10 @@ const ChatConversation = ({ selectedOtherUser, handleOpenChat }) => {
                                                     ?.name
                                             }
                                         </p>
-                                        <p className="flex items-center gap-[20px] justify-between w-[150px] whitespace-nowrap text-ellipsis overflow-hidden">
-                                            {conv.last_message}
+                                        <p className="flex items-center gap-[20px] justify-between">
+                                            <span className="w-[150px] whitespace-nowrap text-ellipsis overflow-hidden">
+                                                {conv.last_message}
+                                            </span>
                                             {conv?.latest_message?.sender
                                                 ?.id === user.id &&
                                                 conv?.latest_message?.seen && (
@@ -134,8 +136,10 @@ const ChatConversation = ({ selectedOtherUser, handleOpenChat }) => {
                                                     ?.manager?.hotel?.name
                                             }
                                         </p>
-                                        <p className="flex items-center gap-[20px] justify-between w-[150px] whitespace-nowrap text-ellipsis overflow-hidden">
-                                            {conv.last_message}
+                                        <p className="flex items-center gap-[20px] justify-between">
+                                            <span className="w-[150px] whitespace-nowrap text-ellipsis overflow-hidden">
+                                                {conv.last_message}
+                                            </span>
                                             {conv?.latest_message?.sender
                                                 ?.id === user.id &&
                                                 conv?.latest_message?.seen && (
@@ -204,8 +208,11 @@ const ChatConversation = ({ selectedOtherUser, handleOpenChat }) => {
                                                     ?.last_name
                                             }`}
                                         </p>
-                                        <p className="flex items-center gap-[20px] justify-between w-[150px] whitespace-nowrap text-ellipsis overflow-hidden">
-                                            {conv.last_message}
+                                        <p className="flex items-center gap-[20px] justify-between">
+                                            <span className="w-[150px] whitespace-nowrap text-ellipsis overflow-hidden">
+                                                {conv.last_message}
+                                            </span>
+
                                             {conv?.latest_message?.sender
                                                 ?.id === user.id &&
                                                 conv?.latest_message?.seen && (

@@ -26,7 +26,7 @@ import {
     callFetchDetailRoomBooking,
 } from "../../config/api";
 import dayjs from "dayjs";
-import { Button, Card, Divider } from "antd";
+import { Button, Card, Divider, Spin } from "antd";
 import { MapContainer, Marker, Popup, TileLayer } from "react-leaflet";
 import MarkerClusterGroup from "react-leaflet-cluster";
 import { Icon } from "leaflet";
@@ -155,7 +155,7 @@ export default function BookingContactActivity() {
     if (loading) {
         return (
             <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-                Đang tải...
+                <Spin size="large" />
             </div>
         );
     }

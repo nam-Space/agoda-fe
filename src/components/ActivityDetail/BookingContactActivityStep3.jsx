@@ -35,6 +35,7 @@ import { MapContainer, Marker, Popup, TileLayer } from "react-leaflet";
 import MarkerClusterGroup from "react-leaflet-cluster";
 import { Icon } from "leaflet";
 import markerImg from "../../images/booking-vehicles/google-map/marker.webp";
+import { Spin } from "antd";
 
 export default function BookingContactActivityStep3() {
     const [searchParams] = useSearchParams();
@@ -145,7 +146,7 @@ export default function BookingContactActivityStep3() {
     if (loading) {
         return (
             <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-                Đang tải...
+                <Spin size="large" />
             </div>
         );
     }
