@@ -1,8 +1,7 @@
 import React from "react";
 import BackgroundHome from "./BackgroundHome";
 import VietnamDestination from "./VietnamDestination";
-import SaleOffAccommodation from "./SaleOffAccommodation";
-import FlightAndActivity from "./FlightAndActivity";
+import SaleOffAll from "./SaleOffAll";
 import RecommendedAccommodation from "./RecommendedAccommodation";
 import ForeignCountryDestination from "./ForeignCountryDestination";
 
@@ -11,8 +10,7 @@ const Home = () => {
         <div>
             <BackgroundHome />
             <VietnamDestination />
-            <SaleOffAccommodation />
-            <FlightAndActivity />
+            <SaleOffAll />
             <RecommendedAccommodation />
             <ForeignCountryDestination />
         </div>

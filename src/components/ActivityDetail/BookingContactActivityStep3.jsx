@@ -58,6 +58,23 @@ export default function BookingContactActivityStep3() {
         const fetchData = async () => {
             try {
                 setLoading(true);
+                  // Lấy thông tin thanh toán
+                const paymentResponse = await getPayment(bookingId);
+                if (paymentResponse.results.length > 0) {
+                    setPayment(paymentResponse.results[0]);
+                }
+
+                // Nếu isSuccess=true, gọi API capture
+                if (isSuccess && paymentResponse.results.length > 0) {
+                    const paymentId = paymentResponse.results[0].id;
+                    try {
+                        const captureResponse = await capturePayment(paymentId);
+                        setCaptureStatus(captureResponse.detail);
+                    } catch (error) {
+                        console.error("Lỗi khi capture thanh toán:", error);
+                        setCaptureStatus("Payment not completed");
+                    }
+                }
 
                 // Lấy thông tin booking
                 const bookingResponse = await getBookingDetail(bookingId);
@@ -66,16 +83,16 @@ export default function BookingContactActivityStep3() {
                 // Lấy thông tin phòng
                 if (bookingResponse.service_type === ServiceType.HOTEL) {
                     const res = await callFetchDetailRoomBooking(
-                        bookingResponse.service_ref_id
+                        bookingResponse.service_ref_ids[0]
                     );
-                    if (res.isSuccess) {
-                        setRoom(res.data?.room);
-                    }
+                    // if (res.isSuccess) {
+                        setRoom(res.room_details[0]?.room);
+                    // }
                 }
 
                 if (bookingResponse.service_type === ServiceType.ACTIVITY) {
                     const res = await callFetchDetailActivityDateBooking(
-                        bookingResponse.service_ref_id
+                        bookingResponse.service_ref_ids[0]
                     );
                     if (res.isSuccess) {
                         setActivityDateBooking(res.data);
@@ -112,23 +129,6 @@ export default function BookingContactActivityStep3() {
                     }
                 }
 
-                // Lấy thông tin thanh toán
-                const paymentResponse = await getPayment(bookingId);
-                if (paymentResponse.results.length > 0) {
-                    setPayment(paymentResponse.results[0]);
-                }
-
-                // Nếu isSuccess=true, gọi API capture
-                if (isSuccess && paymentResponse.results.length > 0) {
-                    const paymentId = paymentResponse.results[0].id;
-                    try {
-                        const captureResponse = await capturePayment(paymentId);
-                        setCaptureStatus(captureResponse.detail);
-                    } catch (error) {
-                        console.error("Lỗi khi capture thanh toán:", error);
-                        setCaptureStatus("Payment not completed");
-                    }
-                }
             } catch (error) {
                 console.error("Lỗi khi tải dữ liệu:", error);
                 alert("Không thể tải thông tin đặt chỗ hoặc thanh toán!");
@@ -150,7 +150,8 @@ export default function BookingContactActivityStep3() {
             </div>
         );
     }
-
+    console.log("booking", booking);
+    console.log("payment", payment);
     if (!booking || !payment) {
         return (
             <div className="min-h-screen bg-gray-50 flex items-center justify-center">

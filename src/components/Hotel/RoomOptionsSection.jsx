@@ -24,6 +24,7 @@ const RoomOptionsSection = ({
     startDate,
     endDate,
     setRooms,
+    roomsCount
 }) => {
     const navigate = useNavigate();
     const user = useAppSelector((state) => state.account.user);
@@ -33,26 +34,6 @@ const RoomOptionsSection = ({
     const [error, setError] = useState(null);
     const { hotelSlug } = useParams();
     const BASE_URL = process.env.REACT_APP_BE_URL || "http://localhost:8000";
-
-    const [payload, setPayload] = useState({
-        service_type: ServiceType.HOTEL,
-        total_price: "500.00",
-        hotel_detail: {
-            room: 2,
-            check_in: startDate || "2025-10-10",
-            check_out: endDate || "2025-10-12",
-            num_guests: capacity || 2,
-        },
-    });
-
-    // const extractHotelIdFromSlug = (slug) => {
-    //   if (!slug) return null;
-    //   const parts = slug.split('-');
-    //   const lastPart = parts[parts.length - 1];
-    //   return isNaN(lastPart) ? null : parseInt(lastPart);
-    // };
-
-    // const effectiveHotelId = hotelId || extractHotelIdFromSlug(hotelSlug);
 
     // 🔹 Xác định hotelId
     const effectiveHotelId =
@@ -133,17 +114,31 @@ const RoomOptionsSection = ({
     }, [effectiveHotelId, capacity, startDate, endDate]);
 
     const handleBookNow = async (roomId, roomPrice) => {
+        // Lấy ngày nhận/trả phòng, số người, số phòng
+        // Đảm bảo gửi dạng datetime ISO (YYYY-MM-DDT00:00:00)
+        const toISODateTime = (dateStr) => {
+            if (!dateStr) return null;
+            if (dateStr.includes('T')) return dateStr;
+            return dateStr + 'T00:00:00';
+        };
+        const checkIn = toISODateTime(startDate);
+        const checkOut = toISODateTime(endDate);
+        const numGuests = capacity || 1;
+        if (!checkIn || !checkOut) {
+            alert("Vui lòng chọn ngày nhận phòng và trả phòng!");
+            return;
+        }
+
         try {
             const updatedPayload = {
-                ...payload,
-                // service_ref_id: roomId,
+                service_type: ServiceType.HOTEL,
                 user: user?.id,
-                total_price: roomPrice.toString(),
-                hotel_detail: {
+                room_details: {
                     room: roomId,
-                    check_in: startDate || "2025-10-10",
-                    check_out: endDate || "2025-10-12",
-                    num_guests: capacity || 2,
+                    check_in: checkIn,
+                    check_out: checkOut,
+                    num_guests: numGuests,
+                    room_count: roomsCount || 1,
                 },
             };
             const res = await callBook(updatedPayload);
@@ -195,6 +190,19 @@ const RoomOptionsSection = ({
                                 Giá chưa bao gồm thuế & phí
                             </p>
                         </div>
+
+                        {/* Hiển thị khuyến mãi nếu có */}
+                        {room.has_promotion && room.promotion && (
+                            <div className="mb-3 p-3 bg-yellow-50 border-l-4 border-yellow-400 rounded">
+                                <div className="font-bold text-yellow-700 flex items-center gap-2">
+                                    🎁 Khuyến mãi: {room.promotion.title}
+                                </div>
+                                <div className="text-sm text-yellow-800 mt-1">
+                                    {room.promotion.discount_percent ? `Giảm ${room.promotion.discount_percent}%` : ''}
+                                    <span className="ml-2">(Từ {room.promotion.start_date?.slice(0,10)} đến {room.promotion.end_date?.slice(0,10)})</span>
+                                </div>
+                            </div>
+                        )}
 
                         <div className="grid grid-cols-[30%_40%_30%] gap-4">
                             {/* Ảnh & chi tiết */}
@@ -284,9 +292,23 @@ const RoomOptionsSection = ({
 
                             {/* Giá & nút */}
                             <div className="text-center">
-                                <p className="text-red-600 text-lg font-bold">
-                                    {priceVND} VND
-                                </p>
+                                {/* Hiển thị giá gốc và giá thật nếu có khuyến mãi */}
+                                {room.has_promotion && room.promotion && room.price_per_night && room.promotion.discount_percent ? (
+                                    <>
+                                        <span className="text-sm text-gray-500 line-through block">
+                                            đ {parseFloat(room.price_per_night).toLocaleString("vi-VN")}
+                                        </span>
+                                        <span className="text-red-600 text-lg font-bold block">
+                                            đ {(
+                                                parseFloat(room.price_per_night) * (1 - room.promotion.discount_percent / 100)
+                                            ).toLocaleString("vi-VN")}
+                                        </span>
+                                    </>
+                                ) : (
+                                    <span className="text-red-600 text-lg font-bold block">
+                                        {priceVND} VND
+                                    </span>
+                                )}
                                 <p className="text-sm text-gray-600">
                                     Mỗi đêm chưa gồm thuế & phí
                                 </p>
