@@ -1,32 +1,135 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
+import { getAirlines } from '../../config/api';
 
-function FilterSideBar() {
+function FilterSideBar({ onFilterChange }) {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [isAirlinesExpanded, setIsAirlinesExpanded] = useState(false);
-  const [baggageIncluded, setBaggageIncluded] = useState(false);
-  const [departureHour, setDepartureHour] = useState(0);
-  const [arrivalHour, setArrivalHour] = useState(0);
-  const [durationHours, setDurationHours] = useState(72);
-  const [desiredPrice, setDesiredPrice] = useState(30257964);
-
-  const [airlines, setAirlines] = useState({
-    'Air China': false,
-    'Asiana Airlines': false,
-    'China Eastern Airlines': false,
-    'China Southern Airlines': false,
-    'Sichuan Airlines': false,
-    'Vietnam Airlines': false,
+  
+  const [filters, setFilters] = useState({
+    baggageIncluded: false,
+    departureHour: 0,
+    arrivalHour: 0,
+    durationHours: 72,
+    desiredPrice: 30257964,
+    selectedAirlines: {},
+    stops: {
+      '0': false,
+      '1': false,
+      '>2': false,
+    },
+    seatClasses: {
+      'economy': false,
+      'business': false,
+      'first': false,
+    },
   });
 
-  const [stops, setStops] = useState({
-    'Bay Thẳng': false,
-    '1 Điểm Dừng': false,
-    '>2 Điểm Dừng': false,
-  });
+  const [airlinesList, setAirlinesList] = useState([]);
 
-  const [seatClasses, setSeatClasses] = useState({
-    'Nhiều hạng': false,
-    'Phổ thông': false,
-  });
+  // Load airlines from API
+  useEffect(() => {
+    const loadAirlines = async () => {
+      try {
+        const res = await getAirlines();
+        const data = res?.data || [];
+        setAirlinesList(data);
+        
+        // Initialize selectedAirlines state
+        const initial = {};
+        data.forEach(airline => {
+          initial[airline.id] = false;
+        });
+        setFilters(prev => ({ ...prev, selectedAirlines: initial }));
+      } catch (err) {
+        console.error('Failed to load airlines', err);
+      }
+    };
+    loadAirlines();
+  }, []);
+
+  // Apply filters whenever any filter changes
+  useEffect(() => {
+    const buildFilterParams = () => {
+      // Giữ lại các params cơ bản từ search bar
+      const params = new URLSearchParams();
+      
+      // Copy các params không phải filter
+      const searchParamsCopy = new URLSearchParams(searchParams);
+      ['origin', 'destination', 'departureDate', 'returnDate', 'passengers', 'seatClass', 'tripType'].forEach(key => {
+        const value = searchParamsCopy.get(key);
+        if (value) {
+          params.set(key, value);
+        }
+      });
+
+      // Add baggage filter
+      if (filters.baggageIncluded) {
+        params.set('baggageIncluded', 'true');
+      }
+
+      // Add selected airlines
+      const selectedAirlineIds = Object.entries(filters.selectedAirlines)
+        .filter(([_, checked]) => checked)
+        .map(([id, _]) => id);
+      
+      if (selectedAirlineIds.length > 0) {
+        selectedAirlineIds.forEach(id => {
+          params.append('airlines[]', id);
+        });
+      }
+
+      // Add selected stops
+      const selectedStops = Object.entries(filters.stops)
+        .filter(([_, checked]) => checked)
+        .map(([value, _]) => value);
+      
+      if (selectedStops.length > 0) {
+        selectedStops.forEach(value => {
+          params.append('stops[]', value);
+        });
+      }
+
+      // Add selected seat classes (from filter sidebar, different from seatClass param)
+      const selectedSeatClasses = Object.entries(filters.seatClasses)
+        .filter(([_, checked]) => checked)
+        .map(([value, _]) => value);
+      
+      if (selectedSeatClasses.length > 0) {
+        selectedSeatClasses.forEach(value => {
+          params.append('seatClasses[]', value);
+        });
+      }
+
+      // Add schedule filters
+      if (filters.departureHour > 0) {
+        params.set('departureHour', filters.departureHour.toString());
+      }
+      if (filters.arrivalHour > 0) {
+        params.set('arrivalHour', filters.arrivalHour.toString());
+      }
+
+      // Add duration filter (convert hours to minutes)
+      if (filters.durationHours < 72) {
+        params.set('maxDuration', (filters.durationHours * 60).toString());
+      }
+
+      // Add price filter
+      if (filters.desiredPrice < 30257964) {
+        params.set('maxPrice', filters.desiredPrice.toString());
+      }
+
+      return params;
+    };
+
+    const params = buildFilterParams();
+    setSearchParams(params, { replace: true });
+
+    // Notify parent component if callback provided
+    if (onFilterChange) {
+      onFilterChange(Object.fromEntries(params));
+    }
+  }, [filters, setSearchParams, onFilterChange]);
 
   const formatHour = (h) => `${h.toString().padStart(2, '0')}:00`;
 
@@ -34,39 +137,58 @@ function FilterSideBar() {
     setIsAirlinesExpanded(!isAirlinesExpanded);
   };
 
-  const areAllAirlinesSelected = Object.values(airlines).every(Boolean);
+  const areAllAirlinesSelected = Object.values(filters.selectedAirlines).every(Boolean);
 
   const handleToggleAllAirlines = () => {
-    const newState = Object.fromEntries(
-      Object.keys(airlines).map((key) => [key, !areAllAirlinesSelected])
-    );
-    setAirlines(newState);
+    const newState = {};
+    Object.keys(filters.selectedAirlines).forEach(id => {
+      newState[id] = !areAllAirlinesSelected;
+    });
+    setFilters(prev => ({ ...prev, selectedAirlines: newState }));
   };
 
   const handleClearSection = (section) => {
     switch (section) {
       case 'baggage':
-        setBaggageIncluded(false);
+        setFilters(prev => ({ ...prev, baggageIncluded: false }));
+        break;
+      case 'airlines':
+        const clearedAirlines = {};
+        Object.keys(filters.selectedAirlines).forEach(id => {
+          clearedAirlines[id] = false;
+        });
+        setFilters(prev => ({ ...prev, selectedAirlines: clearedAirlines }));
         break;
       case 'stops':
-        setStops(Object.fromEntries(Object.keys(stops).map(k => [k, false])));
+        setFilters(prev => ({ ...prev, stops: { '0': false, '1': false, '>2': false } }));
         break;
       case 'seatClasses':
-        setSeatClasses(Object.fromEntries(Object.keys(seatClasses).map(k => [k, false])));
+        setFilters(prev => ({ ...prev, seatClasses: { 'economy': false, 'business': false, 'first': false } }));
         break;
       case 'schedule':
-        setDepartureHour(0);
-        setArrivalHour(0);
+        setFilters(prev => ({ ...prev, departureHour: 0, arrivalHour: 0 }));
         break;
       case 'duration':
-        setDurationHours(72);
+        setFilters(prev => ({ ...prev, durationHours: 72 }));
         break;
       case 'price':
-        setDesiredPrice(30257964);
+        setFilters(prev => ({ ...prev, desiredPrice: 30257964 }));
         break;
       default:
         break;
     }
+  };
+
+  const stopsLabels = {
+    '0': 'Bay Thẳng',
+    '1': '1 Điểm Dừng',
+    '>2': '>2 Điểm Dừng',
+  };
+
+  const seatClassLabels = {
+    'economy': 'Phổ thông',
+    'business': 'Thương gia',
+    'first': 'Hạng nhất',
   };
 
   return (
@@ -82,8 +204,8 @@ function FilterSideBar() {
             <input
               type="checkbox"
               className="form-checkbox"
-              checked={baggageIncluded}
-              onChange={(e) => setBaggageIncluded(e.target.checked)}
+              checked={filters.baggageIncluded}
+              onChange={(e) => setFilters(prev => ({ ...prev, baggageIncluded: e.target.checked }))}
             />
             <span>Đã gồm hành lý ký gửi</span>
           </label>
@@ -93,36 +215,44 @@ function FilterSideBar() {
         <div>
           <div className="flex justify-between items-center mb-2">
             <h3 className="text-lg font-semibold">Hãng hàng không</h3>
-            <label className="flex items-center space-x-2 text-sm">
-              <span>{areAllAirlinesSelected ? 'Bỏ chọn tất cả' : 'Chọn tất cả'}</span>
-              <input
-                type="checkbox"
-                className="form-switch"
-                checked={areAllAirlinesSelected}
-                onChange={handleToggleAllAirlines}
-              />
-            </label>
+            <div className="flex items-center gap-2">
+              <button onClick={() => handleClearSection('airlines')} className="text-blue-500 text-sm hover:underline">Xóa</button>
+              <label className="flex items-center space-x-2 text-sm">
+                <span>{areAllAirlinesSelected ? 'Bỏ chọn' : 'Chọn tất cả'}</span>
+                <input
+                  type="checkbox"
+                  className="form-switch"
+                  checked={areAllAirlinesSelected}
+                  onChange={handleToggleAllAirlines}
+                />
+              </label>
+            </div>
           </div>
 
-          {Object.entries(airlines)
+          {airlinesList
             .slice(0, isAirlinesExpanded ? undefined : 3)
-            .map(([label, checked]) => (
-              <label key={label} className="flex items-center space-x-2">
+            .map((airline) => (
+              <label key={airline.id} className="flex items-center space-x-2">
                 <input
                   type="checkbox"
                   className="form-checkbox"
-                  checked={checked}
+                  checked={filters.selectedAirlines[airline.id] || false}
                   onChange={(e) =>
-                    setAirlines((prev) => ({ ...prev, [label]: e.target.checked }))
+                    setFilters(prev => ({ 
+                      ...prev, 
+                      selectedAirlines: { ...prev.selectedAirlines, [airline.id]: e.target.checked }
+                    }))
                   }
                 />
-                <span>{label}</span>
+                <span>{airline.name}</span>
               </label>
             ))}
 
-          <button onClick={handleAirlinesToggle} className="text-blue-500 text-sm hover:underline mt-2">
-            {isAirlinesExpanded ? 'Thu gọn' : `Hiện tất cả ${Object.keys(airlines).length} hãng hàng không`}
-          </button>
+          {airlinesList.length > 3 && (
+            <button onClick={handleAirlinesToggle} className="text-blue-500 text-sm hover:underline mt-2">
+              {isAirlinesExpanded ? 'Thu gọn' : `Hiện tất cả ${airlinesList.length} hãng hàng không`}
+            </button>
+          )}
         </div>
 
         {/* Điểm dừng */}
@@ -131,17 +261,20 @@ function FilterSideBar() {
             <h3 className="text-lg font-semibold">Điểm dừng</h3>
             <button onClick={() => handleClearSection('stops')} className="text-blue-500 text-sm hover:underline">Xóa</button>
           </div>
-          {Object.entries(stops).map(([label, checked]) => (
-            <label key={label} className="flex items-center space-x-2">
+          {Object.entries(filters.stops).map(([value, checked]) => (
+            <label key={value} className="flex items-center space-x-2">
               <input
                 type="checkbox"
                 className="form-checkbox"
                 checked={checked}
                 onChange={(e) =>
-                  setStops((prev) => ({ ...prev, [label]: e.target.checked }))
+                  setFilters(prev => ({ 
+                    ...prev, 
+                    stops: { ...prev.stops, [value]: e.target.checked }
+                  }))
                 }
               />
-              <span>{label}</span>
+              <span>{stopsLabels[value]}</span>
             </label>
           ))}
         </div>
@@ -154,26 +287,26 @@ function FilterSideBar() {
           </div>
           <div className="space-y-2">
             <div>
-              <span>Khởi hành: {formatHour(departureHour)}</span>
+              <span>Khởi hành: {formatHour(filters.departureHour)}</span>
               <input
                 type="range"
                 min="0"
                 max="24"
                 step="1"
-                value={departureHour}
-                onChange={(e) => setDepartureHour(parseInt(e.target.value))}
+                value={filters.departureHour}
+                onChange={(e) => setFilters(prev => ({ ...prev, departureHour: parseInt(e.target.value) }))}
                 className="w-full h-[5px]"
               />
             </div>
             <div>
-              <span>Đến: {formatHour(arrivalHour)}</span>
+              <span>Đến: {formatHour(filters.arrivalHour)}</span>
               <input
                 type="range"
                 min="0"
                 max="24"
                 step="1"
-                value={arrivalHour}
-                onChange={(e) => setArrivalHour(parseInt(e.target.value))}
+                value={filters.arrivalHour}
+                onChange={(e) => setFilters(prev => ({ ...prev, arrivalHour: parseInt(e.target.value) }))}
                 className="w-full h-[5px]"
               />
             </div>
@@ -187,14 +320,14 @@ function FilterSideBar() {
             <button onClick={() => handleClearSection('duration')} className="text-blue-500 text-sm hover:underline">Xóa</button>
           </div>
           <div>
-            <span>Đi {durationHours} tiếng</span>
+            <span>Đi {filters.durationHours} tiếng</span>
             <input
               type="range"
               min="0"
               max="72"
               step="1"
-              value={durationHours}
-              onChange={(e) => setDurationHours(parseInt(e.target.value))}
+              value={filters.durationHours}
+              onChange={(e) => setFilters(prev => ({ ...prev, durationHours: parseInt(e.target.value) }))}
               className="w-full h-[5px]"
             />
           </div>
@@ -207,14 +340,14 @@ function FilterSideBar() {
             <button onClick={() => handleClearSection('price')} className="text-blue-500 text-sm hover:underline">Xóa</button>
           </div>
           <div>
-            <span>Lên đến {desiredPrice.toLocaleString('vi-VN')} đ</span>
+            <span>Lên đến {filters.desiredPrice.toLocaleString('vi-VN')} đ</span>
             <input
               type="range"
               min="0"
               max="30257964"
               step="100000"
-              value={desiredPrice}
-              onChange={(e) => setDesiredPrice(parseInt(e.target.value))}
+              value={filters.desiredPrice}
+              onChange={(e) => setFilters(prev => ({ ...prev, desiredPrice: parseInt(e.target.value) }))}
               className="w-full h-[5px]"
             />
           </div>
@@ -226,17 +359,20 @@ function FilterSideBar() {
             <h3 className="text-lg font-semibold">Khoang hạng</h3>
             <button onClick={() => handleClearSection('seatClasses')} className="text-blue-500 text-sm hover:underline">Xóa</button>
           </div>
-          {Object.entries(seatClasses).map(([label, checked]) => (
-            <label key={label} className="flex items-center space-x-2">
+          {Object.entries(filters.seatClasses).map(([value, checked]) => (
+            <label key={value} className="flex items-center space-x-2">
               <input
                 type="checkbox"
                 className="form-checkbox"
                 checked={checked}
                 onChange={(e) =>
-                  setSeatClasses((prev) => ({ ...prev, [label]: e.target.checked }))
+                  setFilters(prev => ({ 
+                    ...prev, 
+                    seatClasses: { ...prev.seatClasses, [value]: e.target.checked }
+                  }))
                 }
               />
-              <span>{label}</span>
+              <span>{seatClassLabels[value]}</span>
             </label>
           ))}
         </div>

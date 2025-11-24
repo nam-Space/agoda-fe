@@ -269,6 +269,15 @@ export const getPromotions = (params) => {
     return axios.get("/api/promotions/", { params });
 };
 
+export const getPromotionDetail = (promotionId, params) => {
+    return axios.get(`/api/promotions/${promotionId}/`, { params });
+};
+
+export const getImageUrl = (imagePath) => {
+  if (!imagePath) return '';
+  if (imagePath.startsWith('http')) return imagePath;
+  return `http://127.0.0.1:8000${imagePath}`;
+};
 //Country
 export const getCountries = (params) => {
     return axios.get("/api/countries/countries/", { params });
@@ -390,6 +399,21 @@ export const callUpdateReview = (id, data) => {
 
 export const callDeleteReview = (id) => {
     return axios.delete(`/api/reviews/reviews/${id}/delete/`);
+};
+
+// Airport
+export const getAirports = (params) => {
+    return axios.get("/api/airports/airports/", { params });
+};
+
+// Airline
+export const getAirlines = () => {
+    return axios.get('/api/airlines/');
+};
+
+// Flight
+export const getFlights = (params) => {
+    return axios.get('/api/flights/', { params });
 };
 
 // Handbook
