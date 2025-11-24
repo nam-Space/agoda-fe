@@ -52,7 +52,7 @@ export default function BookingContactActivityStep2() {
     const [distance, setDistance] = useState(0);
     const [zoomLevel, setZoomLevel] = useState(0);
     const [paymentMethod, setPaymentMethod] = useState(PaymentMethod.ONLINE);
-    const [paymentId, setPaymentId] = useState(null);
+    const [loadingSubmit, setLoadingSubmit] = useState(false);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -125,6 +125,8 @@ export default function BookingContactActivityStep2() {
     }, [bookingId]);
 
     const handleNextStep = async () => {
+        if (loadingSubmit) return;
+
         const successUrl = `${window.location.origin}/book/confirmation?isSuccess=true&booking_id=${bookingId}&type=${service_type}&ref=${ref_id}`;
         const cancelUrl = `${window.location.origin}/book/confirmation?isSuccess=false&booking_id=${bookingId}&type=${service_type}&ref=${ref_id}`;
         if (!bookingId) {
@@ -136,6 +138,7 @@ export default function BookingContactActivityStep2() {
             //Tạo payment nếu chưa có
             let payment = null;
             // 🟢 Kiểm tra xem đã có payment cho booking này chưa
+            setLoadingSubmit(true);
             const existingPayments = await getPayment(bookingId);
             if (existingPayments.count > 0) {
                 payment = existingPayments.results[0];
@@ -177,6 +180,8 @@ export default function BookingContactActivityStep2() {
         } catch (error) {
             console.error("Lỗi khi xử lý thanh toán:", error);
             alert("Thanh toán thất bại! Vui lòng thử lại.");
+        } finally {
+            setLoadingSubmit(false);
         }
     };
 
@@ -338,14 +343,20 @@ export default function BookingContactActivityStep2() {
 
                         <button
                             onClick={handleNextStep}
-                            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3.5 px-6 rounded-lg transition-colors shadow-sm flex items-center justify-center gap-2"
+                            className={`${
+                                loadingSubmit ? "opacity-50" : "cursor-pointer"
+                            } w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3.5 px-6 rounded-lg transition-colors shadow-sm flex items-center justify-center gap-2`}
                         >
                             <span>
                                 {paymentMethod === PaymentMethod.ONLINE
                                     ? "THANH TOÁN NGAY"
                                     : "XÁC NHẬN ĐẶT PHÒNG"}
                             </span>
-                            <Lock className="w-5 h-5" />
+                            {loadingSubmit ? (
+                                <Spin className="w-5 h-5" />
+                            ) : (
+                                <Lock className="w-5 h-5" />
+                            )}
                         </button>
                     </div>
 
