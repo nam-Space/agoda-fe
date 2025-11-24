@@ -259,24 +259,23 @@ const PromotionActivities = () => {
           </span>
         </div>
 
-        {promotionData.activity_promotions && promotionData.activity_promotions.length > 0 ? (
+        {promotionData.activitys && promotionData.activitys.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {promotionData.activity_promotions.map((ap) => {
-              const activity = ap.activity || {};
+            {promotionData.activitys.map((activity) => {
               // Tính giá sau giảm
               const avgPrice = activity.avg_price || 0;
-              const discountAmount = ap.effective_discount_amount || 0;
-              const priceAfterDiscount = Math.max(0, avgPrice - discountAmount);
+              const discountPercent = activity.discount || 0;
+              const priceAfterDiscount = avgPrice > 0 ? Math.round(avgPrice * (1 - discountPercent / 100)) : 0;
               // Định dạng tiền VND
               const formatVND = (val) => val.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' });
               return (
                 <div
-                  key={ap.id}
+                  key={activity.id}
                   className="border border-gray-200 rounded-lg bg-white overflow-hidden hover:shadow-lg transition-shadow"
                 >
-                  {activity.thumbnail && (
+                  {activity.thumbnails && (
                     <img
-                      src={getImageUrl(activity.thumbnail)}
+                      src={getImageUrl(activity.thumbnails)}
                       alt={activity.name}
                       className="w-full h-48 object-cover"
                     />
@@ -287,12 +286,10 @@ const PromotionActivities = () => {
                         {activity.name || "N/A"}
                       </h3>
                       <div className="text-xs bg-red-100 text-red-600 px-2 py-1 rounded flex-shrink-0 ml-2">
-                        -{ap.effective_discount_percent || 0}%
+                        -{discountPercent || 0}%
                       </div>
                     </div>
-                    <p className="text-sm text-gray-600 mb-3 line-clamp-2">
-                      {activity.short_description || "Không có mô tả"}
-                    </p>
+                    {/* Không có short_description trong activitys */}
                     <div className="flex items-center justify-between mb-3">
                       <div>
                         <div className="text-xs text-gray-500">Giá trung bình</div>
