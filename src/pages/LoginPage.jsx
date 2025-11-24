@@ -17,7 +17,7 @@ import { callLogin } from "config/api";
 import { useAppDispatch, useAppSelector } from "../redux/hooks";
 import { setUserLoginInfo } from "../redux/slice/accountSlide";
 import { callGetAccount } from "config/api";
-import { useCookies } from "react-cookie";
+import Cookies from "js-cookie";
 import { toast } from "react-toastify";
 
 export default function LoginPage() {
@@ -26,8 +26,6 @@ export default function LoginPage() {
 
     const params = new URLSearchParams(location.search);
     const nextUrl = params.get("next") || "/";
-
-    const [cookies, setCookie] = useCookies(["refresh_token_agoda"]);
     const navigate = useNavigate();
     const dispatch = useAppDispatch();
     const [loading, setLoading] = useState(false);
@@ -51,7 +49,9 @@ export default function LoginPage() {
             const res = await callLogin({ username, password });
             if (res.isSuccess) {
                 localStorage.setItem("access_token_agoda", res.data.access);
-                setCookie("refresh_token_agoda", res.data.refresh);
+                Cookies.set("refresh_token_agoda", res.data.refresh, {
+                    expires: 1,
+                });
                 const resAccount = await callGetAccount();
                 if (resAccount?.isSuccess) {
                     dispatch(setUserLoginInfo(resAccount.data));

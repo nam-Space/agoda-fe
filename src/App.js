@@ -40,14 +40,22 @@ import TravelGuideDetailPage from 'pages/TravelGuideDetailPage';
 function App() {
   const dispatch = useAppDispatch();
   const isLoading = useAppSelector(state => state.account.isLoading);
+  const errorRefreshToken = useAppSelector(state => state.account.errorRefreshToken);
+
+  useEffect(() => {
+    if (errorRefreshToken) {
+      localStorage.removeItem("access_token_agoda");
+    }
+  }, [errorRefreshToken])
 
   useEffect(() => {
     dispatch(fetchAccount())
   }, [])
 
-  // if (isLoading) {
-  //   return <Spin spinning={true} fullscreen />
-  // }
+
+  if (isLoading) {
+    return <Spin spinning={true} fullscreen />
+  }
 
   const router = createBrowserRouter([
     {
