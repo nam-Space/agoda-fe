@@ -37,7 +37,7 @@ const TopActivity = () => {
                                 <div className="rounded-[16px] border-[1px] border-[#d5d9e2] overflow-hidden">
                                     <Link to={`/activity/detail/${item.id}`}>
                                         <img
-                                            src={`${process.env.REACT_APP_BE_URL}${item.images[0].image}`}
+                                            src={`${process.env.REACT_APP_BE_URL}${item?.images?.[0]?.image}`}
                                             className="w-full h-[170px] object-cover"
                                         />
                                         <div className="pt-[12px] px-[16px] pb-[16px]">

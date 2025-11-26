@@ -27,7 +27,7 @@ import { useEffect } from 'react';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import './App.css';
 import { useAppDispatch, useAppSelector } from './redux/hooks';
-import { fetchAccount } from './redux/slice/accountSlide';
+import { fetchAccount, setLogoutAction } from './redux/slice/accountSlide';
 import BookingContactActivityPage from 'pages/BookingContactActivityPage';
 import BookingContactActivityStep2Page from 'pages/BookingContactActivityStep2Page';
 import BookingContactActivityStep3Page from 'pages/BookingContactActivityStep3Page';
@@ -45,7 +45,7 @@ function App() {
 
   useEffect(() => {
     if (errorRefreshToken) {
-      localStorage.removeItem("access_token_agoda");
+      dispatch(setLogoutAction({}))
     }
   }, [errorRefreshToken])
 

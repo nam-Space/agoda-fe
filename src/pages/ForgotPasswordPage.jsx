@@ -1,9 +1,8 @@
-"use client";
-
 import { useState } from "react";
 import { Input, Button, Form, message, Result } from "antd";
 import { MailOutlined, ArrowLeftOutlined } from "@ant-design/icons";
 import { Link } from "react-router-dom";
+import { toast } from "react-toastify";
 
 export default function ForgotPasswordPage() {
     const [loading, setLoading] = useState(false);
@@ -16,9 +15,13 @@ export default function ForgotPasswordPage() {
             // Simulate API call
             await new Promise((resolve) => setTimeout(resolve, 2000));
             setEmailSent(true);
-            message.success("Email khôi phục mật khẩu đã được gửi!");
+            toast.success("Email khôi phục mật khẩu đã được gửi!", {
+                position: "bottom-right",
+            });
         } catch (error) {
-            message.error("Có lỗi xảy ra, vui lòng thử lại!");
+            toast.error("Có lỗi xảy ra, vui lòng thử lại!", {
+                position: "bottom-right",
+            });
         } finally {
             setLoading(false);
         }
