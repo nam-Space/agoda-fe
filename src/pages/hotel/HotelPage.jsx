@@ -42,6 +42,7 @@ const HotelPage = () => {
         capacity: null,
         startDate: null,
         endDate: null,
+        roomsCount: null,
     });
     const [searchedHotel, setSearchedHotel] = useState(null);
     const [searchedRooms, setSearchedRooms] = useState([]); // ✅ thêm
@@ -198,8 +199,9 @@ const HotelPage = () => {
         endDate,
         hotel,
         rooms,
+        roomsCount
     }) => {
-        setSearchParams({ capacity, startDate, endDate });
+        setSearchParams({ capacity, startDate, endDate, roomsCount });
 
         if (hotel) {
             console.log("Hotel Info:", hotel);
@@ -572,6 +574,7 @@ const HotelPage = () => {
                                 capacity={searchParams.capacity}
                                 startDate={searchParams.startDate}
                                 endDate={searchParams.endDate}
+                                roomsCount={searchParams.roomsCount}
                             />
                         </div>
                     )}

@@ -4,7 +4,7 @@ import viImg from "../images/header/vi.svg";
 import enImg from "../images/header/en.svg";
 import koreanImg from "../images/header/korea.png";
 import { Link, useNavigate } from "react-router-dom";
-import { Avatar, Badge, Modal, Popover, Spin } from "antd";
+import { Avatar, Badge, Empty, Modal, Popover, Spin } from "antd";
 import {
     CheckOutlined,
     DownOutlined,
@@ -187,39 +187,50 @@ const HeaderClient = () => {
                             <Popover
                                 content={
                                     <div>
-                                        <div className="w-[400px] max-h-[500px] overflow-y-scroll">
-                                            {notifications.map(
-                                                (noti, index) => (
-                                                    <div
-                                                        onClick={() => {
-                                                            markNotificationAsRead(
-                                                                noti
-                                                            );
-                                                            if (noti.link) {
-                                                                navigate(
-                                                                    noti.link
+                                        <div
+                                            className={`w-[400px] max-h-[500px]`}
+                                        >
+                                            {!loadingNotifications &&
+                                                notifications.length === 0 && (
+                                                    <Empty
+                                                        description="Chưa có thông báo"
+                                                        className="bg-[#abb6cb1f] mx-0 py-[24px] rounded-[16px]"
+                                                    />
+                                                )}
+                                            {!loadingNotifications &&
+                                                notifications.length > 0 &&
+                                                notifications.map(
+                                                    (noti, index) => (
+                                                        <div
+                                                            onClick={() => {
+                                                                markNotificationAsRead(
+                                                                    noti
                                                                 );
-                                                            }
-                                                        }}
-                                                        key={index}
-                                                        className={`
+                                                                if (noti.link) {
+                                                                    navigate(
+                                                                        noti.link
+                                                                    );
+                                                                }
+                                                            }}
+                                                            key={index}
+                                                            className={`
                                                             ${
                                                                 !noti.is_read
                                                                     ? "bg-gray-100 hover:bg-gray-200"
                                                                     : "hover:bg-gray-200"
                                                             } ${
-                                                            noti.is_error
-                                                                ? "bg-red-100 hover:bg-red-200"
-                                                                : ""
-                                                        } cursor-pointer`}
-                                                        dangerouslySetInnerHTML={{
-                                                            __html:
-                                                                noti?.message ||
-                                                                "",
-                                                        }}
-                                                    ></div>
-                                                )
-                                            )}
+                                                                noti.is_error
+                                                                    ? "bg-red-100 hover:bg-red-200"
+                                                                    : ""
+                                                            } cursor-pointer`}
+                                                            dangerouslySetInnerHTML={{
+                                                                __html:
+                                                                    noti?.message ||
+                                                                    "",
+                                                            }}
+                                                        ></div>
+                                                    )
+                                                )}
                                         </div>
                                         <div
                                             onClick={() =>

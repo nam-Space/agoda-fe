@@ -27,11 +27,12 @@ import { useEffect } from 'react';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import './App.css';
 import { useAppDispatch, useAppSelector } from './redux/hooks';
-import { fetchAccount } from './redux/slice/accountSlide';
+import { fetchAccount, setLogoutAction } from './redux/slice/accountSlide';
 import BookingContactActivityPage from 'pages/BookingContactActivityPage';
 import BookingContactActivityStep2Page from 'pages/BookingContactActivityStep2Page';
 import BookingContactActivityStep3Page from 'pages/BookingContactActivityStep3Page';
 import BookingContactActivityStep4Page from 'pages/BookingContactActivityStep4Page';
+import PromotionPage from 'pages/promotion/PromotionPage';
 import TravelGuidePage from 'pages/TravelGuidePage';
 import TravelGuideCountryPage from 'pages/TravelGuideCountryPage';
 import TravelGuideCityPage from 'pages/TravelGuideCityPage';
@@ -44,7 +45,7 @@ function App() {
 
   useEffect(() => {
     if (errorRefreshToken) {
-      localStorage.removeItem("access_token_agoda");
+      dispatch(setLogoutAction({}))
     }
   }, [errorRefreshToken])
 
@@ -170,6 +171,11 @@ function App() {
           path: "booking-contact-information",
           element:
             <BookingContactInfomationPage /> // Add HotelPage route
+        },
+        {
+          path: "promotions/:promotionId",
+          element:
+            <PromotionPage />
         },
         {
           path: "travel-guide",
