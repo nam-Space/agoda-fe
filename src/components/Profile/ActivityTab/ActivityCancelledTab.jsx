@@ -1,4 +1,4 @@
-import { Button, Card, Empty, Input, Select } from "antd";
+import { Button, Card, Empty, Input, Pagination, Select } from "antd";
 import { planForTrips } from "constants/profile";
 import React, { useEffect, useState } from "react";
 import { FaSort } from "react-icons/fa6";
@@ -14,6 +14,13 @@ import dayjs from "dayjs";
 const ActivityCancelledTab = () => {
     const user = useAppSelector((state) => state.account.user);
     const [payments, setPayments] = useState([]);
+    const [meta, setMeta] = useState({
+        currentPage: 1,
+        itemsPerPage: 10,
+        totalPages: 0,
+        totalItems: 0,
+    });
+
     const [sortVal, setSortVal] = useState(
         "sort=booking__activity_date_detail__date_launch"
     );
@@ -48,16 +55,25 @@ const ActivityCancelledTab = () => {
         const res = await callFetchPayment(query);
         if (res.isSuccess) {
             setPayments(res.data);
+            setMeta(res.meta);
         }
+    };
+
+    const onChangePagination = (pageNumber, pageSize) => {
+        setMeta({
+            ...meta,
+            currentPage: pageNumber,
+            itemsPerPage: pageSize,
+        });
     };
 
     useEffect(() => {
         if (user?.id) {
             handleGetPayments(
-                `current=1&pageSize=10&booking__user_id=${user.id}&booking__service_type=${ServiceType.ACTIVITY}&status=${PAYMENT_STATUS.CANCELLED}&${sortVal}&booking__booking_code=${bookingCode}`
+                `current=${meta.currentPage}&pageSize=${meta.itemsPerPage}&booking__user_id=${user.id}&booking__service_type=${ServiceType.ACTIVITY}&status=${PAYMENT_STATUS.CANCELLED}&${sortVal}&booking__booking_code=${bookingCode}`
             );
         }
-    }, [user, sortVal, bookingCode]);
+    }, [user, sortVal, bookingCode, meta.currentPage, meta.itemsPerPage]);
 
     return (
         <div>
@@ -117,12 +133,12 @@ const ActivityCancelledTab = () => {
                                         <img
                                             src={getImage(
                                                 payment?.booking
-                                                    ?.activity_date_detail
+                                                    ?.activity_date_detail?.[0]
                                                     ?.activity_image
                                             )}
                                             alt={
                                                 payment?.booking
-                                                    ?.activity_date_detail
+                                                    ?.activity_date_detail?.[0]
                                                     ?.activity_name
                                             }
                                             className="w-24 h-24 object-cover rounded-lg"
@@ -135,7 +151,7 @@ const ActivityCancelledTab = () => {
                                             <span className="font-bold">
                                                 {
                                                     payment?.booking
-                                                        ?.activity_date_detail
+                                                        ?.activity_date_detail?.[0]
                                                         ?.activity_name
                                                 }
                                             </span>{" "}
@@ -143,7 +159,7 @@ const ActivityCancelledTab = () => {
                                             <span>
                                                 {
                                                     payment?.booking
-                                                        ?.activity_date_detail
+                                                        ?.activity_date_detail?.[0]
                                                         ?.activity_package_name
                                                 }
                                             </span>
@@ -157,7 +173,7 @@ const ActivityCancelledTab = () => {
                                                 <p className="font-semibold text-gray-900">
                                                     {dayjs(
                                                         payment?.booking
-                                                            ?.activity_date_detail
+                                                            ?.activity_date_detail?.[0]
                                                             ?.date_launch
                                                     ).format("YYYY-MM-DD")}
                                                 </p>
@@ -178,6 +194,14 @@ const ActivityCancelledTab = () => {
                                 </div>
                             </Card>
                         ))}
+                        <div className="flex justify-end w-full">
+                            <Pagination
+                                pageSize={meta.itemsPerPage}
+                                showQuickJumper
+                                total={meta.totalItems}
+                                onChange={onChangePagination}
+                            />
+                        </div>
                     </div>
                 )}
             </div>

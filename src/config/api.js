@@ -16,8 +16,8 @@ export const callRegister = (data) => {
 };
 
 // Fetch amenities của 1 phòng
-export const callFetchAmenities = (roomId) => {
-    return axios.get(`/api/rooms/rooms/${roomId}/amenities/`);
+export const callFetchAmenities = (query) => {
+    return axios.get(`/api/rooms/amenities/?${query}`);
 };
 
 export const callGetAccount = (config) => {
@@ -274,9 +274,9 @@ export const getPromotionDetail = (promotionId, params) => {
 };
 
 export const getImageUrl = (imagePath) => {
-  if (!imagePath) return '';
-  if (imagePath.startsWith('http')) return imagePath;
-  return `http://127.0.0.1:8000${imagePath}`;
+    if (!imagePath) return '';
+    if (imagePath.startsWith('http')) return imagePath;
+    return `http://127.0.0.1:8000${imagePath}`;
 };
 //Country
 export const getCountries = (params) => {

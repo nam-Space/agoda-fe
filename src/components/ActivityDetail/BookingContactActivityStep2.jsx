@@ -44,7 +44,7 @@ export default function BookingContactActivityStep2() {
     const [booking, setBooking] = useState(null);
     const service_type = Number(searchParams.get("type"));
     const ref_id = searchParams.get("ref");
-    const [room, setRoom] = useState(null);
+    const [roomBooking, setRoomBooking] = useState(null);
     const [activityDateBooking, setActivityDateBooking] = useState(null);
     const [carBooking, setCarBooking] = useState(null);
     const [center, setCenter] = useState([0, 0]);
@@ -65,16 +65,16 @@ export default function BookingContactActivityStep2() {
                 // Lấy thông tin phòng
                 if (bookingResponse.service_type === ServiceType.HOTEL) {
                     const res = await callFetchDetailRoomBooking(
-                        bookingResponse.service_ref_id
+                        bookingResponse.service_ref_ids?.[0]
                     );
                     if (res.isSuccess) {
-                        setRoom(res.data?.room);
+                        setRoomBooking(res.data);
                     }
                 }
 
                 if (bookingResponse.service_type === ServiceType.ACTIVITY) {
                     const res = await callFetchDetailActivityDateBooking(
-                        bookingResponse.service_ref_id
+                        bookingResponse.service_ref_ids?.[0]
                     );
                     if (res.isSuccess) {
                         setActivityDateBooking(res.data);
@@ -83,7 +83,7 @@ export default function BookingContactActivityStep2() {
 
                 if (bookingResponse.service_type === ServiceType.CAR) {
                     const res = await callFetchDetailCarBooking(
-                        bookingResponse.service_ref_id
+                        bookingResponse.service_ref_ids?.[0]
                     );
                     if (res.isSuccess) {
                         const carBookingData = res.data;
@@ -392,23 +392,32 @@ export default function BookingContactActivityStep2() {
                                         <div className="flex gap-3 p-3">
                                             <div className="relative w-20 h-20 flex-shrink-0 rounded-lg overflow-hidden">
                                                 <img
-                                                    src={`${process.env.REACT_APP_BE_URL}${room?.images?.[0]?.image}`}
+                                                    src={`${process.env.REACT_APP_BE_URL}${roomBooking?.room?.images?.[0]?.image}`}
                                                     className="w-full h-full object-cover"
-                                                    alt={room?.room_type}
+                                                    alt={
+                                                        roomBooking?.room
+                                                            ?.room_type
+                                                    }
                                                 />
                                             </div>
                                             <div className="flex-1 min-w-0">
                                                 <h4 className="font-semibold text-sm text-gray-900 line-clamp-2 mb-1">
-                                                    {room?.room_type || "Phòng"}
+                                                    {roomBooking?.room
+                                                        ?.room_type || "Phòng"}
                                                 </h4>
                                                 <div className="flex items-center gap-1 text-xs">
                                                     <Star className="w-3 h-3 fill-orange-500 text-orange-500" />
                                                     <span className="font-semibold">
-                                                        {room?.hotel?.avg_star}
+                                                        {
+                                                            roomBooking?.room
+                                                                ?.hotel
+                                                                ?.avg_star
+                                                        }
                                                     </span>
                                                     <span className="text-gray-500">
                                                         {
-                                                            room?.hotel
+                                                            roomBooking?.room
+                                                                ?.hotel
                                                                 ?.review_count
                                                         }{" "}
                                                         lượt đánh giá
@@ -421,21 +430,28 @@ export default function BookingContactActivityStep2() {
                                             <div className="flex items-center gap-2 text-sm">
                                                 <Calendar className="w-4 h-4 text-gray-500" />
                                                 <span>
-                                                    {
-                                                        booking.hotel_detail
+                                                    {dayjs(
+                                                        booking
+                                                            ?.room_details?.[0]
                                                             ?.check_in
-                                                    }{" "}
+                                                    ).format(
+                                                        "YYYY-MM-DD HH:mm:ss"
+                                                    )}{" "}
                                                     &rarr;{" "}
-                                                    {
-                                                        booking.hotel_detail
+                                                    {dayjs(
+                                                        booking
+                                                            ?.room_details?.[0]
                                                             ?.check_out
-                                                    }
+                                                    ).format(
+                                                        "YYYY-MM-DD HH:mm:ss"
+                                                    )}
                                                 </span>
                                             </div>
 
                                             <div className="text-sm">
                                                 <div className="font-semibold text-gray-900 mb-1">
-                                                    {room?.room_type || "Phòng"}
+                                                    {roomBooking?.room
+                                                        ?.room_type || "Phòng"}
                                                 </div>
                                                 <div className="text-gray-600 text-xs">
                                                     {getGuestSummary()}

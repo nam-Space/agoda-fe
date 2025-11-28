@@ -8,6 +8,9 @@ import {
 import { ServiceType } from "constants/serviceType";
 import { SERVICE_TYPE } from "constants/booking";
 import { useAppSelector } from "../../redux/hooks";
+import { toast } from "react-toastify";
+import { Swiper, SwiperSlide } from "swiper/react";
+import { Navigation } from "swiper/modules";
 
 const RoomOptionsSection = ({
     title,
@@ -24,7 +27,7 @@ const RoomOptionsSection = ({
     startDate,
     endDate,
     setRooms,
-    roomsCount
+    roomsCount,
 }) => {
     const navigate = useNavigate();
     const user = useAppSelector((state) => state.account.user);
@@ -72,7 +75,9 @@ const RoomOptionsSection = ({
                     const amenitiesData = {};
                     await Promise.all(
                         response.data.map(async (room) => {
-                            const resAmen = await callFetchAmenities(room.id);
+                            const resAmen = await callFetchAmenities(
+                                `current=1&pageSize=200&room_id=${room.id}`
+                            );
 
                             // 🔧 Xử lý linh hoạt nhiều dạng dữ liệu API
                             const raw = resAmen?.data || resAmen;
@@ -118,14 +123,18 @@ const RoomOptionsSection = ({
         // Đảm bảo gửi dạng datetime ISO (YYYY-MM-DDT00:00:00)
         const toISODateTime = (dateStr) => {
             if (!dateStr) return null;
-            if (dateStr.includes('T')) return dateStr;
-            return dateStr + 'T00:00:00';
+            if (dateStr.includes("T")) return dateStr;
+            return dateStr + "T00:00:00";
         };
         const checkIn = toISODateTime(startDate);
         const checkOut = toISODateTime(endDate);
         const numGuests = capacity || 1;
         if (!checkIn || !checkOut) {
-            alert("Vui lòng chọn ngày nhận phòng và trả phòng!");
+            // alert("Vui lòng chọn ngày nhận phòng và trả phòng!");
+            window.scrollTo({ top: 0, behavior: "smooth" });
+            toast.warn("Vui lòng chọn ngày nhận phòng và trả phòng!", {
+                position: "bottom-right",
+            });
             return;
         }
 
@@ -162,11 +171,6 @@ const RoomOptionsSection = ({
             {rooms.map((room) => {
                 const displayRoomType =
                     room.room_type || room_type || "Phòng tiêu chuẩn";
-                const imageUrl =
-                    room.images?.[0]?.image &&
-                    typeof room.images[0].image === "string"
-                        ? `${BASE_URL}${room.images[0].image}`
-                        : roomImage;
 
                 // const priceVND = !isNaN(parseFloat(room.price_per_night))
                 //   ? parseFloat(room.price_per_night).toLocaleString("vi-VN")
@@ -198,8 +202,18 @@ const RoomOptionsSection = ({
                                     🎁 Khuyến mãi: {room.promotion.title}
                                 </div>
                                 <div className="text-sm text-yellow-800 mt-1">
-                                    {room.promotion.discount_percent ? `Giảm ${room.promotion.discount_percent}%` : ''}
-                                    <span className="ml-2">(Từ {room.promotion.start_date?.slice(0,10)} đến {room.promotion.end_date?.slice(0,10)})</span>
+                                    {room.promotion.discount_percent
+                                        ? `Giảm ${room.promotion.discount_percent}%`
+                                        : ""}
+                                    <span className="ml-2">
+                                        (Từ{" "}
+                                        {room.promotion.start_date?.slice(
+                                            0,
+                                            10
+                                        )}{" "}
+                                        đến{" "}
+                                        {room.promotion.end_date?.slice(0, 10)})
+                                    </span>
                                 </div>
                             </div>
                         )}
@@ -207,11 +221,30 @@ const RoomOptionsSection = ({
                         <div className="grid grid-cols-[30%_40%_30%] gap-4">
                             {/* Ảnh & chi tiết */}
                             <div>
-                                <img
+                                {/* <img
                                     src={imageUrl}
                                     alt={displayRoomType}
                                     className="rounded-lg mb-4"
-                                />
+                                /> */}
+                                <Swiper
+                                    slidesPerView={1}
+                                    spaceBetween={12}
+                                    navigation={true}
+                                    modules={[Navigation]}
+                                    className="mt-[24px]"
+                                >
+                                    {room.images?.map((item, index) => (
+                                        <SwiperSlide key={index}>
+                                            <div className="h-[187px]">
+                                                <img
+                                                    src={`${process.env.REACT_APP_BE_URL}${item.image}`}
+                                                    alt={item.image}
+                                                    className="rounded-lg h-full w-full object-cover"
+                                                />
+                                            </div>
+                                        </SwiperSlide>
+                                    ))}
+                                </Swiper>
                                 <a
                                     href="#"
                                     className="text-blue-600 hover:underline text-sm"
@@ -293,14 +326,27 @@ const RoomOptionsSection = ({
                             {/* Giá & nút */}
                             <div className="text-center">
                                 {/* Hiển thị giá gốc và giá thật nếu có khuyến mãi */}
-                                {room.has_promotion && room.promotion && room.price_per_night && room.promotion.discount_percent ? (
+                                {room.has_promotion &&
+                                room.promotion &&
+                                room.price_per_night &&
+                                room.promotion.discount_percent ? (
                                     <>
                                         <span className="text-sm text-gray-500 line-through block">
-                                            đ {parseFloat(room.price_per_night).toLocaleString("vi-VN")}
+                                            đ{" "}
+                                            {parseFloat(
+                                                room.price_per_night
+                                            ).toLocaleString("vi-VN")}
                                         </span>
                                         <span className="text-red-600 text-lg font-bold block">
-                                            đ {(
-                                                parseFloat(room.price_per_night) * (1 - room.promotion.discount_percent / 100)
+                                            đ{" "}
+                                            {(
+                                                parseFloat(
+                                                    room.price_per_night
+                                                ) *
+                                                (1 -
+                                                    room.promotion
+                                                        .discount_percent /
+                                                        100)
                                             ).toLocaleString("vi-VN")}
                                         </span>
                                     </>

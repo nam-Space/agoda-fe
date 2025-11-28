@@ -102,6 +102,7 @@ const transformHotelData = (apiHotel) => {
         cityName: apiHotel.city?.name || "",
         withUs: stripHtml(apiHotel.withUs) || "",
         slug: createHotelSlug(apiHotel.name, apiHotel.id),
+        city: apiHotel.city,
     };
 };
 

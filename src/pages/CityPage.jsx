@@ -9,20 +9,20 @@ import { useParams } from "react-router-dom";
 const { Content } = Layout;
 
 const CityPage = () => {
-  const { cityId } = useParams(); // ✅ Lấy cityId từ URL
+    const { cityId } = useParams(); // ✅ Lấy cityId từ URL
 
-  return (
-    <ClientLayout>
-      <Banner cityId={cityId} />
-      <Content className="p-6">
-        <div className="max-w-6xl mx-auto">
-          <TopHotel />
-          <MoreInfo cityId={cityId} /> 
-        </div>
-      </Content>
-      <Footer />
-    </ClientLayout>
-  );
+    return (
+        <ClientLayout>
+            <Banner cityId={cityId} />
+            <Content className="p-6">
+                <div className="max-w-[1200px] mx-auto">
+                    <TopHotel />
+                    <MoreInfo cityId={cityId} />
+                </div>
+            </Content>
+            <Footer />
+        </ClientLayout>
+    );
 };
 
 export default CityPage;
