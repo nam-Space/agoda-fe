@@ -1,4 +1,4 @@
-import { Button, Card, Empty } from "antd";
+import { Button, Card, Empty, Pagination } from "antd";
 import { planForTrips } from "constants/profile";
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
@@ -13,27 +13,42 @@ import { getImage } from "utils/imageUrl";
 const ActivityIncomingTab = () => {
     const user = useAppSelector((state) => state.account.user);
     const [payments, setPayments] = useState([]);
+    const [meta, setMeta] = useState({
+        currentPage: 1,
+        itemsPerPage: 10,
+        totalPages: 0,
+        totalItems: 0,
+    });
 
     const handleGetPayments = async (query) => {
         const res = await callFetchPayment(query);
         if (res.isSuccess) {
             setPayments(res.data);
+            setMeta(res.meta);
         }
+    };
+
+    const onChangePagination = (pageNumber, pageSize) => {
+        setMeta({
+            ...meta,
+            currentPage: pageNumber,
+            itemsPerPage: pageSize,
+        });
     };
 
     useEffect(() => {
         if (user?.id) {
             handleGetPayments(
-                `current=1&pageSize=10&booking__user_id=${
-                    user.id
-                }&booking__service_type=${
+                `current=${meta.currentPage}&pageSize=${
+                    meta.itemsPerPage
+                }&booking__user_id=${user.id}&booking__service_type=${
                     ServiceType.ACTIVITY
                 }&min_date_launch_activity=${dayjs(Date.now()).format(
                     "YYYY-MM-DDTHH:mm:ss"
                 )}&status=${PAYMENT_STATUS.SUCCESS}`
             );
         }
-    }, [user]);
+    }, [user, meta.currentPage, meta.itemsPerPage]);
 
     return (
         <div>
@@ -77,12 +92,12 @@ const ActivityIncomingTab = () => {
                                         <img
                                             src={getImage(
                                                 payment?.booking
-                                                    ?.activity_date_detail
+                                                    ?.activity_date_detail?.[0]
                                                     ?.activity_image
                                             )}
                                             alt={
                                                 payment?.booking
-                                                    ?.activity_date_detail
+                                                    ?.activity_date_detail?.[0]
                                                     ?.activity_name
                                             }
                                             className="w-24 h-24 object-cover rounded-lg"
@@ -95,7 +110,7 @@ const ActivityIncomingTab = () => {
                                             <span className="font-bold">
                                                 {
                                                     payment?.booking
-                                                        ?.activity_date_detail
+                                                        ?.activity_date_detail?.[0]
                                                         ?.activity_name
                                                 }
                                             </span>{" "}
@@ -103,7 +118,7 @@ const ActivityIncomingTab = () => {
                                             <span>
                                                 {
                                                     payment?.booking
-                                                        ?.activity_date_detail
+                                                        ?.activity_date_detail?.[0]
                                                         ?.activity_package_name
                                                 }
                                             </span>
@@ -117,7 +132,7 @@ const ActivityIncomingTab = () => {
                                                 <p className="font-semibold text-gray-900">
                                                     {dayjs(
                                                         payment?.booking
-                                                            ?.activity_date_detail
+                                                            ?.activity_date_detail?.[0]
                                                             ?.date_launch
                                                     ).format("YYYY-MM-DD")}
                                                 </p>
@@ -139,6 +154,14 @@ const ActivityIncomingTab = () => {
                                 </div>
                             </Card>
                         ))}
+                        <div className="flex justify-end w-full">
+                            <Pagination
+                                pageSize={meta.itemsPerPage}
+                                showQuickJumper
+                                total={meta.totalItems}
+                                onChange={onChangePagination}
+                            />
+                        </div>
                     </div>
                 )}
             </div>

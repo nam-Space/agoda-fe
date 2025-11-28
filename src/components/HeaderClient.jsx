@@ -188,7 +188,7 @@ const HeaderClient = () => {
                                 content={
                                     <div>
                                         <div
-                                            className={`w-[400px] max-h-[500px]`}
+                                            className={`w-[400px] max-h-[500px] overflow-y-auto`}
                                         >
                                             {!loadingNotifications &&
                                                 notifications.length === 0 && (

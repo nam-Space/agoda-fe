@@ -1,4 +1,4 @@
-import { Button, Card, Empty } from "antd";
+import { Button, Card, Empty, Pagination } from "antd";
 import { callFetchPayment } from "config/api";
 import { planForTrips } from "constants/profile";
 import React, { useEffect, useState } from "react";
@@ -13,27 +13,42 @@ import { PAYMENT_STATUS } from "constants/serviceType";
 const HotelIncomingTab = () => {
     const user = useAppSelector((state) => state.account.user);
     const [payments, setPayments] = useState([]);
+    const [meta, setMeta] = useState({
+        currentPage: 1,
+        itemsPerPage: 10,
+        totalPages: 0,
+        totalItems: 0,
+    });
 
     const handleGetPayments = async (query) => {
         const res = await callFetchPayment(query);
         if (res.isSuccess) {
             setPayments(res.data);
+            setMeta(res.meta);
         }
+    };
+
+    const onChangePagination = (pageNumber, pageSize) => {
+        setMeta({
+            ...meta,
+            currentPage: pageNumber,
+            itemsPerPage: pageSize,
+        });
     };
 
     useEffect(() => {
         if (user?.id) {
             handleGetPayments(
-                `current=1&pageSize=10&booking__user_id=${
-                    user.id
-                }&booking__service_type=${
+                `current=${meta.currentPage}&pageSize=${
+                    meta.itemsPerPage
+                }&booking__user_id=${user.id}&booking__service_type=${
                     ServiceType.HOTEL
                 }&min_time_checkin_room=${dayjs(Date.now()).format(
                     "YYYY-MM-DDTHH:mm:ss"
                 )}&status=${PAYMENT_STATUS.SUCCESS}`
             );
         }
-    }, [user]);
+    }, [user, meta.currentPage, meta.itemsPerPage]);
 
     return (
         <div>
@@ -76,12 +91,14 @@ const HotelIncomingTab = () => {
                                     <div className="flex-shrink-0">
                                         <img
                                             src={getImage(
-                                                payment?.booking?.hotel_detail
-                                                    ?.room?.images?.[0]?.image
+                                                payment?.booking
+                                                    ?.room_details?.[0]?.room
+                                                    ?.images?.[0]?.image
                                             )}
                                             alt={
-                                                payment?.booking?.hotel_detail
-                                                    ?.room?.room_type
+                                                payment?.booking
+                                                    ?.room_details?.[0]?.room
+                                                    ?.room_type
                                             }
                                             className="w-24 h-24 object-cover rounded-lg"
                                         />
@@ -91,13 +108,15 @@ const HotelIncomingTab = () => {
                                     <div className="flex-grow">
                                         <h3 className="text-lg font-bold text-gray-900 mb-4">
                                             {
-                                                payment?.booking?.hotel_detail
-                                                    ?.room?.hotel?.name
+                                                payment?.booking
+                                                    ?.room_details?.[0]?.room
+                                                    ?.hotel?.name
                                             }{" "}
                                             -{" "}
                                             {
-                                                payment?.booking?.hotel_detail
-                                                    ?.room?.room_type
+                                                payment?.booking
+                                                    ?.room_details?.[0]?.room
+                                                    ?.room_type
                                             }
                                         </h3>
 
@@ -109,7 +128,7 @@ const HotelIncomingTab = () => {
                                                 <p className="font-semibold text-gray-900">
                                                     {dayjs(
                                                         payment?.booking
-                                                            ?.hotel_detail
+                                                            ?.room_details?.[0]
                                                             ?.check_in
                                                     ).format(
                                                         "YYYY-MM-DD HH:mm:ss"
@@ -123,7 +142,7 @@ const HotelIncomingTab = () => {
                                                 <p className="font-semibold text-gray-900">
                                                     {dayjs(
                                                         payment?.booking
-                                                            ?.hotel_detail
+                                                            ?.room_details?.[0]
                                                             ?.check_out
                                                     ).format(
                                                         "YYYY-MM-DD HH:mm:ss"
@@ -147,6 +166,14 @@ const HotelIncomingTab = () => {
                                 </div>
                             </Card>
                         ))}
+                        <div className="flex justify-end w-full">
+                            <Pagination
+                                pageSize={meta.itemsPerPage}
+                                showQuickJumper
+                                total={meta.totalItems}
+                                onChange={onChangePagination}
+                            />
+                        </div>
                     </div>
                 )}
             </div>

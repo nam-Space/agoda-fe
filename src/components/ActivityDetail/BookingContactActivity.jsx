@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import {
     ChevronDown,
@@ -44,7 +43,7 @@ export default function BookingContactActivity() {
     const ref_id = searchParams.get("ref");
     const [countries, setCountries] = useState([]);
     const [booking, setBooking] = useState(null);
-    const [room, setRoom] = useState(null);
+    const [roomBooking, setRoomBooking] = useState(null);
     const [activityDateBooking, setActivityDateBooking] = useState(null);
     const [carBooking, setCarBooking] = useState(null);
     const [flightDetails, setFlightDetails] = useState([]);
@@ -63,15 +62,15 @@ export default function BookingContactActivity() {
     });
     // Format datetime string to 'DD/MM/YYYY' (hoặc định dạng bạn muốn)
     const formatDateTime = (dt) => {
-        if (!dt) return '';
+        if (!dt) return "";
         // Nếu đã là object Date
         if (dt instanceof Date) {
-            return dt.toLocaleDateString('vi-VN');
+            return dt.toLocaleDateString("vi-VN");
         }
         // Nếu là string ISO
         const d = new Date(dt);
         if (!isNaN(d)) {
-            return d.toLocaleDateString('vi-VN');
+            return d.toLocaleDateString("vi-VN");
         }
         return dt;
     };
@@ -92,24 +91,28 @@ export default function BookingContactActivity() {
                 }
 
                 // Fetch room details if service_type is HOTEL
-                if (service_type === ServiceType.HOTEL && ref_id) {
-                    const res = await callFetchDetailRoomBooking(ref_id);
+                if (service_type === ServiceType.HOTEL) {
+                    const res = await callFetchDetailRoomBooking(
+                        bookingResponse.service_ref_ids?.[0]
+                    );
                     if (res.isSuccess) {
-                        setRoom(res.data?.room);
+                        setRoomBooking(res.data);
                     }
                 }
 
-                if (service_type === ServiceType.ACTIVITY && ref_id) {
+                if (service_type === ServiceType.ACTIVITY) {
                     const res = await callFetchDetailActivityDateBooking(
-                        ref_id
+                        bookingResponse.service_ref_ids?.[0]
                     );
                     if (res.isSuccess) {
                         setActivityDateBooking(res.data);
                     }
                 }
 
-                if (service_type === ServiceType.CAR && ref_id) {
-                    const res = await callFetchDetailCarBooking(ref_id);
+                if (service_type === ServiceType.CAR) {
+                    const res = await callFetchDetailCarBooking(
+                        bookingResponse.service_ref_ids?.[0]
+                    );
                     if (res.isSuccess) {
                         const carBookingData = res.data;
                         setCarBooking(carBookingData);
@@ -197,7 +200,7 @@ export default function BookingContactActivity() {
     };
 
     const getGuestSummary = () => {
-        const numGuests = booking.room_details[0]?.num_guests || 0;
+        const numGuests = booking.room_details?.[0]?.num_guests || 0;
         if (numGuests > 0) {
             return `${numGuests} khách`;
         }
@@ -419,7 +422,7 @@ export default function BookingContactActivity() {
                             </button>
                         </div>
                     </div>
-                    
+
                     {/* Right Column - Summary */}
                     <div className="lg:col-span-1">
                         <div className="sticky top-24 space-y-4">
@@ -453,23 +456,32 @@ export default function BookingContactActivity() {
                                         <div className="flex gap-3 p-3">
                                             <div className="relative w-20 h-20 flex-shrink-0 rounded-lg overflow-hidden">
                                                 <img
-                                                    src={`${process.env.REACT_APP_BE_URL}${room?.images?.[0]?.image}`}
+                                                    src={`${process.env.REACT_APP_BE_URL}${roomBooking?.room?.images?.[0]?.image}`}
                                                     className="w-full h-full object-cover"
-                                                    alt={room?.room_type}
+                                                    alt={
+                                                        roomBooking?.room
+                                                            ?.room_type
+                                                    }
                                                 />
                                             </div>
                                             <div className="flex-1 min-w-0">
                                                 <h4 className="font-semibold text-sm text-gray-900 line-clamp-2 mb-1">
-                                                    {room?.room_type || "Phòng"}
+                                                    {roomBooking?.room
+                                                        ?.room_type || "Phòng"}
                                                 </h4>
                                                 <div className="flex items-center gap-1 text-xs">
                                                     <Star className="w-3 h-3 fill-orange-500 text-orange-500" />
                                                     <span className="font-semibold">
-                                                        {room?.hotel?.avg_star}
+                                                        {
+                                                            roomBooking?.room
+                                                                ?.hotel
+                                                                ?.avg_star
+                                                        }
                                                     </span>
                                                     <span className="text-gray-500">
                                                         {
-                                                            room?.hotel
+                                                            roomBooking?.room
+                                                                ?.hotel
                                                                 ?.review_count
                                                         }{" "}
                                                         lượt đánh giá
@@ -482,21 +494,28 @@ export default function BookingContactActivity() {
                                             <div className="flex items-center gap-2 text-sm">
                                                 <Calendar className="w-4 h-4 text-gray-500" />
                                                 <span>
-                                                    {
-                                                        booking.hotel_detail
+                                                    {dayjs(
+                                                        booking
+                                                            ?.room_details?.[0]
                                                             ?.check_in
-                                                    }{" "}
+                                                    ).format(
+                                                        "YYYY-MM-DD HH:mm:ss"
+                                                    )}{" "}
                                                     &rarr;{" "}
-                                                    {
-                                                        booking.hotel_detail
+                                                    {dayjs(
+                                                        booking
+                                                            ?.room_details?.[0]
                                                             ?.check_out
-                                                    }
+                                                    ).format(
+                                                        "YYYY-MM-DD HH:mm:ss"
+                                                    )}
                                                 </span>
                                             </div>
 
                                             <div className="text-sm">
                                                 <div className="font-semibold text-gray-900 mb-1">
-                                                    {room?.room_type || "Phòng"}
+                                                    {roomBooking?.room
+                                                        ?.room_type || "Phòng"}
                                                 </div>
                                                 <div className="text-gray-600 text-xs">
                                                     {getGuestSummary()}
@@ -822,33 +841,62 @@ export default function BookingContactActivity() {
                                         <div className="flex justify-between text-sm">
                                             <div>
                                                 <div className="text-gray-900">
-                                                    {ServiceTypeLabelVi[service_type] || "Phòng"}
+                                                    {ServiceTypeLabelVi[
+                                                        service_type
+                                                    ] || "Phòng"}
                                                 </div>
                                                 <div className="text-gray-500 text-xs">
-                                                    {formatDateTime(booking.room_details[0]?.check_in)} - {formatDateTime(booking.room_details[0]?.check_out)} | {getGuestSummary()}
+                                                    {formatDateTime(
+                                                        booking
+                                                            .room_details?.[0]
+                                                            ?.check_in
+                                                    )}{" "}
+                                                    -{" "}
+                                                    {formatDateTime(
+                                                        booking
+                                                            .room_details?.[0]
+                                                            ?.check_out
+                                                    )}{" "}
+                                                    | {getGuestSummary()}
                                                 </div>
                                             </div>
                                             <div className="font-semibold text-gray-900 whitespace-nowrap ml-4">
-                                                {formatCurrency(booking.total_price)} ₫
+                                                {formatCurrency(
+                                                    booking.total_price
+                                                )}{" "}
+                                                ₫
                                             </div>
                                         </div>
                                     </div>
                                     <div className="border-t border-gray-200 pt-3 mb-3">
                                         <div className="flex justify-between text-sm mb-2">
                                             <div>
-                                                <div className="text-gray-900">Giảm giá</div>
-                                                <div className="text-gray-500 text-xs">Nếu có</div>
+                                                <div className="text-gray-900">
+                                                    Giảm giá
+                                                </div>
+                                                <div className="text-gray-500 text-xs">
+                                                    Nếu có
+                                                </div>
                                             </div>
                                             <div className="text-gray-500 line-through">
-                                                {formatCurrency(booking.discount_amount || 0)} ₫
+                                                {formatCurrency(
+                                                    booking.discount_amount || 0
+                                                )}{" "}
+                                                ₫
                                             </div>
                                         </div>
                                     </div>
                                     <div className="border-t border-gray-200 pt-3">
                                         <div className="flex justify-between items-center">
-                                            <span className="font-semibold text-gray-900">Tổng quý khách trả</span>
+                                            <span className="font-semibold text-gray-900">
+                                                Tổng quý khách trả
+                                            </span>
                                             <span className="text-2xl font-bold text-red-600">
-                                                {formatCurrency(booking.final_price || booking.total_price)} ₫
+                                                {formatCurrency(
+                                                    booking.final_price ||
+                                                        booking.total_price
+                                                )}{" "}
+                                                ₫
                                             </span>
                                         </div>
                                     </div>
@@ -857,20 +905,46 @@ export default function BookingContactActivity() {
                             {/* Price Summary Card - chỉ hiện nếu là flight */}
                             {service_type === ServiceType.FLIGHT && (
                                 <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-5">
-                                    <h3 className="text-lg font-bold text-gray-900 mb-4">Chi tiết giá</h3>
+                                    <h3 className="text-lg font-bold text-gray-900 mb-4">
+                                        Chi tiết giá
+                                    </h3>
                                     <div className="space-y-3">
                                         {flightDetails.map((detail, index) => {
                                             const isReturn = index === 1;
                                             return (
-                                                <div key={detail.id} className="pb-3 border-b border-gray-100 last:border-0">
+                                                <div
+                                                    key={detail.id}
+                                                    className="pb-3 border-b border-gray-100 last:border-0"
+                                                >
                                                     <div className="flex justify-between text-sm mb-1">
-                                                        <span>{isReturn ? "Chiều về" : "Chiều đi"} • {detail.seat_class}</span>
-                                                        <span>{formatCurrency(detail.total_price)} ₫</span>
+                                                        <span>
+                                                            {isReturn
+                                                                ? "Chiều về"
+                                                                : "Chiều đi"}{" "}
+                                                            •{" "}
+                                                            {detail.seat_class}
+                                                        </span>
+                                                        <span>
+                                                            {formatCurrency(
+                                                                detail.total_price
+                                                            )}{" "}
+                                                            ₫
+                                                        </span>
                                                     </div>
-                                                    {detail.discount_amount > 0 && (
+                                                    {detail.discount_amount >
+                                                        0 && (
                                                         <div className="flex justify-between text-xs text-gray-500">
-                                                            <span>Giảm giá khuyến mãi</span>
-                                                            <span>-{formatCurrency(detail.discount_amount)} ₫</span>
+                                                            <span>
+                                                                Giảm giá khuyến
+                                                                mãi
+                                                            </span>
+                                                            <span>
+                                                                -
+                                                                {formatCurrency(
+                                                                    detail.discount_amount
+                                                                )}{" "}
+                                                                ₫
+                                                            </span>
                                                         </div>
                                                     )}
                                                 </div>
@@ -880,11 +954,15 @@ export default function BookingContactActivity() {
                                             <div className="flex justify-between text-lg font-bold">
                                                 <span>Tổng cộng</span>
                                                 <span className="text-2xl text-red-600">
-                                                    {formatCurrency(booking.total_price)} ₫
+                                                    {formatCurrency(
+                                                        booking.total_price
+                                                    )}{" "}
+                                                    ₫
                                                 </span>
                                             </div>
                                             <div className="text-xs text-gray-500 mt-2">
-                                                Đã bao gồm thuế và phí • Thanh toán an toàn
+                                                Đã bao gồm thuế và phí • Thanh
+                                                toán an toàn
                                             </div>
                                         </div>
                                     </div>
@@ -894,145 +972,246 @@ export default function BookingContactActivity() {
                     </div>
                 </div>
                 {/* Flight Summary - NEW */}
-                {service_type === ServiceType.FLIGHT && flightDetails.length > 0 && (
-                <div className="space-y-6 mt-8">
-                    {flightDetails.map((detail, index) => {
-                    const isReturn = index === 1;
-                    const legs = detail.flight.legs || [];
-                    const firstLeg = legs[0];
-                    const lastLeg = legs[legs.length - 1];
+                {service_type === ServiceType.FLIGHT &&
+                    flightDetails.length > 0 && (
+                        <div className="space-y-6 mt-8">
+                            {flightDetails.map((detail, index) => {
+                                const isReturn = index === 1;
+                                const legs = detail.flight.legs || [];
+                                const firstLeg = legs[0];
+                                const lastLeg = legs[legs.length - 1];
 
-                    return (
-                        <div
-                        key={detail.id}
-                        className="border border-gray-200 rounded-xl overflow-hidden"
-                        >
-                        {/* Header: Chiều đi / Chiều về */}
-                        <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-50 px-4 py-3">
-                            <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                                <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
+                                return (
+                                    <div
+                                        key={detail.id}
+                                        className="border border-gray-200 rounded-xl overflow-hidden"
+                                    >
+                                        {/* Header: Chiều đi / Chiều về */}
+                                        <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-50 px-4 py-3">
+                                            <div className="flex items-center justify-between">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center"></div>
+                                                    <div>
+                                                        <div className="font-bold text-lg">
+                                                            {isReturn
+                                                                ? "Chiều về"
+                                                                : "Chiều đi"}
+                                                        </div>
+                                                        <div className="text-sm opacity-90">
+                                                            {dayjs(
+                                                                detail.flight
+                                                                    .departure_time
+                                                            ).format(
+                                                                "ddd, DD/MM/YYYY"
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div className="text-right">
+                                                    <div className="text-xs opacity-90">
+                                                        Hạng ghế
+                                                    </div>
+                                                    <div className="font-bold uppercase">
+                                                        {detail.seat_class}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Flight Info */}
+                                        <div className="p-4 space-y-4">
+                                            {/* Airline Logo + Flight Info */}
+                                            <div className="flex items-center justify-between">
+                                                {/* ${process.env.REACT_APP_BE_URL} */}
+                                                <div className="flex items-center gap-3">
+                                                    <img
+                                                        src={`${detail.flight.airline.logo}`}
+                                                        alt={
+                                                            detail.flight
+                                                                .airline.name
+                                                        }
+                                                        className="w-10 h-10 rounded"
+                                                    />
+                                                    <div>
+                                                        <div className="font-semibold">
+                                                            {
+                                                                detail.flight
+                                                                    .airline
+                                                                    .name
+                                                            }
+                                                        </div>
+                                                        <div className="text-sm text-gray-600">
+                                                            {
+                                                                detail.flight
+                                                                    .aircraft
+                                                                    .model
+                                                            }{" "}
+                                                            •{" "}
+                                                            {legs
+                                                                .map(
+                                                                    (l) =>
+                                                                        l.flight_code
+                                                                )
+                                                                .join(", ")}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div className="text-right">
+                                                    <div className="text-sm text-gray-500">
+                                                        Thời gian bay
+                                                    </div>
+                                                    <div className="font-bold">
+                                                        {
+                                                            detail.flight
+                                                                .total_duration
+                                                        }{" "}
+                                                        phút
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            {/* Route Timeline */}
+                                            <div className="flex gap-4 relative">
+                                                {legs.map((leg, i) => (
+                                                    <div
+                                                        key={leg.id}
+                                                        className="flex gap-4 relative"
+                                                    >
+                                                        <div className="flex flex-col items-center">
+                                                            <div className="w-4 h-4 bg-blue-600 rounded-full z-10"></div>
+                                                            {i <
+                                                                legs.length -
+                                                                    1 && (
+                                                                <div className="w-0.5 h-16 bg-gray-300 absolute top-4 left-2"></div>
+                                                            )}
+                                                        </div>
+                                                        <div className="flex-1 pb-8">
+                                                            <div className="font-medium">
+                                                                {dayjs(
+                                                                    leg.departure_time
+                                                                ).format(
+                                                                    "HH:mm"
+                                                                )}
+                                                            </div>
+                                                            <div className="text-sm font-semibold">
+                                                                {
+                                                                    leg
+                                                                        .departure_airport
+                                                                        .code
+                                                                }
+                                                            </div>
+                                                            <div className="text-xs text-gray-500">
+                                                                {leg
+                                                                    .departure_airport
+                                                                    .city
+                                                                    ?.name ||
+                                                                    leg
+                                                                        .departure_airport
+                                                                        .name}
+                                                            </div>
+
+                                                            {i <
+                                                                legs.length -
+                                                                    1 && (
+                                                                <div className="mt-2 text-xs text-gray-500 border-l-2 border-dashed border-gray-300 pl-4 py-1">
+                                                                    Quá cảnh{" "}
+                                                                    {
+                                                                        leg
+                                                                            .arrival_airport
+                                                                            .code
+                                                                    }{" "}
+                                                                    •{" "}
+                                                                    {Math.floor(
+                                                                        (new Date(
+                                                                            legs[
+                                                                                i +
+                                                                                    1
+                                                                            ].departure_time
+                                                                        ) -
+                                                                            new Date(
+                                                                                leg.arrival_time
+                                                                            )) /
+                                                                            60000
+                                                                    )}{" "}
+                                                                    phút
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                ))}
+
+                                                {/* Final Arrival */}
+                                                <div className="flex gap-4">
+                                                    <div className="w-4 h-4 bg-green-600 rounded-full"></div>
+                                                    <div>
+                                                        <div className="font-medium">
+                                                            {dayjs(
+                                                                lastLeg.arrival_time
+                                                            ).format("HH:mm")}
+                                                        </div>
+                                                        <div className="text-sm font-semibold">
+                                                            {
+                                                                lastLeg
+                                                                    .arrival_airport
+                                                                    .code
+                                                            }
+                                                        </div>
+                                                        <div className="text-xs text-gray-500">
+                                                            {lastLeg
+                                                                .arrival_airport
+                                                                .city?.name ||
+                                                                lastLeg
+                                                                    .arrival_airport
+                                                                    .name}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            {/* Stops Info */}
+                                            <div className="flex items-center justify-between text-sm">
+                                                <div className="flex items-center gap-2">
+                                                    <span className="px-2 py-1 bg-gray-100 rounded">
+                                                        {legs.length - 1 === 0
+                                                            ? "Bay thẳng"
+                                                            : `${
+                                                                  legs.length -
+                                                                  1
+                                                              } điểm dừng`}
+                                                    </span>
+                                                    {detail.baggage_included && (
+                                                        <span className="flex items-center gap-1">
+                                                            Checked baggage •
+                                                            Hành lý xách tay
+                                                        </span>
+                                                    )}
+                                                </div>
+                                                <div className="text-right">
+                                                    <div className="text-xs text-gray-500">
+                                                        Số hành khách
+                                                    </div>
+                                                    <div className="font-bold">
+                                                        {detail.num_passengers}{" "}
+                                                        người
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+
+                            {/* Passenger & Baggage Summary */}
+                            <div className="bg-gray-50 rounded-lg p-4 text-sm">
+                                <div className="flex justify-between">
+                                    <span>Hành lý ký gửi</span>
+                                    <span className="font-medium text-green-600">
+                                        Đã bao gồm
+                                    </span>
                                 </div>
-                                <div>
-                                <div className="font-bold text-lg">
-                                    {isReturn ? "Chiều về" : "Chiều đi"}
-                                </div>
-                                <div className="text-sm opacity-90">
-                                    {dayjs(detail.flight.departure_time).format("ddd, DD/MM/YYYY")}
-                                </div>
-                                </div>
-                            </div>
-                            <div className="text-right">
-                                <div className="text-xs opacity-90">Hạng ghế</div>
-                                <div className="font-bold uppercase">{detail.seat_class}</div>
-                            </div>
                             </div>
                         </div>
-
-                        {/* Flight Info */}
-                        <div className="p-4 space-y-4">
-                            {/* Airline Logo + Flight Info */}
-                            <div className="flex items-center justify-between">
-                                {/* ${process.env.REACT_APP_BE_URL} */}
-                            <div className="flex items-center gap-3">
-                                <img
-                                src={`${detail.flight.airline.logo}`}
-                                alt={detail.flight.airline.name}
-                                className="w-10 h-10 rounded"
-                                />
-                                <div>
-                                <div className="font-semibold">{detail.flight.airline.name}</div>
-                                <div className="text-sm text-gray-600">
-                                    {detail.flight.aircraft.model} • {legs.map(l => l.flight_code).join(", ")}
-                                </div>
-                                </div>
-                            </div>
-                            <div className="text-right">
-                                <div className="text-sm text-gray-500">Thời gian bay</div>
-                                <div className="font-bold">{detail.flight.total_duration} phút</div>
-                            </div>
-                            </div>
-
-                            {/* Route Timeline */}
-                            <div className="flex gap-4 relative">
-                            {legs.map((leg, i) => (
-                                <div key={leg.id} className="flex gap-4 relative">
-                                <div className="flex flex-col items-center">
-                                    <div className="w-4 h-4 bg-blue-600 rounded-full z-10"></div>
-                                    {i < legs.length - 1 && (
-                                    <div className="w-0.5 h-16 bg-gray-300 absolute top-4 left-2"></div>
-                                    )}
-                                </div>
-                                <div className="flex-1 pb-8">
-                                    <div className="font-medium">
-                                    {dayjs(leg.departure_time).format("HH:mm")}
-                                    </div>
-                                    <div className="text-sm font-semibold">
-                                    {leg.departure_airport.code}
-                                    </div>
-                                    <div className="text-xs text-gray-500">
-                                    {leg.departure_airport.city?.name || leg.departure_airport.name}
-                                    </div>
-
-                                    {i < legs.length - 1 && (
-                                    <div className="mt-2 text-xs text-gray-500 border-l-2 border-dashed border-gray-300 pl-4 py-1">
-                                        Quá cảnh {leg.arrival_airport.code} •{" "}
-                                        {Math.floor((new Date(legs[i + 1].departure_time) - new Date(leg.arrival_time)) / 60000)} phút
-                                    </div>
-                                    )}
-                                </div>
-                                </div>
-                            ))}
-
-                            {/* Final Arrival */}
-                            <div className="flex gap-4">
-                                <div className="w-4 h-4 bg-green-600 rounded-full"></div>
-                                <div>
-                                <div className="font-medium">
-                                    {dayjs(lastLeg.arrival_time).format("HH:mm")}
-                                </div>
-                                <div className="text-sm font-semibold">
-                                    {lastLeg.arrival_airport.code}
-                                </div>
-                                <div className="text-xs text-gray-500">
-                                    {lastLeg.arrival_airport.city?.name || lastLeg.arrival_airport.name}
-                                </div>
-                                </div>
-                            </div>
-                            </div>
-
-                            {/* Stops Info */}
-                            <div className="flex items-center justify-between text-sm">
-                            <div className="flex items-center gap-2">
-                                <span className="px-2 py-1 bg-gray-100 rounded">
-                                {legs.length - 1 === 0 ? "Bay thẳng" : `${legs.length - 1} điểm dừng`}
-                                </span>
-                                {detail.baggage_included && (
-                                <span className="flex items-center gap-1">
-                                    Checked baggage • Hành lý xách tay
-                                </span>
-                                )}
-                            </div>
-                            <div className="text-right">
-                                <div className="text-xs text-gray-500">Số hành khách</div>
-                                <div className="font-bold">{detail.num_passengers} người</div>
-                            </div>
-                            </div>
-                        </div>
-                        </div>
-                    );
-                    })}
-
-                    {/* Passenger & Baggage Summary */}
-                    <div className="bg-gray-50 rounded-lg p-4 text-sm">
-                    <div className="flex justify-between">
-                        <span>Hành lý ký gửi</span>
-                        <span className="font-medium text-green-600">Đã bao gồm</span>
-                    </div>
-                    </div>
-                </div>
-                )}
-
+                    )}
             </main>
         </div>
     );

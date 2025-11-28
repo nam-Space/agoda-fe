@@ -1,4 +1,4 @@
-import { Button, Card, Empty, Input, Select } from "antd";
+import { Button, Card, Empty, Input, Pagination, Select } from "antd";
 import { planForTrips } from "constants/profile";
 import React, { useEffect, useState } from "react";
 import { FaSort } from "react-icons/fa6";
@@ -14,6 +14,13 @@ import { getImage } from "utils/imageUrl";
 const HotelCancelledTab = () => {
     const user = useAppSelector((state) => state.account.user);
     const [payments, setPayments] = useState([]);
+    const [meta, setMeta] = useState({
+        currentPage: 1,
+        itemsPerPage: 10,
+        totalPages: 0,
+        totalItems: 0,
+    });
+
     const [sortVal, setSortVal] = useState(
         "sort=booking__hotel_detail__check_in-asc"
     );
@@ -48,16 +55,25 @@ const HotelCancelledTab = () => {
         const res = await callFetchPayment(query);
         if (res.isSuccess) {
             setPayments(res.data);
+            setMeta(res.meta);
         }
+    };
+
+    const onChangePagination = (pageNumber, pageSize) => {
+        setMeta({
+            ...meta,
+            currentPage: pageNumber,
+            itemsPerPage: pageSize,
+        });
     };
 
     useEffect(() => {
         if (user?.id) {
             handleGetPayments(
-                `current=1&pageSize=10&booking__user_id=${user.id}&booking__service_type=${ServiceType.HOTEL}&status=${PAYMENT_STATUS.CANCELLED}&${sortVal}&booking__booking_code=${bookingCode}`
+                `current=${meta.currentPage}&pageSize=${meta.itemsPerPage}&booking__user_id=${user.id}&booking__service_type=${ServiceType.HOTEL}&status=${PAYMENT_STATUS.CANCELLED}&${sortVal}&booking__booking_code=${bookingCode}`
             );
         }
-    }, [user, sortVal, bookingCode]);
+    }, [user, sortVal, bookingCode, meta.currentPage, meta.itemsPerPage]);
 
     return (
         <div>
@@ -117,12 +133,14 @@ const HotelCancelledTab = () => {
                                     <div className="flex-shrink-0">
                                         <img
                                             src={getImage(
-                                                payment?.booking?.hotel_detail
-                                                    ?.room?.images?.[0]?.image
+                                                payment?.booking
+                                                    ?.room_details?.[0]?.room
+                                                    ?.images?.[0]?.image
                                             )}
                                             alt={
-                                                payment?.booking?.hotel_detail
-                                                    ?.room?.room_type
+                                                payment?.booking
+                                                    ?.room_details?.[0]?.room
+                                                    ?.room_type
                                             }
                                             className="w-24 h-24 object-cover rounded-lg"
                                         />
@@ -132,13 +150,15 @@ const HotelCancelledTab = () => {
                                     <div className="flex-grow">
                                         <h3 className="text-lg font-bold text-gray-900 mb-4">
                                             {
-                                                payment?.booking?.hotel_detail
-                                                    ?.room?.hotel?.name
+                                                payment?.booking
+                                                    ?.room_details?.[0]?.room
+                                                    ?.hotel?.name
                                             }{" "}
                                             -{" "}
                                             {
-                                                payment?.booking?.hotel_detail
-                                                    ?.room?.room_type
+                                                payment?.booking
+                                                    ?.room_details?.[0]?.room
+                                                    ?.room_type
                                             }
                                         </h3>
 
@@ -150,7 +170,7 @@ const HotelCancelledTab = () => {
                                                 <p className="font-semibold text-gray-900">
                                                     {dayjs(
                                                         payment?.booking
-                                                            ?.hotel_detail
+                                                            ?.room_details?.[0]
                                                             ?.check_in
                                                     ).format(
                                                         "YYYY-MM-DD HH:mm:ss"
@@ -164,7 +184,7 @@ const HotelCancelledTab = () => {
                                                 <p className="font-semibold text-gray-900">
                                                     {dayjs(
                                                         payment?.booking
-                                                            ?.hotel_detail
+                                                            ?.room_details?.[0]
                                                             ?.check_out
                                                     ).format(
                                                         "YYYY-MM-DD HH:mm:ss"
@@ -186,6 +206,14 @@ const HotelCancelledTab = () => {
                                 </div>
                             </Card>
                         ))}
+                        <div className="flex justify-end w-full">
+                            <Pagination
+                                pageSize={meta.itemsPerPage}
+                                showQuickJumper
+                                total={meta.totalItems}
+                                onChange={onChangePagination}
+                            />
+                        </div>
                     </div>
                 )}
             </div>

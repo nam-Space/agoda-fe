@@ -32,7 +32,7 @@ const ChatConversation = ({ selectedOtherUser, handleOpenChat }) => {
                                     <img
                                         src={getUserAvatar(
                                             getOtherUser(conv, user)?.hotel
-                                                ?.images?.[0]?.image
+                                                ?.thumbnail
                                         )}
                                         alt={getUserAvatar(
                                             getOtherUser(conv, user)?.username

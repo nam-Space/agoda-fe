@@ -13,15 +13,9 @@ import {
 } from "lucide-react";
 import { Link, useSearchParams } from "react-router-dom";
 import { formatCurrency } from "utils/formatCurrency";
-import {
-    ServiceType,
-    ServiceTypeLabel,
-    PaymentMethod,
-    PaymentMethodLabel,
-} from "../../constants/serviceType";
+import { ServiceType, PaymentMethodLabel } from "../../constants/serviceType";
 import {
     getBookingDetail,
-    getRoomDetail,
     getPayment,
     capturePayment,
     callFetchDetailActivityDateBooking,
@@ -44,7 +38,7 @@ export default function BookingContactActivityStep3() {
     const service_type = Number(searchParams.get("type"));
     const ref_id = searchParams.get("ref");
     const [booking, setBooking] = useState(null);
-    const [room, setRoom] = useState(null);
+    const [roomBooking, setRoomBooking] = useState(null);
     const [activityDateBooking, setActivityDateBooking] = useState(null);
     const [carBooking, setCarBooking] = useState(null);
     const [center, setCenter] = useState([0, 0]);
@@ -58,7 +52,7 @@ export default function BookingContactActivityStep3() {
         const fetchData = async () => {
             try {
                 setLoading(true);
-                  // Lấy thông tin thanh toán
+                // Lấy thông tin thanh toán
                 const paymentResponse = await getPayment(bookingId);
                 if (paymentResponse.results.length > 0) {
                     setPayment(paymentResponse.results[0]);
@@ -83,16 +77,16 @@ export default function BookingContactActivityStep3() {
                 // Lấy thông tin phòng
                 if (bookingResponse.service_type === ServiceType.HOTEL) {
                     const res = await callFetchDetailRoomBooking(
-                        bookingResponse.service_ref_ids[0]
+                        bookingResponse.service_ref_ids?.[0]
                     );
-                    // if (res.isSuccess) {
-                        setRoom(res.room_details[0]?.room);
-                    // }
+                    if (res.isSuccess) {
+                        setRoomBooking(res.data);
+                    }
                 }
 
                 if (bookingResponse.service_type === ServiceType.ACTIVITY) {
                     const res = await callFetchDetailActivityDateBooking(
-                        bookingResponse.service_ref_ids[0]
+                        bookingResponse.service_ref_ids?.[0]
                     );
                     if (res.isSuccess) {
                         setActivityDateBooking(res.data);
@@ -101,7 +95,7 @@ export default function BookingContactActivityStep3() {
 
                 if (bookingResponse.service_type === ServiceType.CAR) {
                     const res = await callFetchDetailCarBooking(
-                        bookingResponse.service_ref_id
+                        bookingResponse.service_ref_ids?.[0]
                     );
                     if (res.isSuccess) {
                         const carBookingData = res.data;
@@ -128,7 +122,6 @@ export default function BookingContactActivityStep3() {
                         }
                     }
                 }
-
             } catch (error) {
                 console.error("Lỗi khi tải dữ liệu:", error);
                 alert("Không thể tải thông tin đặt chỗ hoặc thanh toán!");
@@ -150,8 +143,6 @@ export default function BookingContactActivityStep3() {
             </div>
         );
     }
-    console.log("booking", booking);
-    console.log("payment", payment);
     if (!booking || !payment) {
         return (
             <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -161,7 +152,7 @@ export default function BookingContactActivityStep3() {
     }
 
     const getGuestSummary = () => {
-        const numGuests = booking.hotel_detail?.num_guests || 0;
+        const numGuests = booking?.room_details?.[0]?.num_guests || 0;
         return numGuests > 0
             ? `${numGuests} khách`
             : "Không có thông tin số lượng khách";
@@ -286,31 +277,38 @@ export default function BookingContactActivityStep3() {
                                 <div className="flex gap-4 mb-6 pb-6 border-b">
                                     <div className="relative w-32 h-32 rounded-lg overflow-hidden flex-shrink-0">
                                         <img
-                                            src={`${process.env.REACT_APP_BE_URL}${room?.images?.[0]?.image}`}
-                                            alt={room?.room_type}
+                                            src={`${process.env.REACT_APP_BE_URL}${roomBooking?.room?.images?.[0]?.image}`}
+                                            alt={roomBooking?.room?.room_type}
                                             className="object-cover w-full h-full"
                                         />
                                     </div>
                                     <div className="flex-1">
                                         <h3 className="font-bold text-gray-900 mb-2">
-                                            {room?.room_type} -{" "}
-                                            {room?.hotel?.name}
+                                            {roomBooking?.room?.room_type} -{" "}
+                                            {roomBooking?.room?.hotel?.name}
                                         </h3>
                                         <div className="flex items-center gap-1 text-sm mb-2">
                                             <span className="text-yellow-500">
                                                 ★
                                             </span>
                                             <span className="font-semibold">
-                                                {room?.hotel?.avg_star}
+                                                {
+                                                    roomBooking?.room?.hotel
+                                                        ?.avg_star
+                                                }
                                             </span>
                                             <span className="text-gray-500">
-                                                ({room?.hotel?.review_count}{" "}
+                                                (
+                                                {
+                                                    roomBooking?.room?.hotel
+                                                        ?.review_count
+                                                }{" "}
                                                 lượt đánh giá)
                                             </span>
                                         </div>
                                         <p className="text-sm text-gray-600">
                                             <MapPin className="w-4 h-4 inline mr-1" />
-                                            {room?.description}
+                                            {roomBooking?.room?.description}
                                         </p>
                                     </div>
                                 </div>
@@ -324,12 +322,17 @@ export default function BookingContactActivityStep3() {
                                                 Ngày nhận phòng - trả phòng
                                             </p>
                                             <p className="font-semibold text-gray-900">
-                                                {booking.hotel_detail?.check_in}{" "}
+                                                {dayjs(
+                                                    booking?.room_details?.[0]
+                                                        ?.check_in
+                                                ).format(
+                                                    "YYYY-MM-DD HH:mm:ss"
+                                                )}{" "}
                                                 -{" "}
-                                                {
-                                                    booking.hotel_detail
+                                                {dayjs(
+                                                    booking?.room_details?.[0]
                                                         ?.check_out
-                                                }
+                                                ).format("YYYY-MM-DD HH:mm:ss")}
                                             </p>
                                         </div>
                                     </div>
@@ -344,8 +347,10 @@ export default function BookingContactActivityStep3() {
                                                 {getGuestSummary()}
                                             </p>
                                             <p className="text-sm text-gray-600 mt-1">
-                                                {room.room_type} | {room.beds}{" "}
-                                                phòng | {room.capacity} người
+                                                {roomBooking?.room?.room_type} |{" "}
+                                                {roomBooking?.room?.beds} phòng
+                                                | {roomBooking?.room?.capacity}{" "}
+                                                người
                                             </p>
                                         </div>
                                     </div>
@@ -692,13 +697,24 @@ export default function BookingContactActivityStep3() {
                                 <div className="space-y-3 mb-4 pb-4 border-b">
                                     <div>
                                         <p className="text-sm text-gray-900 mb-1">
-                                            {room?.room_type} -{" "}
-                                            {room?.hotel?.name}
+                                            {roomBooking?.room?.room_type} -{" "}
+                                            {roomBooking?.room?.hotel?.name}
                                         </p>
                                         <p className="text-xs text-gray-500">
-                                            {booking.hotel_detail?.check_in} -{" "}
-                                            {booking.hotel_detail?.check_out} |{" "}
-                                            {getGuestSummary()}
+                                            {dayjs(
+                                                booking?.room_details?.[0]
+                                                    ?.check_in
+                                            ).format(
+                                                "YYYY-MM-DD HH:mm:ss"
+                                            )}{" "}
+                                            -{" "}
+                                            {dayjs(
+                                                booking?.room_details?.[0]
+                                                    ?.check_out
+                                            ).format(
+                                                "YYYY-MM-DD HH:mm:ss"
+                                            )}{" "}
+                                            | {getGuestSummary()}
                                         </p>
                                     </div>
                                 </div>
