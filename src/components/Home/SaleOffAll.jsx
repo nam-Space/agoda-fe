@@ -61,6 +61,8 @@ import { Link } from "react-router-dom";
 import { getPromotions } from "../../config/api";
 import "swiper/css";
 import "swiper/css/navigation";
+import { getImage } from "utils/imageUrl";
+import dayjs from "dayjs";
 
 const extractList = (res) => {
     return res?.data || res?.results || [];
@@ -85,7 +87,7 @@ const SaleOffSection = ({ title, typeQuery, typeParam = "", promotions }) => (
                         }`}
                     >
                         <img
-                            src={promo.image || "/default-promo.jpg"}
+                            src={getImage(promo.image)}
                             alt={promo.title}
                             className="w-full h-[154px] rounded-[16px] object-cover"
                         />
@@ -105,9 +107,21 @@ const SaleOffAll = () => {
         const fetchAll = async () => {
             try {
                 const [r1, r2, r3] = await Promise.all([
-                    getPromotions({ promotion_type: 1 }),
-                    getPromotions({ promotion_type: 2 }),
-                    getPromotions({ promotion_type: 3 }),
+                    getPromotions({
+                        promotion_type: 1,
+                        min_date: dayjs(Date.now()).toISOString(),
+                        sort: "id-desc",
+                    }),
+                    getPromotions({
+                        promotion_type: 2,
+                        min_date: dayjs(Date.now()).toISOString(),
+                        sort: "id-desc",
+                    }),
+                    getPromotions({
+                        promotion_type: 3,
+                        min_date: dayjs(Date.now()).toISOString(),
+                        sort: "id-desc",
+                    }),
                 ]);
                 setAccom(extractList(r1));
                 setFlight(extractList(r2));
