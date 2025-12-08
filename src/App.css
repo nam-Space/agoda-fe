@@ -354,3 +354,10 @@
         padding: 0.5rem;
     }
 }
+
+.navigation-bar.isSticky {
+    left: 0;
+    right: 0;
+    margin: 0;
+    max-width: unset;
+}

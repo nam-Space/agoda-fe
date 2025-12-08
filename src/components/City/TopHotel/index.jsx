@@ -1,18 +1,13 @@
 import { Empty, Pagination, Slider, Spin, message } from "antd";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
-import {
-    fetchHotelsByCity,
-    setCurrentPage,
-    setFilters,
-    setSortBy,
-} from "../../../redux/slice/hotelSlide";
 import FilterGroup from "./FilterGroup";
 import HotelCard from "./HotelCard";
 import SortBar from "./SortBar";
 import { RANGE_PRICE_HOTEL } from "constants/hotel";
 import { callGetHotels } from "config/api";
+import { createHotelSlug } from "utils/slugHelpers";
+import { getImage } from "utils/imageUrl";
 // HotelList component
 const HotelList = ({ hotels, loading }) => {
     if (loading)
@@ -53,39 +48,12 @@ const transformHotelData = (apiHotel) => {
                   .slice(0, 4)
             : [];
     };
-    const getImageUrl = (imagePath) => {
-        if (!imagePath) return "/default-hotel.jpg";
-        if (imagePath.startsWith("http")) return imagePath;
-        const base = process.env.REACT_APP_BE_URL?.endsWith("/")
-            ? process.env.REACT_APP_BE_URL
-            : process.env.REACT_APP_BE_URL + "/";
-        return `${base}${imagePath.replace(/^\/+/, "")}`;
-    };
-
-    // Hàm slug giữ chữ tiếng Việt có dấu nhưng chuyển sang không dấu
-    const createHotelSlug = (name, id) => {
-        if (!name) return id;
-        const removeVietnameseTones = (str) => {
-            str = str.replace(/à|á|ạ|ả|ã|â|ầ|ấ|ậ|ẩ|ẫ|ă|ằ|ắ|ặ|ẳ|ẵ/g, "a");
-            str = str.replace(/è|é|ẹ|ẻ|ẽ|ê|ề|ế|ệ|ể|ễ/g, "e");
-            str = str.replace(/ì|í|ị|ỉ|ĩ/g, "i");
-            str = str.replace(/ò|ó|ọ|ỏ|õ|ô|ồ|ố|ộ|ổ|ỗ|ơ|ờ|ớ|ợ|ở|ỡ/g, "o");
-            str = str.replace(/ù|ú|ụ|ủ|ũ|ư|ừ|ứ|ự|ử|ữ/g, "u");
-            str = str.replace(/ỳ|ý|ỵ|ỷ|ỹ/g, "y");
-            str = str.replace(/đ/g, "d");
-            str = str.replace(/\s+/g, "-");
-            str = str.replace(/[^a-zA-Z0-9-]/g, "");
-            str = str.replace(/-+/g, "-");
-            return str;
-        };
-        return removeVietnameseTones(name.toLowerCase()) + `-${id}`;
-    };
 
     return {
         id: apiHotel.id,
         name: apiHotel.name || "Khách sạn",
-        image: getImageUrl(apiHotel.images?.[0]?.image),
-        thumbnails: apiHotel.images?.map((img) => getImageUrl(img.image)) || [],
+        image: getImage(apiHotel.images?.[0]?.image),
+        thumbnails: apiHotel.images?.map((img) => getImage(img.image)) || [],
         stars: Math.floor(apiHotel.avg_star || 0),
         area: apiHotel.location || "N/A",
         mapUrl:
@@ -93,11 +61,11 @@ const transformHotelData = (apiHotel) => {
                 ? `https://maps.google.com/?q=${apiHotel.lat},${apiHotel.lng}`
                 : null,
         facilities: extractFacilities(apiHotel.facilities),
-        review: stripHtml(apiHotel.description) || "",
+        review: apiHotel.best_comment || "",
         rating: apiHotel.avg_star?.toFixed(1) || "N/A",
         ratingText: getRatingText(apiHotel.avg_star || 0),
         ratingCount: apiHotel.review_count,
-        price: "" + (apiHotel.min_price || 0).toLocaleString("vi-VN") + " đ",
+        price: apiHotel.min_price || 0,
         url: `/hotel/${createHotelSlug(apiHotel.name, apiHotel.id)}`,
         cityName: apiHotel.city?.name || "",
         withUs: stripHtml(apiHotel.withUs) || "",
@@ -118,19 +86,7 @@ const getRatingText = (rating) =>
         : "Trung bình";
 
 const TopHotel = () => {
-    const { cityId } = useParams(); // string
-    // const dispatch = useAppDispatch();
-    // const {
-    //     hotels,
-    //     isLoadingHotels,
-    //     totalHotels,
-    //     currentPage,
-    //     pageSize,
-    //     totalPages,
-    //     sortBy,
-    //     filters,
-    //     error,
-    // } = useAppSelector((state) => state.hotel || {});
+    const { cityId } = useParams();
 
     const [hotels, setHotels] = useState([]);
     const [isLoadingHotels, setIsLoadingHotels] = useState(false);
@@ -312,17 +268,6 @@ const TopHotel = () => {
                     />
                     {meta.total > 0 && (
                         <div className="flex justify-center mt-6">
-                            {/* <Pagination
-                                current={currentPage}
-                                total={totalHotels}
-                                pageSize={pageSize}
-                                showSizeChanger={false}
-                                showQuickJumper
-                                showTotal={(total, range) =>
-                                    `${range[0]}-${range[1]} của ${total} khách sạn`
-                                }
-                                onChange={handlePageChange}
-                            /> */}
                             <Pagination
                                 pageSize={meta.pageSize}
                                 showQuickJumper

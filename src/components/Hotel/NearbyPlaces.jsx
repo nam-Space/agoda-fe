@@ -13,14 +13,14 @@ export default function NearbyPlaces({ locations }) {
                 <MapPin size={20} />
                 Đi đâu gần đây
             </h2>
-            <ul className="space-y-1 text-sm text-gray-700">
+            <div className="space-y-1 text-sm text-gray-700 grid grid-cols-3 gap-y-[10px]">
                 {locations.map((place, index) => (
-                    <li key={index} className="flex items-center gap-2">
-                        <MapPin size={16} className="text-gray-500" />
+                    <div key={index} className="flex items-start gap-[6px]">
+                        <MapPin size={16} className="text-gray-500 mt-[3px]" />
                         <span>{place}</span>
-                    </li>
+                    </div>
                 ))}
-            </ul>
+            </div>
         </section>
     );
 }

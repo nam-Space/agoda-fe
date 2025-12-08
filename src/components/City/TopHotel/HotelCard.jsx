@@ -2,11 +2,10 @@ import { EnvironmentOutlined } from "@ant-design/icons";
 import { useState } from "react";
 import { FaStar } from "react-icons/fa";
 import { Link } from "react-router-dom";
+import { formatCurrency } from "utils/formatCurrency";
 
 const HotelCard = ({ hotel }) => {
     const [showFullReview, setShowFullReview] = useState(false);
-
-    console.log("hotelNAM", hotel);
 
     //  const displayPrice =
     //   hotel?.min_price && !isNaN(hotel.min_price)
@@ -162,7 +161,7 @@ const HotelCard = ({ hotel }) => {
                         Giá trung bình mỗi đêm
                     </div>
                     <div className="font-bold text-red-600 text-2xl">
-                        {hotel?.price}
+                        {formatCurrency(+hotel.price)}đ
                     </div>
                 </div>
 

@@ -26,6 +26,9 @@ const RoomOptionsSection = ({
     capacity,
     startDate,
     endDate,
+    searchParams,
+    setSearchParams,
+    setFocusDatePicker,
     setRooms,
     roomsCount,
 }) => {
@@ -130,11 +133,7 @@ const RoomOptionsSection = ({
         const checkOut = toISODateTime(endDate);
         const numGuests = capacity || 1;
         if (!checkIn || !checkOut) {
-            // alert("Vui lòng chọn ngày nhận phòng và trả phòng!");
-            window.scrollTo({ top: 0, behavior: "smooth" });
-            toast.warn("Vui lòng chọn ngày nhận phòng và trả phòng!", {
-                position: "bottom-right",
-            });
+            setFocusDatePicker(true);
             return;
         }
 
@@ -231,7 +230,6 @@ const RoomOptionsSection = ({
                                     spaceBetween={12}
                                     navigation={true}
                                     modules={[Navigation]}
-                                    className="mt-[24px]"
                                 >
                                     {room.images?.map((item, index) => (
                                         <SwiperSlide key={index}>
@@ -263,26 +261,6 @@ const RoomOptionsSection = ({
                                     </li>
                                     <li>Số giường: {room.beds || "N/A"}</li>
                                 </ul>
-
-                                {/* Tiện nghi */}
-                                {roomAmenities.length > 0 ? (
-                                    <div className="mt-3">
-                                        <h4 className="font-bold text-gray-700 mb-1">
-                                            Tiện nghi:
-                                        </h4>
-                                        <ul className="text-sm text-gray-600 list-disc list-inside">
-                                            {roomAmenities.map((amenity) => (
-                                                <li key={amenity.id}>
-                                                    {amenity.name}
-                                                </li>
-                                            ))}
-                                        </ul>
-                                    </div>
-                                ) : (
-                                    <p className="text-sm text-gray-500 italic mt-2">
-                                        Không có thông tin tiện nghi
-                                    </p>
-                                )}
                             </div>
 
                             {/* Chính sách & perks */}
@@ -374,6 +352,25 @@ const RoomOptionsSection = ({
                                 </p>
                             </div>
                         </div>
+                        {/* Tiện nghi */}
+                        {roomAmenities.length > 0 ? (
+                            <div className="mt-3">
+                                <h4 className="font-bold text-gray-700 mb-1">
+                                    Tiện nghi:
+                                </h4>
+                                <div className="text-sm text-gray-600 grid grid-cols-4 gap-3">
+                                    {roomAmenities.map((amenity) => (
+                                        <div key={amenity.id}>
+                                            ✔ {amenity.name}
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        ) : (
+                            <p className="text-sm text-gray-500 italic mt-2">
+                                Không có thông tin tiện nghi
+                            </p>
+                        )}
                     </div>
                 );
             })}
