@@ -6,6 +6,8 @@ import { Tabs } from "antd";
 import { FaStar } from "react-icons/fa";
 import { FaLocationDot } from "react-icons/fa6";
 import { getCities, callFetchHotel } from "../../config/api";
+import { getImage } from "utils/imageUrl";
+import { createHotelSlug } from "utils/slugHelpers";
 const RecommendedAccommodation = () => {
     const [cities, setCities] = useState([]);
     const [hotelsByCity, setHotelsByCity] = useState({});
@@ -35,7 +37,10 @@ const RecommendedAccommodation = () => {
 
             const promises = cities?.map(async (city) => {
                 try {
-                    const res = await callFetchHotel({ cityId: city.id });
+                    const res = await callFetchHotel({
+                        cityId: city.id,
+                        recommended: true,
+                    });
                     return { cityId: city.id, hotels: res.data || [] };
                 } catch (error) {
                     console.error(
@@ -81,23 +86,23 @@ const RecommendedAccommodation = () => {
             >
                 {hotelsByCity[city.id]?.map((hotel) => (
                     <SwiperSlide key={hotel.id}>
-                        <Link className="relative">
+                        <Link
+                            to={`/hotel/${createHotelSlug(
+                                hotel.name,
+                                hotel.id
+                            )}`}
+                            className="relative"
+                        >
                             <img
-                                src={
-                                    hotel?.images
-                                        ? `http://localhost:8000${hotel.images[0]?.image}`
-                                        : "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSYR83krjU8bD9NkDRlV3iGwsdCsAmyzAPSdg&s"
-                                }
-                                className="w-full h-[154px] rounded-[16px]"
+                                src={getImage(hotel?.images?.[0]?.image)}
+                                alt={hotel?.name}
+                                className="w-full h-[154px] rounded-[16px] object-cover"
                             />
-                            <div className="absolute top-[12px] right-[12px] p-[4px] bg-[#2067da] text-white font-bold rounded-[4px]">
-                                {hotel.rating || "8.5"}
-                            </div>
                             <p className="font-bold mt-[12px]">{hotel.name}</p>
                             <div className="flex items-center gap-[4px]">
                                 <div className="flex items-center">
                                     {Array.from({
-                                        length: hotel.stars || 5,
+                                        length: hotel.avg_star || 0,
                                     }).map((_, i) => (
                                         <FaStar
                                             key={i}

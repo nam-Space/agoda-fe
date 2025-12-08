@@ -512,13 +512,17 @@ const ActivityCity = () => {
                                         </div>
                                         <div className="mt-[4px] flex items-center justify-end gap-[4px]">
                                             <p className="text-[13px] text-end line-through">
-                                                {formatCurrency(item.avg_price)}{" "}
+                                                {formatCurrency(
+                                                    item.avg_price.toFixed(0)
+                                                )}{" "}
                                                 ₫
                                             </p>
                                             <div className="flex items-center justify-end gap-[8px]">
                                                 <p className="text-[16px] font-bold text-end text-[#c53829]">
                                                     {formatCurrency(
-                                                        item.avg_price
+                                                        item.avg_price.toFixed(
+                                                            0
+                                                        )
                                                     )}
                                                 </p>
                                                 <p className="text-[12px] mt-[2px] font-semibold text-end text-[#c53829]">

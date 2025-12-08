@@ -29,10 +29,9 @@ import RoomOptionsSection from "components/Hotel/RoomOptionsSection";
 import SearchBar from "components/Hotel/SearchBarSection";
 
 import icTable from "../../images/hotel/ic_table.png";
-import { callUpdateHotel } from "config/api";
-import { callUpdateHotelNotImage } from "config/api";
 import { callFetchDetailUserHotelInteractionByHotelId } from "config/api";
 import { callUpsertUserHotelInteraction } from "config/api";
+import { stripHtml } from "utils/renderHtml";
 
 const HotelPage = () => {
     const { hotelSlug } = useParams();
@@ -44,6 +43,7 @@ const HotelPage = () => {
         endDate: null,
         roomsCount: null,
     });
+    const [focusDatePicker, setFocusDatePicker] = useState(false);
     const [searchedHotel, setSearchedHotel] = useState(null);
     const [searchedRooms, setSearchedRooms] = useState([]); // ✅ thêm
 
@@ -61,36 +61,12 @@ const HotelPage = () => {
         return isNaN(lastPart) ? null : parseInt(lastPart);
     };
 
-    const createHotelSlug = (hotelName, hotelId) => {
-        if (!hotelName) return hotelId;
-        return (
-            hotelName
-                .toLowerCase()
-                .replace(/à|á|ạ|ả|ã|â|ầ|ấ|ậ|ẩ|ẫ|ă|ằ|ắ|ặ|ẳ|ẵ/g, "a")
-                .replace(/è|é|ẹ|ẻ|ẽ|ê|ề|ế|ệ|ể|ễ/g, "e")
-                .replace(/ì|í|ị|ỉ|ĩ/g, "i")
-                .replace(/ò|ó|ọ|ỏ|õ|ô|ồ|ố|ộ|ổ|ỗ|ơ|ờ|ớ|ợ|ở|ỡ/g, "o")
-                .replace(/ù|ú|ụ|ủ|ũ|ư|ừ|ứ|ự|ử|ữ/g, "u")
-                .replace(/ỳ|ý|ỵ|ỷ|ỹ/g, "y")
-                .replace(/đ/g, "d")
-                .replace(/[^a-z0-9\s-]/g, "")
-                .replace(/\s+/g, "-")
-                .replace(/-+/g, "-")
-                .trim() + `-${hotelId}`
-        );
-    };
-
     const hotelId = extractHotelIdFromSlug(hotelSlug);
 
     const getImageUrl = (imagePath) => {
         if (!imagePath) return "https://via.placeholder.com/400x300";
         if (imagePath.startsWith("http")) return imagePath;
         return `${process.env.REACT_APP_BE_URL}${imagePath}`;
-    };
-
-    const stripHtml = (html) => {
-        if (!html) return "";
-        return html.replace(/<[^>]*>/g, "").trim();
     };
 
     const extractFacilities = (input) => {
@@ -199,7 +175,7 @@ const HotelPage = () => {
         endDate,
         hotel,
         rooms,
-        roomsCount
+        roomsCount,
     }) => {
         setSearchParams({ capacity, startDate, endDate, roomsCount });
 
@@ -246,9 +222,9 @@ const HotelPage = () => {
             ? {
                   name: hotelDetail.name || "Tên khách sạn",
                   address: hotelDetail.location || "Địa chỉ không có",
-                  description: stripHtml(hotelDetail.description) || "",
+                  description: hotelDetail.description || "",
                   images: hotelDetail.images || [],
-                  facilities: extractFacilities(hotelDetail.facilities),
+                  facilities: stripHtml(hotelDetail.facilities).split(","),
                   avgStar: hotelDetail.avg_star || 0,
                   mostFeature: hotelDetail.mostFeature || "",
                   lat: hotelDetail.lat,
@@ -389,10 +365,12 @@ const HotelPage = () => {
     };
 
     const highlights = hotelData?.mostFeature
-        ? hotelData.mostFeature.split(",").map((item) => ({
-              icon: icTable, // icon bạn muốn hiển thị cho mỗi tính năng
-              text: item.trim(),
-          }))
+        ? stripHtml(hotelData.mostFeature)
+              .split(",")
+              .map((item) => ({
+                  icon: icTable, // icon bạn muốn hiển thị cho mỗi tính năng
+                  text: item.trim(),
+              }))
         : [];
 
     const promotionCategories = [
@@ -434,15 +412,20 @@ const HotelPage = () => {
     ];
 
     return (
-        <div className="hotel-page">
+        <div className="hotel-page relative">
             <HeaderClient />
-            <div className="search-bar bg-white shadow-md rounded-lg mx-auto my-8">
-                <SearchBar onSearch={handleSearch} />
-                <BreadcrumbSection
-                    breadcrumbs={breadcrumbs}
-                    viewAllLink={viewAllLink}
-                />
-            </div>
+            <SearchBar
+                onSearch={handleSearch}
+                searchParams={searchParams}
+                setSearchParams={setSearchParams}
+                focusDatePicker={focusDatePicker}
+                setFocusDatePicker={setFocusDatePicker}
+            />
+            <BreadcrumbSection
+                breadcrumbs={breadcrumbs}
+                viewAllLink={viewAllLink}
+            />
+            {/* </div> */}
             <GallerySection images={hotelData?.images} />
             <NavigationBar
                 scrollToSection={scrollToSection}
@@ -505,10 +488,7 @@ const HotelPage = () => {
                             }
                             promotionCategories={promotionCategories}
                             facilities={hotelData?.facilities || []}
-                            aboutText={
-                                hotelData?.description ||
-                                "Hãy để chuyến đi của quý khách có một khởi đầu tuyệt vời khi ở lại khách sạn này, nơi có Wi-Fi miễn phí trong tất cả các phòng."
-                            }
+                            aboutText={hotelData?.withUs}
                             aboutLink="#"
                             hotSaleText={
                                 isDetailPage
@@ -575,6 +555,10 @@ const HotelPage = () => {
                                 startDate={searchParams.startDate}
                                 endDate={searchParams.endDate}
                                 roomsCount={searchParams.roomsCount}
+                                searchParams={searchParams}
+                                setSearchParams={setSearchParams}
+                                focusDatePicker={focusDatePicker}
+                                setFocusDatePicker={setFocusDatePicker}
                             />
                         </div>
                     )}
@@ -582,7 +566,7 @@ const HotelPage = () => {
                 <div id="activity" className="section mt-5">
                     <ActivitySlider
                         cityId={hotelData?.city_id}
-                        cityName={hotelData?.name}
+                        cityName={hotelData?.cityName}
                     />
                 </div>
 
@@ -590,7 +574,7 @@ const HotelPage = () => {
                     <HostAndAmenitiesSection />
                 </div>
                 <div id="facilities" className="section mt-5">
-                    <ExperienceSection hotelId={hotelId} />
+                    <ExperienceSection hotelData={hotelData} />
                 </div>
 
                 <div id="facilities-ami" className="section mt-5">
@@ -603,7 +587,7 @@ const HotelPage = () => {
                 <div id="nearby" className="section mt-5">
                     {hotelDetail && hotelDetail.nearbyLocation && (
                         <NearbyPlaces
-                            locations={hotelDetail.nearbyLocation
+                            locations={stripHtml(hotelDetail.nearbyLocation)
                                 .split(",")
                                 .map((item) => item.trim())
                                 .filter(Boolean)}
@@ -627,6 +611,9 @@ const HotelPage = () => {
                 </div>
             </div>
             <FooterClient />
+            {focusDatePicker && (
+                <div className="absolute bg-[rgba(0,0,0,0.4)] z-[4] top-0 left-0 right-0 bottom-0"></div>
+            )}
         </div>
     );
 };
