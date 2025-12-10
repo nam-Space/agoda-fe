@@ -2,15 +2,12 @@
 import { People, Search } from "@mui/icons-material";
 import { useEffect, useState } from "react";
 import { DatePicker } from "antd";
-import moment from "moment";
 import { callSearchRoomQuery } from "../../config/api";
 import { useAppSelector } from "../../redux/hooks";
 import dayjs from "dayjs";
 
 const SearchBar = ({
     onSearch = () => console.log("onSearch not provided"),
-    searchParams,
-    setSearchParams,
     focusDatePicker,
     setFocusDatePicker,
 }) => {

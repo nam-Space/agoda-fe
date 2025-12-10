@@ -190,6 +190,65 @@ const HeaderClient = () => {
                                         <div
                                             className={`w-[400px] max-h-[500px] overflow-y-auto`}
                                         >
+                                            {/* <div className="bg-gray-100 hover:bg-gray-200  cursor-pointer">
+                                                <div className="border-t-[1px] border-[#f0f0f0] px-[10px] py-[10px] flex gap-[10px]">
+                                                    <div className="flex-shrink-0">
+                                                        <img
+                                                            src="http://localhost:8000/media/airline_logo_images/bamboo-airways.png"
+                                                            alt="Xe manivan độc nhất"
+                                                            className="w-[50px] h-[50px] object-cover rounded-lg"
+                                                        />
+                                                    </div>
+                                                    <div className="flex-grow">
+                                                        <h3 className="text-gray-900 mb-[6px] leading-[18px]">
+                                                            <div>
+                                                                Mã:
+                                                                <span className="text-blue-500 font-semibold">
+                                                                    {" "}
+                                                                    AGD9E3286
+                                                                </span>
+                                                            </div>
+                                                            <span>
+                                                                Chuyến bay{" "}
+                                                            </span>
+                                                            <span className="font-bold text-yellow-600">
+                                                                một chiều
+                                                            </span>
+                                                            :{" "}
+                                                            <span className="font-bold">
+                                                                Tân Sơn Nhất
+                                                            </span>{" "}
+                                                            →{" "}
+                                                            <span className="font-bold">
+                                                                Đà Nẵng
+                                                            </span>
+                                                        </h3>
+                                                        <div className="flex gap-[20px]">
+                                                            <div>
+                                                                <p className="text-gray-600 text-[12px]">
+                                                                    Thời điểm
+                                                                    cất cánh
+                                                                </p>
+                                                                <p className="font-semibold text-[12px] text-gray-900">
+                                                                    2025-12-04
+                                                                    00:00:00
+                                                                </p>
+                                                            </div>
+
+                                                            <div>
+                                                                <p className="text-gray-600 text-[12px]">
+                                                                    Thời gian hạ
+                                                                    cánh
+                                                                </p>
+                                                                <p className="font-semibold text-[12px] text-gray-900">
+                                                                    2025-12-04
+                                                                    02:00:00
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div> */}
                                             {!loadingNotifications &&
                                                 notifications.length === 0 && (
                                                     <Empty
