@@ -416,8 +416,6 @@ const HotelPage = () => {
             <HeaderClient />
             <SearchBar
                 onSearch={handleSearch}
-                searchParams={searchParams}
-                setSearchParams={setSearchParams}
                 focusDatePicker={focusDatePicker}
                 setFocusDatePicker={setFocusDatePicker}
             />
