@@ -121,7 +121,7 @@ const Question = ({ cityId, city }) => {
                     Kinh nghiệm du lịch
                 </h2>
                 <div
-                    className="handbook-detail-container"
+                    className="markdown-container"
                     dangerouslySetInnerHTML={{
                         __html: city?.description || "",
                     }}

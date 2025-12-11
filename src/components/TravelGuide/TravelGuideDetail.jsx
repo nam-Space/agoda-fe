@@ -137,7 +137,7 @@ export default function TravelGuideDetail() {
                     {/* Left Column */}
                     <div className="lg:col-span-2">
                         <div
-                            className="handbook-detail-container"
+                            className="markdown-container"
                             dangerouslySetInnerHTML={{
                                 __html: handbookDetail?.description || "",
                             }}

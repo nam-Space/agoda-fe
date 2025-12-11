@@ -27,7 +27,7 @@ const ExperienceSection = ({ hotelData }) => {
                 </div>
             </div>
             <div
-                className={`handbook-detail-container mt-[20px]`}
+                className={`markdown-container mt-[20px]`}
                 dangerouslySetInnerHTML={{
                     __html: isExpanded
                         ? hotelData.description
