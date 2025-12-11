@@ -17,10 +17,17 @@ export const ServiceTypeLabel = {
 
 export const ServiceTypeLabelVi = {
   [ServiceType.HOTEL]: "Phòng",
-  [ServiceType.CAR]: "Xe",
-  [ServiceType.FLIGHT]: "Máy bay",
+  [ServiceType.CAR]: "Xe taxi",
+  [ServiceType.FLIGHT]: "Chuyến bay",
   [ServiceType.ACTIVITY]: 'Hoạt động',
   [ServiceType.HANDBOOK]: 'Cẩm nang'
+};
+
+export const ServiceTypeLabelIcon = {
+  [ServiceType.HOTEL]: "🏨",
+  [ServiceType.CAR]: "🚕",
+  [ServiceType.FLIGHT]: "✈",
+  [ServiceType.ACTIVITY]: '🎡',
 };
 
 export const PAYMENT_STATUS = {

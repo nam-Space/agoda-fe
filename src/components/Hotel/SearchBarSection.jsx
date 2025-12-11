@@ -81,59 +81,59 @@ const SearchBar = ({
     };
 
     return (
-        <div className="search-bar sticky z-[5] top-0 left-0 bg-blue-900 shadow p-4 flex justify-center items-center text-white">
-            {/* Search input */}
-            <div className="flex items-center bg-white text-black rounded px-4 py-2 w-full max-w-md">
-                <Search className="text-gray-600 mr-2" />
-                <input
-                    type="text"
-                    placeholder="Nhập tên khách sạn..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="border-none outline-none w-full"
-                />
-            </div>
-
-            {/* Filters */}
-            <div className="filters flex space-x-4 items-center px-4 py-2">
-                <DatePicker.RangePicker
-                    format="YYYY-MM-DD"
-                    value={
-                        selectedDate1 && selectedDate2
-                            ? [dayjs(selectedDate1), dayjs(selectedDate2)]
-                            : null
-                    }
-                    autoFocus={focusDatePicker}
-                    open={focusDatePicker}
-                    onFocus={() => setFocusDatePicker(true)}
-                    onChange={handleRangeChange}
-                    placeholder={[
-                        "Chọn ngày nhận phòng",
-                        "Chọn ngày trả phòng",
-                    ]}
-                    className="bg-white text-black rounded px-4 py-2"
-                    allowClear
-                />
-                <div className="relative">
-                    <button
-                        onClick={toggleDropdown}
-                        className="flex items-center bg-white text-black rounded px-4 py-2"
-                    >
-                        <People className="mr-2 text-gray-600" />
-                        <span>
-                            {adults} người lớn, {rooms} phòng
-                        </span>
-                    </button>
+        <div className="search-bar sticky z-[5] top-0 left-0 bg-blue-900 shadow p-4">
+            <div className="max-w-6xl mx-auto flex justify-center items-center text-white">
+                <div className="flex items-center bg-white text-black rounded px-4 py-2 w-full max-w-md">
+                    <Search className="text-gray-600 mr-2" />
+                    <input
+                        type="text"
+                        placeholder="Nhập tên khách sạn..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="border-none outline-none w-full"
+                    />
                 </div>
-            </div>
 
-            {/* Search button */}
-            <button
-                onClick={handleSearch}
-                className="bg-blue-700 text-white px-4 py-2 rounded"
-            >
-                Cập nhật
-            </button>
+                <div className="filters flex space-x-4 items-center px-4 py-2">
+                    <DatePicker.RangePicker
+                        format="YYYY-MM-DD"
+                        value={
+                            selectedDate1 && selectedDate2
+                                ? [dayjs(selectedDate1), dayjs(selectedDate2)]
+                                : null
+                        }
+                        autoFocus={focusDatePicker}
+                        open={focusDatePicker}
+                        onFocus={() => setFocusDatePicker(true)}
+                        onChange={handleRangeChange}
+                        placeholder={[
+                            "Chọn ngày nhận phòng",
+                            "Chọn ngày trả phòng",
+                        ]}
+                        className="bg-white text-black rounded px-4 py-2"
+                        allowClear
+                    />
+                    <div className="relative">
+                        <button
+                            onClick={toggleDropdown}
+                            className="flex items-center bg-white text-black rounded px-4 py-2"
+                        >
+                            <People className="mr-2 text-gray-600" />
+                            <span>
+                                {adults} người lớn, {rooms} phòng
+                            </span>
+                        </button>
+                    </div>
+                </div>
+
+                {/* Search button */}
+                <button
+                    onClick={handleSearch}
+                    className="bg-blue-700 text-white px-4 py-2 rounded"
+                >
+                    Cập nhật
+                </button>
+            </div>
 
             {/* Dropdown rooms/adults/children */}
             {isDropdownOpen && (

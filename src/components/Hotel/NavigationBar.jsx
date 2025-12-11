@@ -54,9 +54,9 @@ const NavigationBar = ({ scrollToSection, hotel }) => {
 
             <div
                 ref={navigationBarRef}
-                className="navigation-bar z-[3] sticky top-[88px] bg-white border border-gray-300 rounded-lg p-4 my-4 max-w-6xl mx-auto"
+                className="navigation-bar z-[3] sticky top-[88px] bg-white border border-gray-300 rounded-lg my-4 max-w-6xl mx-auto"
             >
-                <div className="max-w-6xl mx-auto flex items-center justify-between">
+                <div className="p-4 max-w-6xl mx-auto flex items-center justify-between">
                     {/* Navigation Links */}
                     <div className="flex space-x-6 text-gray-600 text-sm">
                         <button

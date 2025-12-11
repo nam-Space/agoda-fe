@@ -220,6 +220,7 @@ const HotelPage = () => {
     const transformedHotel =
         isDetailPage && hotelDetail
             ? {
+                  id: hotelDetail.id,
                   name: hotelDetail.name || "Tên khách sạn",
                   address: hotelDetail.location || "Địa chỉ không có",
                   description: hotelDetail.description || "",
@@ -429,7 +430,7 @@ const HotelPage = () => {
                 scrollToSection={scrollToSection}
                 hotel={hotelData}
             />
-            <div className="w-full max-w-6xl mx-auto px-4">
+            <div className="w-full max-w-6xl mx-auto">
                 <div
                     id="overview"
                     className="section flex flex-col lg:flex-row items-start"
@@ -602,7 +603,7 @@ const HotelPage = () => {
                 </div>
 
                 <div id="policy" className="section mt-5">
-                    <FlightBookingSection />
+                    <FlightBookingSection hotel={hotelData} />
                 </div>
                 <div id="reviews" className="section mt-5">
                     <ReviewTabView hotelId={isDetailPage ? hotelId : null} />

@@ -14,6 +14,7 @@ import { useSearchParams } from "react-router-dom";
 import {
     ServiceType,
     ServiceTypeLabel,
+    ServiceTypeLabelIcon,
     ServiceTypeLabelVi,
 } from "../../constants/serviceType";
 import {
@@ -33,6 +34,9 @@ import { Icon } from "leaflet";
 import { CarOutlined, EditOutlined, UserOutlined } from "@ant-design/icons";
 import { haversine } from "utils/googleMap";
 import markerImg from "../../images/booking-vehicles/google-map/marker.webp";
+import { SEAT_CLASS_VI } from "constants/airline";
+import { getImage } from "utils/imageUrl";
+import { SERVICE_TYPE } from "constants/booking";
 
 export default function BookingContactActivity() {
     const navigate = useNavigate();
@@ -74,9 +78,6 @@ export default function BookingContactActivity() {
         }
         return dt;
     };
-    // const center = [(carBooking?.lat1 || 0 + carBooking?.lat2 || 0) / 2, (carBooking?.lng1 + carBooking?.lng2) / 2];
-    // const distance = haversine(lat1, long1, lat2, long2);
-    console.log("carBooking", carBooking);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -200,10 +201,27 @@ export default function BookingContactActivity() {
     };
 
     const getGuestSummary = () => {
-        const numGuests = booking.room_details?.[0]?.num_guests || 0;
-        if (numGuests > 0) {
-            return `${numGuests} khách`;
+        if (service_type === ServiceType.HOTEL) {
+            const numGuests = booking.room_details?.[0]?.num_guests || 0;
+            if (numGuests > 0) {
+                return `${numGuests} khách`;
+            }
+        } else if (service_type === ServiceType.ACTIVITY) {
+            const adult_guest =
+                booking.activity_date_detail?.[0]?.adult_quantity_booking || 0;
+            const child_guest =
+                booking.activity_date_detail?.[0]?.child_quantity_booking || 0;
+            if (adult_guest > 0 || child_guest > 0) {
+                return `${adult_guest} người lớn, ${child_guest} trẻ em`;
+            }
+        } else if (service_type === ServiceType.CAR) {
+            const numGuests =
+                booking.car_detail?.[0]?.passenger_quantity_booking || 0;
+            if (numGuests > 0) {
+                return `${numGuests} khách`;
+            }
         }
+
         return "Không có thông tin số lượng khách";
     };
 
@@ -434,15 +452,13 @@ export default function BookingContactActivity() {
 
                                 {/* Service Type Badge */}
                                 <div className="flex items-center gap-2 mb-3">
-                                    <div className="w-6 h-6 bg-gray-900 rounded flex items-center justify-center">
-                                        <span className="text-white text-xs">
-                                            🏨
+                                    <div className="rounded flex items-center justify-center">
+                                        <span className="text-white text-[20px]">
+                                            {ServiceTypeLabelIcon[service_type]}
                                         </span>
                                     </div>
                                     <span className="font-semibold text-sm">
-                                        {ServiceTypeLabel[
-                                            service_type
-                                        ].toUpperCase()}
+                                        {ServiceTypeLabelVi[service_type]}
                                     </span>
                                 </div>
 
@@ -825,6 +841,142 @@ export default function BookingContactActivity() {
                                         </div>
                                     </div>
                                 )}
+                                {service_type === ServiceType.FLIGHT && (
+                                    <div className="border border-gray-200 rounded-lg overflow-hidden mb-4">
+                                        {flightDetails.map(
+                                            (flightDetail, index) => {
+                                                const flightLegsSorted =
+                                                    flightDetail?.flight?.legs
+                                                        ?.length
+                                                        ? [
+                                                              ...flightDetail
+                                                                  ?.flight.legs,
+                                                          ].sort(
+                                                              (a, b) =>
+                                                                  new Date(
+                                                                      a.departure_time
+                                                                  ).getTime() -
+                                                                  new Date(
+                                                                      b.departure_time
+                                                                  ).getTime() // giảm dần
+                                                          )
+                                                        : [];
+
+                                                const firstLeg =
+                                                    flightLegsSorted[0];
+                                                const lastLeg =
+                                                    flightLegsSorted[
+                                                        flightLegsSorted.length -
+                                                            1
+                                                    ];
+
+                                                return (
+                                                    <div
+                                                        key={index}
+                                                        className={`flex gap-3 p-3 ${
+                                                            index !== 0
+                                                                ? "border-t-[1px] border-gray-200"
+                                                                : ""
+                                                        }`}
+                                                    >
+                                                        <div className="flex-1 min-w-0">
+                                                            {index === 0 ? (
+                                                                <h2 class="font-semibold text-[16px] text-blue-700">
+                                                                    {" "}
+                                                                    Chiều đi
+                                                                    (→):
+                                                                </h2>
+                                                            ) : (
+                                                                <h2 class="font-semibold text-[16px] text-red-700">
+                                                                    Chiều về
+                                                                    (←):
+                                                                </h2>
+                                                            )}
+
+                                                            <div class="flex items-center gap-[10px] mt-[3px]">
+                                                                <img
+                                                                    src={`${process.env.REACT_APP_BE_URL}${flightDetail?.flight?.airline?.logo}`}
+                                                                    alt={
+                                                                        flightDetail
+                                                                            ?.flight
+                                                                            ?.airline
+                                                                            ?.name
+                                                                    }
+                                                                    class="w-12 object-cover rounded-lg"
+                                                                />
+                                                                <h3 class="text-lg text-gray-900">
+                                                                    <span class="font-bold">
+                                                                        {
+                                                                            flightDetail
+                                                                                ?.flight
+                                                                                ?.airline
+                                                                                ?.name
+                                                                        }
+                                                                    </span>
+                                                                </h3>
+                                                            </div>
+                                                            <div>
+                                                                <div>
+                                                                    Chuyến bay
+                                                                    từ:{" "}
+                                                                    <strong>
+                                                                        {
+                                                                            firstLeg
+                                                                                ?.departure_airport
+                                                                                ?.name
+                                                                        }
+                                                                    </strong>{" "}
+                                                                    <strong>
+                                                                        →
+                                                                    </strong>{" "}
+                                                                    <strong>
+                                                                        {
+                                                                            lastLeg
+                                                                                ?.arrival_airport
+                                                                                ?.name
+                                                                        }
+                                                                    </strong>
+                                                                </div>
+                                                                <div class="flex gap-8 mt-[6px]">
+                                                                    <div>
+                                                                        <p class="text-gray-600 text-sm mb-1">
+                                                                            Thời
+                                                                            gian
+                                                                            cất
+                                                                            cánh
+                                                                        </p>
+                                                                        <p class="font-semibold text-gray-900">
+                                                                            {dayjs(
+                                                                                firstLeg.arrival_time
+                                                                            ).format(
+                                                                                "YYYY-MM-DD HH:mm:ss"
+                                                                            )}
+                                                                        </p>
+                                                                    </div>
+                                                                    <div>
+                                                                        <p class="text-gray-600 text-sm mb-1">
+                                                                            Thời
+                                                                            gian
+                                                                            hạ
+                                                                            cánh
+                                                                        </p>
+                                                                        <p class="font-semibold text-gray-900">
+                                                                            {dayjs(
+                                                                                lastLeg.arrival_time
+                                                                            ).format(
+                                                                                "YYYY-MM-DD HH:mm:ss"
+                                                                            )}
+                                                                        </p>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                );
+                                            }
+                                        )}
+                                    </div>
+                                )}
 
                                 <button className="text-blue-600 text-sm font-semibold hover:underline">
                                     Xem thêm
@@ -845,20 +997,45 @@ export default function BookingContactActivity() {
                                                         service_type
                                                     ] || "Phòng"}
                                                 </div>
-                                                <div className="text-gray-500 text-xs">
-                                                    {formatDateTime(
-                                                        booking
-                                                            .room_details?.[0]
-                                                            ?.check_in
-                                                    )}{" "}
-                                                    -{" "}
-                                                    {formatDateTime(
-                                                        booking
-                                                            .room_details?.[0]
-                                                            ?.check_out
-                                                    )}{" "}
-                                                    | {getGuestSummary()}
-                                                </div>
+                                                {service_type ===
+                                                    ServiceType.HOTEL && (
+                                                    <div className="text-gray-500 text-xs">
+                                                        {formatDateTime(
+                                                            booking
+                                                                .room_details?.[0]
+                                                                ?.check_in
+                                                        )}{" "}
+                                                        -{" "}
+                                                        {formatDateTime(
+                                                            booking
+                                                                .room_details?.[0]
+                                                                ?.check_out
+                                                        )}{" "}
+                                                        | {getGuestSummary()}
+                                                    </div>
+                                                )}
+                                                {service_type ===
+                                                    ServiceType.ACTIVITY && (
+                                                    <div className="text-gray-500 text-xs">
+                                                        {formatDateTime(
+                                                            booking
+                                                                .activity_date_detail?.[0]
+                                                                ?.date_launch
+                                                        )}{" "}
+                                                        | {getGuestSummary()}
+                                                    </div>
+                                                )}
+                                                {service_type ===
+                                                    ServiceType.CAR && (
+                                                    <div className="text-gray-500 text-xs">
+                                                        {formatDateTime(
+                                                            booking
+                                                                .car_detail?.[0]
+                                                                ?.pickup_datetime
+                                                        )}{" "}
+                                                        | {getGuestSummary()}
+                                                    </div>
+                                                )}
                                             </div>
                                             <div className="font-semibold text-gray-900 whitespace-nowrap ml-4">
                                                 {formatCurrency(
@@ -914,22 +1091,45 @@ export default function BookingContactActivity() {
                                             return (
                                                 <div
                                                     key={detail.id}
-                                                    className="pb-3 border-b border-gray-100 last:border-0"
+                                                    className={`pb-3 ${
+                                                        index !== 0
+                                                            ? "border-b border-gray-100"
+                                                            : ""
+                                                    } last:border-0`}
                                                 >
                                                     <div className="flex justify-between text-sm mb-1">
-                                                        <span>
-                                                            {isReturn
-                                                                ? "Chiều về"
-                                                                : "Chiều đi"}{" "}
-                                                            •{" "}
-                                                            {detail.seat_class}
-                                                        </span>
-                                                        <span>
+                                                        <div>
+                                                            <p className="font-semibold">
+                                                                {isReturn
+                                                                    ? "Chiều về"
+                                                                    : "Chiều đi"}
+                                                            </p>
+                                                            <div className="flex items-center gap-[6px]">
+                                                                <p className="text-gray-500 text-xs">
+                                                                    {
+                                                                        SEAT_CLASS_VI[
+                                                                            detail
+                                                                                .seat_class
+                                                                        ]
+                                                                    }
+                                                                </p>
+                                                                <p className="text-gray-500 text-xs">
+                                                                    |
+                                                                </p>
+                                                                <p className="text-gray-500 text-xs">
+                                                                    {
+                                                                        detail.num_passengers
+                                                                    }{" "}
+                                                                    khách
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                        <p className="font-semibold">
                                                             {formatCurrency(
                                                                 detail.total_price
                                                             )}{" "}
                                                             ₫
-                                                        </span>
+                                                        </p>
                                                     </div>
                                                     {detail.discount_amount >
                                                         0 && (
@@ -978,8 +1178,23 @@ export default function BookingContactActivity() {
                             {flightDetails.map((detail, index) => {
                                 const isReturn = index === 1;
                                 const legs = detail.flight.legs || [];
-                                const firstLeg = legs[0];
-                                const lastLeg = legs[legs.length - 1];
+
+                                const flightLegsSorted = detail?.flight?.legs
+                                    ?.length
+                                    ? [...detail?.flight.legs].sort(
+                                          (a, b) =>
+                                              new Date(
+                                                  a.departure_time
+                                              ).getTime() -
+                                              new Date(
+                                                  b.departure_time
+                                              ).getTime() // giảm dần
+                                      )
+                                    : [];
+                                const lastLeg =
+                                    flightLegsSorted[
+                                        flightLegsSorted.length - 1
+                                    ];
 
                                 return (
                                     <div
@@ -987,10 +1202,16 @@ export default function BookingContactActivity() {
                                         className="border border-gray-200 rounded-xl overflow-hidden"
                                     >
                                         {/* Header: Chiều đi / Chiều về */}
-                                        <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-50 px-4 py-3">
+                                        <div
+                                            className={`bg-gradient-to-r ${
+                                                index === 0
+                                                    ? "from-blue-600 to-blue-700"
+                                                    : "from-red-600 to-red-700"
+                                            } text-white px-50 px-4 py-3`}
+                                        >
                                             <div className="flex items-center justify-between">
                                                 <div className="flex items-center gap-3">
-                                                    <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center"></div>
+                                                    {/* <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center"></div> */}
                                                     <div>
                                                         <div className="font-bold text-lg">
                                                             {isReturn
@@ -1008,11 +1229,16 @@ export default function BookingContactActivity() {
                                                     </div>
                                                 </div>
                                                 <div className="text-right">
-                                                    <div className="text-xs opacity-90">
+                                                    <div className="font-bold text-lg">
                                                         Hạng ghế
                                                     </div>
-                                                    <div className="font-bold uppercase">
-                                                        {detail.seat_class}
+                                                    <div className="text-sm opacity-90">
+                                                        {
+                                                            SEAT_CLASS_VI[
+                                                                detail
+                                                                    .seat_class
+                                                            ]
+                                                        }
                                                     </div>
                                                 </div>
                                             </div>
@@ -1025,12 +1251,15 @@ export default function BookingContactActivity() {
                                                 {/* ${process.env.REACT_APP_BE_URL} */}
                                                 <div className="flex items-center gap-3">
                                                     <img
-                                                        src={`${detail.flight.airline.logo}`}
+                                                        src={`${getImage(
+                                                            detail.flight
+                                                                .airline.logo
+                                                        )}`}
                                                         alt={
                                                             detail.flight
                                                                 .airline.name
                                                         }
-                                                        className="w-10 h-10 rounded"
+                                                        className="w-12"
                                                     />
                                                     <div>
                                                         <div className="font-semibold">
@@ -1072,73 +1301,82 @@ export default function BookingContactActivity() {
 
                                             {/* Route Timeline */}
                                             <div className="flex gap-4 relative">
-                                                {legs.map((leg, i) => (
-                                                    <div
-                                                        key={leg.id}
-                                                        className="flex gap-4 relative"
-                                                    >
-                                                        <div className="flex flex-col items-center">
-                                                            <div className="w-4 h-4 bg-blue-600 rounded-full z-10"></div>
-                                                            {i <
-                                                                legs.length -
-                                                                    1 && (
-                                                                <div className="w-0.5 h-16 bg-gray-300 absolute top-4 left-2"></div>
-                                                            )}
-                                                        </div>
-                                                        <div className="flex-1 pb-8">
-                                                            <div className="font-medium">
-                                                                {dayjs(
-                                                                    leg.departure_time
-                                                                ).format(
-                                                                    "HH:mm"
+                                                {flightLegsSorted.map(
+                                                    (leg, i) => (
+                                                        <div
+                                                            key={leg.id}
+                                                            className="flex gap-4 relative"
+                                                        >
+                                                            <div className="flex flex-col items-center">
+                                                                <div className="w-4 h-4 bg-blue-600 rounded-full z-10"></div>
+                                                                {i <
+                                                                    flightLegsSorted.length -
+                                                                        1 && (
+                                                                    <div className="w-0.5 h-16 bg-gray-300 absolute top-4 left-2"></div>
                                                                 )}
                                                             </div>
-                                                            <div className="text-sm font-semibold">
-                                                                {
-                                                                    leg
-                                                                        .departure_airport
-                                                                        .code
-                                                                }
-                                                            </div>
-                                                            <div className="text-xs text-gray-500">
-                                                                {leg
-                                                                    .departure_airport
-                                                                    .city
-                                                                    ?.name ||
-                                                                    leg
-                                                                        .departure_airport
-                                                                        .name}
-                                                            </div>
-
-                                                            {i <
-                                                                legs.length -
-                                                                    1 && (
-                                                                <div className="mt-2 text-xs text-gray-500 border-l-2 border-dashed border-gray-300 pl-4 py-1">
-                                                                    Quá cảnh{" "}
+                                                            <div className="flex-1 pb-8">
+                                                                <div className="font-medium">
+                                                                    {dayjs(
+                                                                        leg.departure_time
+                                                                    ).format(
+                                                                        "HH:mm"
+                                                                    )}
+                                                                </div>
+                                                                <div className="text-[12px] text-gray-500">
+                                                                    {dayjs(
+                                                                        leg.departure_time
+                                                                    ).format(
+                                                                        "DD-MM-YYYY"
+                                                                    )}
+                                                                </div>
+                                                                <div className="text-sm font-semibold">
                                                                     {
                                                                         leg
-                                                                            .arrival_airport
+                                                                            .departure_airport
                                                                             .code
-                                                                    }{" "}
-                                                                    •{" "}
-                                                                    {Math.floor(
-                                                                        (new Date(
-                                                                            legs[
-                                                                                i +
-                                                                                    1
-                                                                            ].departure_time
-                                                                        ) -
-                                                                            new Date(
-                                                                                leg.arrival_time
-                                                                            )) /
-                                                                            60000
-                                                                    )}{" "}
-                                                                    phút
+                                                                    }
                                                                 </div>
-                                                            )}
+                                                                <div className="text-xs text-gray-500">
+                                                                    {leg
+                                                                        .departure_airport
+                                                                        .city
+                                                                        ?.name ||
+                                                                        leg
+                                                                            .departure_airport
+                                                                            .name}
+                                                                </div>
+
+                                                                {i <
+                                                                    flightLegsSorted.length -
+                                                                        1 && (
+                                                                    <div className="mt-2 text-xs text-gray-500 border-l-2 border-dashed border-gray-300 pl-4 py-1">
+                                                                        Quá cảnh{" "}
+                                                                        {
+                                                                            leg
+                                                                                .arrival_airport
+                                                                                .code
+                                                                        }{" "}
+                                                                        •{" "}
+                                                                        {Math.floor(
+                                                                            (new Date(
+                                                                                flightLegsSorted[
+                                                                                    i +
+                                                                                        1
+                                                                                ].departure_time
+                                                                            ) -
+                                                                                new Date(
+                                                                                    leg.arrival_time
+                                                                                )) /
+                                                                                60000
+                                                                        )}{" "}
+                                                                        phút
+                                                                    </div>
+                                                                )}
+                                                            </div>
                                                         </div>
-                                                    </div>
-                                                ))}
+                                                    )
+                                                )}
 
                                                 {/* Final Arrival */}
                                                 <div className="flex gap-4">
@@ -1148,6 +1386,13 @@ export default function BookingContactActivity() {
                                                             {dayjs(
                                                                 lastLeg.arrival_time
                                                             ).format("HH:mm")}
+                                                        </div>
+                                                        <div className="text-[12px] text-gray-500">
+                                                            {dayjs(
+                                                                lastLeg.arrival_time
+                                                            ).format(
+                                                                "DD-MM-YYYY"
+                                                            )}
                                                         </div>
                                                         <div className="text-sm font-semibold">
                                                             {

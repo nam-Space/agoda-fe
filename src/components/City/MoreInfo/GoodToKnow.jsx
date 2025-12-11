@@ -1,119 +1,139 @@
+import { callFetchAirport } from "config/api";
+import { callFetchHotelQuery } from "config/api";
 import { useEffect, useState } from "react";
+import { formatCurrency } from "utils/formatCurrency";
 
-const GoodToKnow = ({ cityId }) => {
-  const [neighborhoods, setNeighborhoods] = useState([]);
-  const [quickInfo, setQuickInfo] = useState([]);
-  const [cityInfo, setCityInfo] = useState(null);
-  const [loading, setLoading] = useState(true);
+const GoodToKnow = ({ cityId, city }) => {
+    const [neighborhoods, setNeighborhoods] = useState([]);
+    const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    if (!cityId) return;
+    const [quickInfoMap, setQuickInfoMap] = useState({});
 
-    const fetchData = async () => {
-      try {
-        const [neighRes, quickRes] = await Promise.all([
-          fetch(`http://localhost:8000/api/neighborhoods?city_id=${cityId}`),
-          fetch(`http://localhost:8000/api/quick-info/by-city/?city_id=${cityId}`),
-
+    const handleGetHotelAndAirport = async (queryHotel, queryAirport) => {
+        const [resHotel, resAirport] = await Promise.all([
+            callFetchHotelQuery(queryHotel),
+            callFetchAirport(queryAirport),
         ]);
+        if (resHotel.isSuccess && resAirport.isSuccess) {
+            const newQuickInfoMap = { ...quickInfoMap };
 
-        if (!neighRes.ok || !quickRes.ok)
-          throw new Error("Không thể tải dữ liệu");
-
-        const neighData = await neighRes.json();
-        const quickData = await quickRes.json();
-
-        setNeighborhoods(neighData.results || []);
-        setQuickInfo(quickData.results || []);
-
-        // Lấy thông tin city từ bất kỳ object nào có city
-        const city =
-          (neighData.results?.[0]?.city || quickData.results?.[0]?.city) ?? null;
-        setCityInfo(city);
-      } catch (error) {
-        console.error("Lỗi khi tải dữ liệu:", error);
-      } finally {
-        setLoading(false);
-      }
+            newQuickInfoMap["Nơi ở"] = `${resHotel.meta.totalItems}`;
+            newQuickInfoMap["Khách sạn phổ biến"] = resHotel.data[0]?.name;
+            newQuickInfoMap["Giá mỗi đêm từ"] = `${formatCurrency(
+                +(resHotel.data[0]?.min_price || "0")
+            )}đ`;
+            newQuickInfoMap["Lý do vi vu"] = resHotel.data[0]?.best_comment;
+            newQuickInfoMap["Sân bay"] = resAirport.data[0]?.name;
+            setQuickInfoMap({ ...newQuickInfoMap });
+        }
     };
+    useEffect(() => {
+        if (cityId) {
+            handleGetHotelAndAirport(
+                `current=1&pageSize=1&cityId=${cityId}&recommended=true`,
+                `current=1&pageSize=1&city_id=${cityId}`
+            );
+        }
+    }, [cityId]);
 
-    fetchData();
-  }, [cityId]);
+    useEffect(() => {
+        if (!cityId) return;
 
-  return (
-    <div className="container mx-auto my-6">
-      {/* Quick Info */}
-      <div className="bg-white rounded-lg shadow p-6 mb-8 border">
-        <div className="border-b pb-4 mb-4">
-          <h2 className="text-2xl font-bold text-blue-700">
-            Thông tin nhanh về{" "}
-            {cityInfo
-              ? `${cityInfo.name}, ${cityInfo.country.name}`
-              : "Đang tải..."}
-          </h2>
-        </div>
-        <div className="overflow-x-auto">
-          <table className="min-w-full">
-            <tbody>
-              {quickInfo.length > 0 ? (
-                quickInfo.map((item) => (
-                  <tr
-                    key={item.id}
-                    className={item.highlight ? "bg-blue-50" : ""}
-                  >
-                    <td className="py-2 px-4 font-semibold text-gray-700 w-1/3">
-                      {item.label}
-                    </td>
-                    <td className="py-2 px-4 text-gray-900">{item.value}</td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td className="py-2 px-4 text-gray-500" colSpan={2}>
-                    Không có dữ liệu nhanh.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
+        const fetchData = async () => {
+            try {
+                const [neighRes] = await Promise.all([
+                    fetch(
+                        `http://localhost:8000/api/neighborhoods?city_id=${cityId}`
+                    ),
+                ]);
 
-      {/* Neighborhoods */}
-      <section className="mb-8">
-        <div className="bg-white rounded-lg shadow p-6 border">
-          <div className="mb-4 border-b pb-4">
-            <h2 className="text-2xl font-bold text-blue-700">
-              {cityInfo
-                ? `Khám phá khu vực ở ${cityInfo.name}`
-                : "Khám phá khu vực"}
-            </h2>
-          </div>
+                if (!neighRes.ok) throw new Error("Không thể tải dữ liệu");
 
-          {loading ? (
-            <p className="text-gray-500">Đang tải dữ liệu...</p>
-          ) : neighborhoods.length === 0 ? (
-            <p className="text-gray-500">Không có dữ liệu khu vực.</p>
-          ) : (
-            <div className="grid md:grid-cols-3 gap-4">
-              {neighborhoods.map((item) => (
-                <div
-                  key={item.id}
-                  className="block hover:bg-blue-50 rounded px-3 py-3 transition border border-gray-100"
-                >
-                  <dt className="font-semibold text-gray-700">{item.name}</dt>
-                  <dd className="text-gray-500 text-sm">
-                    {item.description || "Chưa có mô tả"}
-                  </dd>
+                const neighData = await neighRes.json();
+
+                setNeighborhoods(neighData.results || []);
+            } catch (error) {
+                console.error("Lỗi khi tải dữ liệu:", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchData();
+    }, [cityId]);
+
+    return (
+        <div className="container mx-auto my-6">
+            {/* Quick Info */}
+            <div className="bg-white rounded-lg shadow p-6 mb-8 border">
+                <div className="border-b pb-4 mb-4">
+                    <h2 className="text-2xl font-bold text-blue-700">
+                        Thông tin nhanh về {city?.name}, {city?.country?.name}
+                    </h2>
                 </div>
-              ))}
+                <div className="overflow-x-auto">
+                    <table className="min-w-full">
+                        <tbody>
+                            {Object.entries(quickInfoMap).map(
+                                ([key, value], index) => (
+                                    <tr
+                                        key={index}
+                                        className={
+                                            index % 2 === 0
+                                                ? "bg-[#f8f7f9]"
+                                                : ""
+                                        }
+                                    >
+                                        <td className="py-2 px-4 font-semibold text-gray-700 w-1/3">
+                                            {key}
+                                        </td>
+                                        <td className="py-2 px-4 text-gray-900">
+                                            {value}
+                                        </td>
+                                    </tr>
+                                )
+                            )}
+                        </tbody>
+                    </table>
+                </div>
             </div>
-          )}
+
+            {/* Neighborhoods */}
+            <section className="mb-8">
+                <div className="bg-white rounded-lg shadow p-6 border">
+                    <div className="mb-4 border-b pb-4">
+                        <h2 className="text-2xl font-bold text-blue-700">
+                            Khám phá khu vực ở {city.name}
+                        </h2>
+                    </div>
+
+                    {loading ? (
+                        <p className="text-gray-500">Đang tải dữ liệu...</p>
+                    ) : neighborhoods.length === 0 ? (
+                        <p className="text-gray-500">
+                            Không có dữ liệu khu vực.
+                        </p>
+                    ) : (
+                        <div className="grid md:grid-cols-3 gap-4">
+                            {neighborhoods.map((item) => (
+                                <div
+                                    key={item.id}
+                                    className="block hover:bg-blue-50 rounded px-3 py-3 transition border border-gray-100"
+                                >
+                                    <dt className="font-semibold text-gray-700">
+                                        {item.name}
+                                    </dt>
+                                    <dd className="text-gray-500 text-sm">
+                                        {item.description || "Chưa có mô tả"}
+                                    </dd>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            </section>
         </div>
-      </section>
-    </div>
-  );
+    );
 };
 
 export default GoodToKnow;
-

@@ -44,7 +44,7 @@ const VietnamDestination = () => {
                                             : "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSYR83krjU8bD9NkDRlV3iGwsdCsAmyzAPSdg&s"
                                     }
                                     alt={city.name}
-                                    className="w-full h-[200px] rounded-[16px]"
+                                    className="w-full h-[200px] object-cover rounded-[16px]"
                                 />
                                 <p className="font-bold text-center">
                                     {city?.name}

@@ -416,6 +416,10 @@ export const getFlights = (params) => {
     return axios.get('/api/flights/', { params });
 };
 
+export const callFetchFlight = (query) => {
+    return axios.get(`/api/flights/flights-for-admin/?${query}`);
+};
+
 // Handbook
 export const callFetchHandbook = (query) => {
     return axios.get(`/api/handbooks/handbooks/?${query}`);
