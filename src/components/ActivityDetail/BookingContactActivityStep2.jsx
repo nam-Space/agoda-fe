@@ -1,19 +1,9 @@
 import { useEffect, useState } from "react";
-import {
-    ChevronDown,
-    Star,
-    Calendar,
-    Zap,
-    CheckCircle,
-    Info,
-    Lock,
-} from "lucide-react";
+import { Star, Calendar, Zap, CheckCircle, Info, Lock } from "lucide-react";
 import { useSearchParams } from "react-router-dom";
-import { useNavigate } from "react-router-dom";
 import { formatCurrency } from "utils/formatCurrency";
 import {
     ServiceType,
-    ServiceTypeLabel,
     PaymentMethod,
     PaymentMethodLabel,
     ServiceTypeLabelIcon,
@@ -21,7 +11,6 @@ import {
 } from "../../constants/serviceType";
 import {
     getBookingDetail,
-    getRoomDetail,
     createPayment,
     payWithStripe,
     confirmCashPayment,
@@ -42,7 +31,6 @@ import { SEAT_CLASS_VI } from "constants/airline";
 import { getImage } from "utils/imageUrl";
 
 export default function BookingContactActivityStep2() {
-    const navigate = useNavigate();
     const [searchParams] = useSearchParams();
     const bookingId = searchParams.get("booking_id");
     const [booking, setBooking] = useState(null);
@@ -224,13 +212,55 @@ export default function BookingContactActivityStep2() {
         );
     }
 
-    const getPrice = () => Number(booking.total_price) || 0;
-
     const getGuestSummary = () => {
-        const numGuests = booking.hotel_detail?.num_guests || 0;
-        return numGuests > 0
-            ? `${numGuests} khách`
-            : "Không có thông tin số lượng khách";
+        if (service_type === ServiceType.HOTEL) {
+            const numGuests = booking.room_details?.[0]?.num_guests || 0;
+            if (numGuests > 0) {
+                return `${numGuests} khách`;
+            }
+        } else if (service_type === ServiceType.ACTIVITY) {
+            const adult_guest =
+                booking.activity_date_detail?.[0]?.adult_quantity_booking || 0;
+            const child_guest =
+                booking.activity_date_detail?.[0]?.child_quantity_booking || 0;
+            if (adult_guest > 0 || child_guest > 0) {
+                return `${adult_guest} người lớn, ${child_guest} trẻ em`;
+            }
+        } else if (service_type === ServiceType.CAR) {
+            const numGuests =
+                booking.car_detail?.[0]?.passenger_quantity_booking || 0;
+            if (numGuests > 0) {
+                return `${numGuests} khách`;
+            }
+        }
+
+        return "Không có thông tin số lượng khách";
+    };
+
+    const getDiscountPercent = () => {
+        if (service_type === ServiceType.HOTEL) {
+            const discountPercent =
+                booking.room_details?.[0]?.room?.promotion?.discount_percent ||
+                0;
+            return discountPercent;
+        } else if (service_type === ServiceType.ACTIVITY) {
+            const discountPercent =
+                booking.activity_date_detail?.[0]?.activity_date?.promotion
+                    ?.discount_percent || 0;
+            return discountPercent;
+        } else if (service_type === ServiceType.CAR) {
+            const discountPercent =
+                booking.car_detail?.[0]?.car?.promotion?.discount_percent || 0;
+            return discountPercent;
+        } else if (service_type === ServiceType.FLIGHT) {
+            const discountPercent =
+                booking.flight_detail?.[0]?.flight?.promotion
+                    ?.discount_percent || 0;
+
+            return discountPercent;
+        }
+
+        return 0;
     };
 
     return (
@@ -404,7 +434,7 @@ export default function BookingContactActivityStep2() {
                                 </div>
 
                                 <div className="bg-red-50 text-red-600 text-xs font-semibold px-2 py-1 rounded inline-block mb-3">
-                                    0% giảm giá
+                                    {getDiscountPercent()}% giảm giá
                                 </div>
 
                                 {/* Room Card */}
@@ -429,11 +459,9 @@ export default function BookingContactActivityStep2() {
                                                 <div className="flex items-center gap-1 text-xs">
                                                     <Star className="w-3 h-3 fill-orange-500 text-orange-500" />
                                                     <span className="font-semibold">
-                                                        {
-                                                            roomBooking?.room
-                                                                ?.hotel
-                                                                ?.avg_star
-                                                        }
+                                                        {roomBooking?.room?.hotel?.avg_star?.toFixed(
+                                                            1
+                                                        )}
                                                     </span>
                                                     <span className="text-gray-500">
                                                         {
@@ -521,9 +549,9 @@ export default function BookingContactActivityStep2() {
                                                     <Star className="w-3 h-3 fill-orange-500 text-orange-500" />
 
                                                     <span className="font-semibold">
-                                                        {
-                                                            activityDateBooking?.avg_star
-                                                        }
+                                                        {activityDateBooking?.avg_star?.toFixed(
+                                                            1
+                                                        )}
                                                     </span>
                                                     <span className="text-gray-500">
                                                         {activityDateBooking
