@@ -159,10 +159,54 @@ export default function BookingContactActivityStep3() {
     }
 
     const getGuestSummary = () => {
-        const numGuests = booking?.room_details?.[0]?.num_guests || 0;
-        return numGuests > 0
-            ? `${numGuests} khách`
-            : "Không có thông tin số lượng khách";
+        if (service_type === ServiceType.HOTEL) {
+            const numGuests = booking.room_details?.[0]?.num_guests || 0;
+            if (numGuests > 0) {
+                return `${numGuests} khách`;
+            }
+        } else if (service_type === ServiceType.ACTIVITY) {
+            const adult_guest =
+                booking.activity_date_detail?.[0]?.adult_quantity_booking || 0;
+            const child_guest =
+                booking.activity_date_detail?.[0]?.child_quantity_booking || 0;
+            if (adult_guest > 0 || child_guest > 0) {
+                return `${adult_guest} người lớn, ${child_guest} trẻ em`;
+            }
+        } else if (service_type === ServiceType.CAR) {
+            const numGuests =
+                booking.car_detail?.[0]?.passenger_quantity_booking || 0;
+            if (numGuests > 0) {
+                return `${numGuests} khách`;
+            }
+        }
+
+        return "Không có thông tin số lượng khách";
+    };
+
+    const getDiscountPercent = () => {
+        if (service_type === ServiceType.HOTEL) {
+            const discountPercent =
+                booking.room_details?.[0]?.room?.promotion?.discount_percent ||
+                0;
+            return discountPercent;
+        } else if (service_type === ServiceType.ACTIVITY) {
+            const discountPercent =
+                booking.activity_date_detail?.[0]?.activity_date?.promotion
+                    ?.discount_percent || 0;
+            return discountPercent;
+        } else if (service_type === ServiceType.CAR) {
+            const discountPercent =
+                booking.car_detail?.[0]?.car?.promotion?.discount_percent || 0;
+            return discountPercent;
+        } else if (service_type === ServiceType.FLIGHT) {
+            const discountPercent =
+                booking.flight_detail?.[0]?.flight?.promotion
+                    ?.discount_percent || 0;
+
+            return discountPercent;
+        }
+
+        return 0;
     };
 
     return (
@@ -299,10 +343,9 @@ export default function BookingContactActivityStep3() {
                                                 ★
                                             </span>
                                             <span className="font-semibold">
-                                                {
-                                                    roomBooking?.room?.hotel
-                                                        ?.avg_star
-                                                }
+                                                {roomBooking?.room?.hotel?.avg_star?.toFixed(
+                                                    1
+                                                )}
                                             </span>
                                             <span className="text-gray-500">
                                                 (
@@ -396,7 +439,7 @@ export default function BookingContactActivityStep3() {
                                     </div>
                                     <div className="flex-1">
                                         <div className="inline-block px-2 py-1 bg-red-100 text-red-700 text-xs font-semibold rounded mb-2">
-                                            0% giảm giá
+                                            {getDiscountPercent()}% giảm giá
                                         </div>
                                         <h3 className="font-bold text-gray-900 mb-2">
                                             {activityDateBooking?.activity_name}
@@ -406,7 +449,9 @@ export default function BookingContactActivityStep3() {
                                                 ★
                                             </span>
                                             <span className="font-semibold">
-                                                {activityDateBooking?.avg_star}
+                                                {activityDateBooking?.avg_star?.toFixed(
+                                                    1
+                                                )}
                                             </span>
                                             <span className="text-gray-500">
                                                 {activityDateBooking
@@ -498,7 +543,7 @@ export default function BookingContactActivityStep3() {
                                     </div>
                                     <div className="flex-1">
                                         <div className="inline-block px-2 py-1 bg-red-100 text-red-700 text-xs font-semibold rounded mb-2">
-                                            0% giảm giá
+                                            {getDiscountPercent()}% giảm giá
                                         </div>
                                         <h3 className="font-bold text-gray-900 mb-2">
                                             {carBooking?.pickup_location} -{">"}{" "}
@@ -1068,10 +1113,23 @@ export default function BookingContactActivityStep3() {
                                     </div>
                                     <div className="flex justify-between items-center">
                                         <span className="text-sm text-gray-600">
-                                            Giảm giá (0%)
+                                            Giảm giá (
+                                            {activityDateBooking?.activity_date
+                                                ?.promotion?.discount_percent ||
+                                                0}
+                                            %)
                                         </span>
                                         <span className="text-sm text-green-600 font-semibold line-through">
-                                            0 ₫
+                                            {formatCurrency(
+                                                (activityDateBooking?.total_price *
+                                                    (activityDateBooking
+                                                        ?.activity_date
+                                                        ?.promotion
+                                                        ?.discount_percent ||
+                                                        0)) /
+                                                    100
+                                            )}{" "}
+                                            ₫
                                         </span>
                                     </div>
                                 </div>
@@ -1165,10 +1223,20 @@ export default function BookingContactActivityStep3() {
                                     </div>
                                     <div className="flex justify-between items-center">
                                         <span className="text-sm text-gray-600">
-                                            Giảm giá (0%)
+                                            Giảm giá (
+                                            {carBooking?.car?.promotion
+                                                ?.discount_percent || 0}
+                                            %)
                                         </span>
                                         <span className="text-sm text-green-600 font-semibold line-through">
-                                            0 ₫
+                                            {formatCurrency(
+                                                (carBooking?.total_price *
+                                                    (carBooking?.car?.promotion
+                                                        ?.discount_percent ||
+                                                        0)) /
+                                                    100
+                                            )}{" "}
+                                            ₫
                                         </span>
                                     </div>
                                 </div>

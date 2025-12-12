@@ -8,12 +8,11 @@ import {
     Info,
 } from "lucide-react";
 import { useAppSelector } from "../../redux/hooks";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { formatCurrency } from "utils/formatCurrency";
 import { useSearchParams } from "react-router-dom";
 import {
     ServiceType,
-    ServiceTypeLabel,
     ServiceTypeLabelIcon,
     ServiceTypeLabelVi,
 } from "../../constants/serviceType";
@@ -21,13 +20,12 @@ import {
     getCountries,
     addBookingContact,
     getBookingDetail,
-    getRoomDetail,
     callFetchDetailActivityDateBooking,
     callFetchDetailCarBooking,
     callFetchDetailRoomBooking,
 } from "../../config/api";
 import dayjs from "dayjs";
-import { Button, Card, Divider, Spin } from "antd";
+import { Button, Divider, Spin } from "antd";
 import { MapContainer, Marker, Popup, TileLayer } from "react-leaflet";
 import MarkerClusterGroup from "react-leaflet-cluster";
 import { Icon } from "leaflet";
@@ -36,7 +34,6 @@ import { haversine } from "utils/googleMap";
 import markerImg from "../../images/booking-vehicles/google-map/marker.webp";
 import { SEAT_CLASS_VI } from "constants/airline";
 import { getImage } from "utils/imageUrl";
-import { SERVICE_TYPE } from "constants/booking";
 
 export default function BookingContactActivity() {
     const navigate = useNavigate();
@@ -196,10 +193,6 @@ export default function BookingContactActivity() {
         );
     }
 
-    const getPrice = () => {
-        return Number(booking.total_price) || 0;
-    };
-
     const getGuestSummary = () => {
         if (service_type === ServiceType.HOTEL) {
             const numGuests = booking.room_details?.[0]?.num_guests || 0;
@@ -223,6 +216,32 @@ export default function BookingContactActivity() {
         }
 
         return "Không có thông tin số lượng khách";
+    };
+
+    const getDiscountPercent = () => {
+        if (service_type === ServiceType.HOTEL) {
+            const discountPercent =
+                booking.room_details?.[0]?.room?.promotion?.discount_percent ||
+                0;
+            return discountPercent;
+        } else if (service_type === ServiceType.ACTIVITY) {
+            const discountPercent =
+                booking.activity_date_detail?.[0]?.activity_date?.promotion
+                    ?.discount_percent || 0;
+            return discountPercent;
+        } else if (service_type === ServiceType.CAR) {
+            const discountPercent =
+                booking.car_detail?.[0]?.car?.promotion?.discount_percent || 0;
+            return discountPercent;
+        } else if (service_type === ServiceType.FLIGHT) {
+            const discountPercent =
+                booking.flight_detail?.[0]?.flight?.promotion
+                    ?.discount_percent || 0;
+
+            return discountPercent;
+        }
+
+        return 0;
     };
 
     return (
@@ -416,19 +435,13 @@ export default function BookingContactActivity() {
                             <p className="text-sm text-gray-600">
                                 Thực hiện bước tiếp theo đồng nghĩa với việc quý
                                 khách chấp nhận tuân thủ theo:{" "}
-                                <a
-                                    href="#"
-                                    className="text-blue-600 hover:underline"
-                                >
+                                <span className="text-blue-600 hover:underline">
                                     Điều khoản Sử dụng
-                                </a>{" "}
+                                </span>{" "}
                                 và{" "}
-                                <a
-                                    href="#"
-                                    className="text-blue-600 hover:underline"
-                                >
+                                <span className="text-blue-600 hover:underline">
                                     Chính sách Quyền riêng tư
-                                </a>{" "}
+                                </span>{" "}
                                 của Agoda.
                             </p>
 
@@ -462,9 +475,9 @@ export default function BookingContactActivity() {
                                     </span>
                                 </div>
 
-                                {/* <div className="bg-red-50 text-red-600 text-xs font-semibold px-2 py-1 rounded inline-block mb-3">
-                                    0% giảm giá
-                                </div> */}
+                                <div className="bg-red-50 text-red-600 text-xs font-semibold px-2 py-1 rounded inline-block mb-3">
+                                    {getDiscountPercent()}% giảm giá
+                                </div>
 
                                 {/* Room Card */}
                                 {service_type === ServiceType.HOTEL && (
@@ -488,11 +501,9 @@ export default function BookingContactActivity() {
                                                 <div className="flex items-center gap-1 text-xs">
                                                     <Star className="w-3 h-3 fill-orange-500 text-orange-500" />
                                                     <span className="font-semibold">
-                                                        {
-                                                            roomBooking?.room
-                                                                ?.hotel
-                                                                ?.avg_star
-                                                        }
+                                                        {roomBooking?.room?.hotel?.avg_star?.toFixed(
+                                                            1
+                                                        )}
                                                     </span>
                                                     <span className="text-gray-500">
                                                         {
@@ -565,6 +576,9 @@ export default function BookingContactActivity() {
                                                 <img
                                                     src={`${process.env.REACT_APP_BE_URL}${activityDateBooking?.activity_image}`}
                                                     className="w-full h-full object-cover"
+                                                    alt={
+                                                        activityDateBooking?.activity_name
+                                                    }
                                                 />
                                             </div>
                                             <div className="flex-1 min-w-0">
@@ -577,9 +591,9 @@ export default function BookingContactActivity() {
                                                     <Star className="w-3 h-3 fill-orange-500 text-orange-500" />
 
                                                     <span className="font-semibold">
-                                                        {
-                                                            activityDateBooking?.avg_star
-                                                        }
+                                                        {activityDateBooking?.avg_star?.toFixed(
+                                                            1
+                                                        )}
                                                     </span>
                                                     <span className="text-gray-500">
                                                         {activityDateBooking
