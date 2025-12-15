@@ -43,7 +43,7 @@ const GoodToKnow = ({ cityId, city }) => {
             try {
                 const [neighRes] = await Promise.all([
                     fetch(
-                        `http://localhost:8000/api/neighborhoods?city_id=${cityId}`
+                        `${process.env.REACT_APP_BE_URL}/api/neighborhoods?city_id=${cityId}`
                     ),
                 ]);
 

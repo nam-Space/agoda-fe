@@ -32,14 +32,12 @@ const RoomOptionsSection = ({
     setRooms,
     roomsCount,
 }) => {
-    const navigate = useNavigate();
     const user = useAppSelector((state) => state.account.user);
     const [rooms, setLocalRooms] = useState([]);
     const [amenitiesMap, setAmenitiesMap] = useState({});
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const { hotelSlug } = useParams();
-    const BASE_URL = process.env.REACT_APP_BE_URL || "http://localhost:8000";
 
     // 🔹 Xác định hotelId
     const effectiveHotelId =

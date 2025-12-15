@@ -40,7 +40,7 @@ const VietnamDestination = () => {
                                 <img
                                     src={
                                         city?.image
-                                            ? `http://localhost:8000${city.image}`
+                                            ? `${process.env.REACT_APP_BE_URL}${city.image}`
                                             : "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSYR83krjU8bD9NkDRlV3iGwsdCsAmyzAPSdg&s"
                                     }
                                     alt={city.name}
