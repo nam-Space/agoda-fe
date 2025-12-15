@@ -1,18 +1,18 @@
 import { Navigation } from "swiper/modules";
-import React, { useEffect, useState }  from "react";
+import React, { useEffect, useState } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Link } from "react-router-dom";
 import { getTopAbroadHotel } from "../../config/api";
 
 const ForeignCountryDestination = () => {
     const [cities, setCities] = useState([]);
-    
+
     useEffect(() => {
         const fetchData = async () => {
             try {
                 const res = await getTopAbroadHotel({ limit: 10 });
                 if (res.isSuccess) {
-                    setCities(res.data|| []);
+                    setCities(res.data || []);
                 }
             } catch (error) {
                 console.error("Failed to fetch top VN cities:", error);
@@ -38,7 +38,11 @@ const ForeignCountryDestination = () => {
                         <SwiperSlide key={city.id}>
                             <Link to={`/city/${city.id}`}>
                                 <img
-                                    src={city?.image? `http://localhost:8000${city.image}` : "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSYR83krjU8bD9NkDRlV3iGwsdCsAmyzAPSdg&s"}
+                                    src={
+                                        city?.image
+                                            ? `${process.env.REACT_APP_BE_URL}${city.image}`
+                                            : "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSYR83krjU8bD9NkDRlV3iGwsdCsAmyzAPSdg&s"
+                                    }
                                     alt={city.name}
                                     className="w-full h-[200px] rounded-[16px]"
                                 />

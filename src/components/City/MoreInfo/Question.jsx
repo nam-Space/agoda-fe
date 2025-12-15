@@ -16,7 +16,7 @@ const Question = ({ cityId, city }) => {
             try {
                 const [faqRes] = await Promise.all([
                     fetch(
-                        `http://localhost:8000/api/faqs/by-city/?cityId=${cityId}`
+                        `${process.env.REACT_APP_BE_URL}/api/faqs/by-city/?cityId=${cityId}`
                     ),
                 ]);
                 const faqData = await faqRes.json();
