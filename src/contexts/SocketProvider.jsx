@@ -13,10 +13,9 @@ const SocketContext = createContext(null);
 export const SocketProvider = ({ children }) => {
     const user = useAppSelector((state) => state.account.user);
     const BE_URL = process.env.REACT_APP_BE_URL;
-    const WS_URL = BE_URL.replace("http://", "ws://").replace(
-        "https://",
-        "wss://"
-    );
+    const WS_URL = BE_URL?.startsWith("https")
+        ? BE_URL.replace("https://", "wss://")
+        : BE_URL.replace("http://", "ws://");
     const userSocketRef = useRef(null);
     const chatSocketRef = useRef(null);
     const notifSocketRef = useRef(null);
