@@ -1,4 +1,4 @@
-import { Button, Card, Empty, Pagination } from "antd";
+import { Button, Card, Empty, Pagination, Spin } from "antd";
 import { planForTrips } from "constants/profile";
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
@@ -12,6 +12,7 @@ import { getImage } from "utils/imageUrl";
 
 const ActivityIncomingTab = () => {
     const user = useAppSelector((state) => state.account.user);
+    const [isLoading, setIsLoading] = useState(false);
     const [payments, setPayments] = useState([]);
     const [meta, setMeta] = useState({
         currentPage: 1,
@@ -21,11 +22,13 @@ const ActivityIncomingTab = () => {
     });
 
     const handleGetPayments = async (query) => {
+        setIsLoading(true);
         const res = await callFetchPayment(query);
         if (res.isSuccess) {
             setPayments(res.data);
             setMeta(res.meta);
         }
+        setIsLoading(false);
     };
 
     const onChangePagination = (pageNumber, pageSize) => {
@@ -54,7 +57,11 @@ const ActivityIncomingTab = () => {
         <div>
             <div className="p-[16px] bg-white rounded-b-[16px]">
                 <h1 className="text-[22px] font-bold">Chuyến đi sắp tới</h1>
-                {payments.length === 0 ? (
+                {isLoading ? (
+                    <div className="flex justify-center items-center h-[200px]">
+                        <Spin size="large" />
+                    </div>
+                ) : payments.length === 0 ? (
                     <Empty
                         description="Chưa có chuyến đi sắp tới"
                         className="bg-[#abb6cb1f] mx-0 mt-[12px] py-[24px] rounded-[16px]"

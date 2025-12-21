@@ -1,31 +1,28 @@
-import { useEffect, useRef, useState } from "react";
-import "swiper/css";
-import "swiper/css/navigation";
+import { useEffect, useState } from "react";
 import { Navigation } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/react";
 import Item from "./Item";
+import { getImage } from "utils/imageUrl";
+import { callFetchHotelQuery } from "config/api";
 
 const List = ({ cityId }) => {
-    const prevRef = useRef(null);
-    const nextRef = useRef(null);
     const [hotels, setHotels] = useState([]);
     const [loading, setLoading] = useState(true);
 
+    const handleGetHotels = async (query) => {
+        setLoading(true);
+        const res = await callFetchHotelQuery(query);
+        if (res.isSuccess) {
+            setHotels(res.data);
+        }
+        setLoading(false);
+    };
+
     useEffect(() => {
         if (!cityId) return; // không fetch khi chưa có cityId
-
-        setLoading(true);
-        fetch(`http://localhost:8000/api/hotels/by-city/${cityId}/`)
-            .then((res) => res.json())
-            .then((data) => {
-                if (data.isSuccess && data.data) {
-                    setHotels(data.data);
-                } else {
-                    setHotels([]);
-                }
-            })
-            .catch((err) => console.error("Lỗi tải khách sạn:", err))
-            .finally(() => setLoading(false));
+        handleGetHotels(
+            `current=1&pageSize=10&cityId=${cityId}&recommended=true`
+        );
     }, [cityId]); // refetch khi cityId thay đổi
 
     if (loading) {
@@ -50,57 +47,24 @@ const List = ({ cityId }) => {
                 Khách sạn &amp; chỗ ở tốt nhất
             </h2>
 
-            {/* Nút prev */}
-            <button
-                ref={prevRef}
-                className="absolute z-10 left-0 top-1/2 -translate-y-1/2 bg-white border border-gray-300 rounded-full w-12 h-12 flex items-center justify-center shadow hover:bg-gray-100 transition"
-            >
-                <svg width="24" height="24" fill="none" stroke="currentColor">
-                    <path d="M15 19l-7-7 7-7" />
-                </svg>
-            </button>
-
-            {/* Nút next */}
-            <button
-                ref={nextRef}
-                className="absolute z-10 right-0 top-1/2 -translate-y-1/2 bg-white border border-gray-300 rounded-full w-12 h-12 flex items-center justify-center shadow hover:bg-gray-100 transition"
-            >
-                <svg width="24" height="24" fill="none" stroke="currentColor">
-                    <path d="M9 5l7 7-7 7" />
-                </svg>
-            </button>
-
             <Swiper
                 modules={[Navigation]}
-                navigation={{
-                    prevEl: prevRef.current,
-                    nextEl: nextRef.current,
-                }}
-                onInit={(swiper) => {
-                    swiper.params.navigation.prevEl = prevRef.current;
-                    swiper.params.navigation.nextEl = nextRef.current;
-                    swiper.navigation.init();
-                    swiper.navigation.update();
-                }}
-                loop
-                spaceBetween={32}
-                slidesPerView={1}
-                breakpoints={{
-                    768: { slidesPerView: 2 },
-                    1024: { slidesPerView: 3 },
-                }}
-                className="!pb-8"
+                slidesPerView={4}
+                spaceBetween={12}
+                navigation
+                className="w-full h-full"
             >
                 {hotels.map((hotel, idx) => (
-                    <SwiperSlide key={idx}>
+                    <SwiperSlide key={idx} className="!h-auto">
                         <Item
-                            image={`http://localhost:8000${hotel.images?.[0]?.image}`}
+                            id={hotel.id}
+                            image={getImage(hotel.images?.[0]?.image)}
                             name={hotel.name}
                             link="#"
                             stars={hotel.avg_star}
                             reviewText="Tuyệt vời"
                             reviewCount={`${hotel.review_count} nhận xét`}
-                            snippet={hotel.description}
+                            snippet={hotel.best_comment}
                             reviewer={hotel.owner?.first_name || "Ẩn danh"}
                             reviewerCountry="Việt Nam"
                         />

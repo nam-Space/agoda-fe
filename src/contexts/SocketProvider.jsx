@@ -13,10 +13,9 @@ const SocketContext = createContext(null);
 export const SocketProvider = ({ children }) => {
     const user = useAppSelector((state) => state.account.user);
     const BE_URL = process.env.REACT_APP_BE_URL;
-    const WS_URL = BE_URL.replace("http://", "ws://").replace(
-        "https://",
-        "wss://"
-    );
+    const WS_URL = BE_URL?.startsWith("https")
+        ? BE_URL.replace("https://", "wss://")
+        : BE_URL.replace("http://", "ws://");
     const userSocketRef = useRef(null);
     const chatSocketRef = useRef(null);
     const notifSocketRef = useRef(null);
@@ -31,8 +30,8 @@ export const SocketProvider = ({ children }) => {
     const [notifHasNext, setNotifHasNext] = useState(false);
     const [totalUnseenNotif, setTotalUnseenNotif] = useState(0);
 
-    const [loadingConversations, setLoadingConversations] = useState(true);
-    const [loadingNotifications, setLoadingNotifications] = useState(true);
+    const [loadingConversations, setLoadingConversations] = useState(false);
+    const [loadingNotifications, setLoadingNotifications] = useState(false);
 
     // Kết nối UserConsumer socket (nhận onlineUsers + unseen conversations)
     useEffect(() => {
@@ -103,10 +102,12 @@ export const SocketProvider = ({ children }) => {
 
         userSocketRef.current.onerror = (error) => {
             console.error("User WebSocket error:", error);
+            setLoadingConversations(false);
         };
 
         userSocketRef.current.onclose = () => {
             console.log("User WebSocket disconnected");
+            setLoadingConversations(false);
         };
 
         return () => {
@@ -329,10 +330,12 @@ export const SocketProvider = ({ children }) => {
 
         notifSocketRef.current.onerror = (err) => {
             console.error("Notif socket error", err);
+            setLoadingNotifications(false);
         };
 
         notifSocketRef.current.onclose = () => {
             console.log("Notif socket closed");
+            setLoadingNotifications(false);
         };
 
         return () => {

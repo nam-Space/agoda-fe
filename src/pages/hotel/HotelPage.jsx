@@ -29,10 +29,9 @@ import RoomOptionsSection from "components/Hotel/RoomOptionsSection";
 import SearchBar from "components/Hotel/SearchBarSection";
 
 import icTable from "../../images/hotel/ic_table.png";
-import { callUpdateHotel } from "config/api";
-import { callUpdateHotelNotImage } from "config/api";
 import { callFetchDetailUserHotelInteractionByHotelId } from "config/api";
 import { callUpsertUserHotelInteraction } from "config/api";
+import { stripHtml } from "utils/renderHtml";
 
 const HotelPage = () => {
   const { hotelSlug } = useParams();

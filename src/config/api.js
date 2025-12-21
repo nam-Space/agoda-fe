@@ -272,6 +272,10 @@ export const getPromotions = (params) => {
   return axios.get("/api/promotions/", { params });
 };
 
+export const getPromotionsAdmin = (query) => {
+  return axios.get(`/api/promotions/promotions-admin/?${query}`);
+};
+
 export const getPromotionDetail = (promotionId, params) => {
   return axios.get(`/api/promotions/${promotionId}/`, { params });
 };
@@ -279,7 +283,7 @@ export const getPromotionDetail = (promotionId, params) => {
 export const getImageUrl = (imagePath) => {
   if (!imagePath) return "";
   if (imagePath.startsWith("http")) return imagePath;
-  return `http://127.0.0.1:8000${imagePath}`;
+  return `${process.env.REACT_APP_BE_URL}${imagePath}`;
 };
 //Country
 export const getCountries = (params) => {
@@ -429,6 +433,10 @@ export const getFlights = (params) => {
   return axios.get("/api/flights/", { params });
 };
 
+export const callFetchFlight = (query) => {
+  return axios.get(`/api/flights/flights-for-admin/?${query}`);
+};
+
 // Handbook
 export const callFetchHandbook = (query) => {
   return axios.get(`/api/handbooks/handbooks/?${query}`);
@@ -481,4 +489,57 @@ export const callUpdatePayment = (id, data) => {
 
 export const callDeletePayment = (id) => {
   return axios.delete(`/api/payments/payments/${id}/delete/`);
+};
+
+// Flight Promotion
+export const callFetchFlightPromotion = (query) => {
+  return axios.get(`/api/promotions/flight-promotions/?${query}`);
+};
+
+export const callCreateFlightPromotion = (data) => {
+  return axios.post("/api/promotions/flight-promotions/create/", { ...data });
+};
+
+export const callUpdateFlightPromotion = (id, data) => {
+  return axios.put(`/api/promotions/flight-promotions/${id}/update/`, {
+    ...data,
+  });
+};
+
+export const callDeleteFlightPromotion = (id) => {
+  return axios.delete(`/api/promotions/flight-promotions/${id}/delete/`);
+};
+
+/* Flight leg */
+export const callFetchFlightLeg = (query) => {
+  return axios.get(`/api/flights/legs/?${query}`);
+};
+
+export const callCreateFlightLeg = (data) => {
+  return axios.post("/api/flights/legs/", { ...data });
+};
+
+export const callUpdateFlightLeg = (id, data) => {
+  return axios.put(`/api/flights/legs/${id}/`, { ...data });
+};
+
+export const callDeleteFlightLeg = (id) => {
+  return axios.delete(`/api/flights/legs/${id}/`);
+};
+
+/* Seat class pricing */
+export const callFetchSeatClassPricing = (query) => {
+  return axios.get(`/api/flights/seat-classes/?${query}`);
+};
+
+export const callCreateSeatClassPricing = (data) => {
+  return axios.post("/api/flights/seat-classes/", { ...data });
+};
+
+export const callUpdateSeatClassPricing = (id, data) => {
+  return axios.put(`/api/flights/seat-classes/${id}/`, { ...data });
+};
+
+export const callDeleteSeatClassPricing = (id) => {
+  return axios.delete(`/api/flights/seat-classes/${id}/`);
 };

@@ -28,7 +28,7 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { callFetchDetailActivity } from "config/api";
 import { ACTIVITY_TYPE } from "constants/activity";
 import { callFetchActivity } from "config/api";
-import { formatCurrency } from "utils/formatCurrency";
+import { formatCurrency, getPriceAfterDiscount } from "utils/formatCurrency";
 import { callFetchActivityPackageByActivityIdAndDateLaunch } from "config/api";
 import _ from "lodash";
 import { INF } from "constants/activity";
@@ -54,6 +54,8 @@ export default function ActivityDetail() {
     const [activity, setActivity] = useState({});
     const [activityPackages, setActivityPackages] = useState([]);
     const [minPrice, setMinPrice] = useState(INF);
+    const [minPriceDiscountPercent, setMinPriceDiscountPercent] = useState(INF);
+    const [minPriceDiscountAmount, setMinPriceDiscountAmount] = useState(0);
     const [activeKey, setActiveKey] = useState(["1"]);
     const [loadingActivityPackages, setLoadingActivityPackages] =
         useState(false);
@@ -170,6 +172,8 @@ export default function ActivityDetail() {
             groupById(activityPackages).map((item) => dateSelectedGeneral)
         );
         setMinPrice(INF);
+        setMinPriceDiscountPercent(INF);
+        setMinPriceDiscountAmount(INF);
     }, [activityPackages]);
 
     const handleChange = (key) => {
@@ -199,9 +203,39 @@ export default function ActivityDetail() {
 
         if (price < minPrice) {
             setMinPrice(price);
+            setMinPriceDiscountPercent(
+                activity_date?.promotion?.discount_percent || 0
+            );
+            setMinPriceDiscountAmount(
+                activity_date?.promotion?.discount_amount || 0
+            );
         }
 
         return price;
+    };
+
+    const getDiscountPercent = (item, index) => {
+        const activity_date = item.activity_package.activities_dates.find(
+            (activities_date) =>
+                activities_date.date_launch.substring(0, 10) ===
+                dateTickets[index]
+        );
+
+        const discount = activity_date?.promotion?.discount_percent || 0;
+
+        return discount;
+    };
+
+    const getDiscountAmount = (item, index) => {
+        const activity_date = item.activity_package.activities_dates.find(
+            (activities_date) =>
+                activities_date.date_launch.substring(0, 10) ===
+                dateTickets[index]
+        );
+
+        const discount = activity_date?.promotion?.discount_amount || 0;
+
+        return discount;
     };
 
     const getSinglePriceAdult = (item, index) => {
@@ -506,21 +540,40 @@ export default function ActivityDetail() {
                                                         item.id && (
                                                         <div className="flex justify-between items-center">
                                                             <div>
-                                                                <p className="text-sm text-gray-500 line-through">
-                                                                    {formatCurrency(
-                                                                        getPrice(
-                                                                            item,
-                                                                            index
-                                                                        )
-                                                                    )}{" "}
-                                                                    ₫
-                                                                </p>
-                                                                <div className="flex items-center">
-                                                                    <span className="text-red-600 font-semibold text-[22px]">
+                                                                {getDiscountPercent(
+                                                                    item,
+                                                                    index
+                                                                ) > 0 && (
+                                                                    <p className="text-sm text-gray-500 line-through">
                                                                         {formatCurrency(
                                                                             getPrice(
                                                                                 item,
                                                                                 index
+                                                                            )
+                                                                        )}{" "}
+                                                                        ₫
+                                                                    </p>
+                                                                )}
+
+                                                                <div className="flex items-center">
+                                                                    <span className="text-red-600 font-semibold text-[22px]">
+                                                                        {formatCurrency(
+                                                                            Math.max(
+                                                                                getPriceAfterDiscount(
+                                                                                    getPrice(
+                                                                                        item,
+                                                                                        index
+                                                                                    ),
+                                                                                    getDiscountAmount(
+                                                                                        item,
+                                                                                        index
+                                                                                    ),
+                                                                                    getDiscountPercent(
+                                                                                        item,
+                                                                                        index
+                                                                                    )
+                                                                                ),
+                                                                                0
                                                                             )
                                                                         )}{" "}
                                                                         ₫
@@ -782,21 +835,40 @@ export default function ActivityDetail() {
                                                             </div>
                                                         </div>
                                                         <div className="flex gap-2 items-center">
-                                                            <p className="text-sm text-gray-500 line-through">
-                                                                {formatCurrency(
-                                                                    getPrice(
-                                                                        item,
-                                                                        index
-                                                                    )
-                                                                )}{" "}
-                                                                ₫
-                                                            </p>
-                                                            <div className="flex items-center">
-                                                                <span className="text-red-600 font-semibold text-[22px]">
+                                                            {getDiscountPercent(
+                                                                item,
+                                                                index
+                                                            ) > 0 && (
+                                                                <p className="text-sm text-gray-500 line-through">
                                                                     {formatCurrency(
                                                                         getPrice(
                                                                             item,
                                                                             index
+                                                                        )
+                                                                    )}{" "}
+                                                                    ₫
+                                                                </p>
+                                                            )}
+
+                                                            <div className="flex items-center">
+                                                                <span className="text-red-600 font-semibold text-[22px]">
+                                                                    {formatCurrency(
+                                                                        Math.max(
+                                                                            getPriceAfterDiscount(
+                                                                                getPrice(
+                                                                                    item,
+                                                                                    index
+                                                                                ),
+                                                                                getDiscountAmount(
+                                                                                    item,
+                                                                                    index
+                                                                                ),
+                                                                                getDiscountPercent(
+                                                                                    item,
+                                                                                    index
+                                                                                )
+                                                                            ),
+                                                                            0
                                                                         )
                                                                     )}{" "}
                                                                     ₫
@@ -834,7 +906,8 @@ export default function ActivityDetail() {
                         {/* Related Activities */}
                         <div className="mt-12">
                             <h3 className="text-xl font-semibold mb-6">
-                                Các hoạt động hấp dẫn khác tại Hạ Long
+                                Các hoạt động hấp dẫn khác tại{" "}
+                                {activity?.city?.name}
                             </h3>
                             <Swiper
                                 slidesPerView={3}
@@ -864,7 +937,9 @@ export default function ActivityDetail() {
                                                         <div className="flex items-center gap-[4px]">
                                                             <IoIosStar className="text-[#b54c01] text-[12px]" />
                                                             <p className="font-semibold">
-                                                                {item.avg_star}
+                                                                {item.avg_star?.toFixed(
+                                                                    1
+                                                                )}
                                                             </p>
                                                             <p className="text-[13px] text-[#5e6b82]">
                                                                 (49)
@@ -901,14 +976,18 @@ export default function ActivityDetail() {
                                                         <div className="mt-[4px] flex items-center justify-end gap-[4px]">
                                                             <p className="text-[13px] text-end line-through">
                                                                 {formatCurrency(
-                                                                    item.avg_price
+                                                                    item.avg_price.toFixed(
+                                                                        0
+                                                                    )
                                                                 )}{" "}
                                                                 ₫
                                                             </p>
                                                             <div className="flex items-center justify-end gap-[8px]">
                                                                 <p className="text-[16px] font-bold text-end text-[#c53829]">
                                                                     {formatCurrency(
-                                                                        item.avg_price
+                                                                        item.avg_price.toFixed(
+                                                                            0
+                                                                        )
                                                                     )}
                                                                 </p>
                                                                 <p className="text-[12px] mt-[2px] font-semibold text-end text-[#c53829]">
@@ -1069,13 +1148,24 @@ export default function ActivityDetail() {
                                             </h1>
 
                                             <div>
-                                                <p className="text-sm text-gray-500 line-through">
-                                                    {formatCurrency(minPrice)} ₫
-                                                </p>
+                                                {minPriceDiscountPercent >
+                                                    0 && (
+                                                    <p className="text-sm text-gray-500 line-through">
+                                                        {formatCurrency(
+                                                            minPrice
+                                                        )}{" "}
+                                                        ₫
+                                                    </p>
+                                                )}
+
                                                 <div className="flex items-center">
                                                     <span className="text-red-600 font-semibold text-[22px]">
                                                         {formatCurrency(
-                                                            minPrice
+                                                            getPriceAfterDiscount(
+                                                                minPrice,
+                                                                minPriceDiscountAmount,
+                                                                minPriceDiscountPercent
+                                                            )
                                                         )}{" "}
                                                         ₫
                                                     </span>

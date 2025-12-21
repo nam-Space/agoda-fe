@@ -54,7 +54,7 @@ const ChatRoom = ({ conversation, otherUser }) => {
                         <div className="col-start-1 col-span-2">
                             <div className="flex gap-[10px]">
                                 {getOtherUser(conversation, user)?.role ===
-                                ROLE.STAFF ? (
+                                ROLE.HOTEL_STAFF ? (
                                     <>
                                         <div className="relative h-fit">
                                             <img
@@ -185,7 +185,7 @@ const ChatRoom = ({ conversation, otherUser }) => {
                         </div>
                         <div className="col-start-3 col-span-1">
                             {getOtherUser(conversation, user)?.role ===
-                                ROLE.STAFF && (
+                                ROLE.HOTEL_STAFF && (
                                 <div>
                                     <div className="text-[12px] text-[#5392f9] flex gap-[3px] items-center">
                                         <IoIosMail className="text-[13px]" />

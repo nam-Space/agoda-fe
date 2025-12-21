@@ -115,14 +115,14 @@
 }
 
 /* Styling for HTML content from API */
-.handbook-detail-container {
+.markdown-container {
     font-family: inherit;
     line-height: 1.6;
     color: #333;
 }
 
 /* Headings */
-.handbook-detail-container h1 {
+.markdown-container h1 {
     font-size: 2rem;
     font-weight: 700;
     margin: 1.5rem 0 1rem;
@@ -130,7 +130,7 @@
     line-height: 1.2;
 }
 
-.handbook-detail-container h2 {
+.markdown-container h2 {
     font-size: 1.5rem;
     font-weight: 700;
     margin: 1.25rem 0 0.75rem;
@@ -140,74 +140,74 @@
     padding-bottom: 0.5rem;
 }
 
-.handbook-detail-container h3 {
+.markdown-container h3 {
     font-size: 1.25rem;
     font-weight: 600;
     margin: 1rem 0 0.5rem;
     color: #222;
 }
 
-.handbook-detail-container h4,
-.handbook-detail-container h5,
-.handbook-detail-container h6 {
+.markdown-container h4,
+.markdown-container h5,
+.markdown-container h6 {
     font-weight: 600;
     margin: 0.75rem 0 0.5rem;
     color: #333;
 }
 
 /* Paragraphs */
-.handbook-detail-container p {
+.markdown-container p {
     margin: 0.75rem 0;
     line-height: 1.7;
     font-size: 1rem;
 }
 
-.handbook-detail-container p:first-child {
+.markdown-container p:first-child {
     margin-top: 0;
 }
 
 /* Links */
-.handbook-detail-container a {
+.markdown-container a {
     color: #0066cc;
     text-decoration: none;
     transition: color 0.2s ease;
     font-weight: 500;
 }
 
-.handbook-detail-container a:hover {
+.markdown-container a:hover {
     color: #0052a3;
     text-decoration: underline;
 }
 
 /* Lists */
-.handbook-detail-container ul,
-.handbook-detail-container ol {
+.markdown-container ul,
+.markdown-container ol {
     margin: 1rem 0;
     padding-left: 2rem;
 }
 
-.handbook-detail-container ul {
+.markdown-container ul {
     list-style-type: disc;
 }
 
-.handbook-detail-container ol {
+.markdown-container ol {
     list-style-type: decimal;
 }
 
-.handbook-detail-container ul ul,
-.handbook-detail-container ol ol,
-.handbook-detail-container ul ol,
-.handbook-detail-container ol ul {
+.markdown-container ul ul,
+.markdown-container ol ol,
+.markdown-container ul ol,
+.markdown-container ol ul {
     margin: 0.5rem 0;
 }
 
-.handbook-detail-container li {
+.markdown-container li {
     margin: 0.5rem 0;
     line-height: 1.6;
 }
 
 /* Images */
-.handbook-detail-container img {
+.markdown-container img {
     max-width: 100%;
     height: auto;
     margin: 1rem 0;
@@ -217,7 +217,7 @@
 }
 
 /* Blockquote */
-.handbook-detail-container blockquote {
+.markdown-container blockquote {
     margin: 1.5rem 0;
     padding: 1rem;
     padding-left: 1.5rem;
@@ -227,12 +227,12 @@
     color: #555;
 }
 
-.handbook-detail-container blockquote p {
+.markdown-container blockquote p {
     margin: 0;
 }
 
 /* Code and Pre */
-.handbook-detail-container code {
+.markdown-container code {
     background-color: #f5f5f5;
     padding: 2px 6px;
     border-radius: 4px;
@@ -241,7 +241,7 @@
     color: #d73a49;
 }
 
-.handbook-detail-container pre {
+.markdown-container pre {
     background-color: #282c34;
     color: #abb2bf;
     padding: 1rem;
@@ -253,14 +253,14 @@
     line-height: 1.5;
 }
 
-.handbook-detail-container pre code {
+.markdown-container pre code {
     background-color: transparent;
     color: inherit;
     padding: 0;
 }
 
 /* Tables */
-.handbook-detail-container table {
+.markdown-container table {
     width: 100%;
     border-collapse: collapse;
     margin: 1rem 0;
@@ -269,7 +269,7 @@
     overflow: hidden;
 }
 
-.handbook-detail-container th {
+.markdown-container th {
     background-color: #0066cc;
     color: white;
     padding: 0.75rem;
@@ -277,50 +277,50 @@
     font-weight: 600;
 }
 
-.handbook-detail-container td {
+.markdown-container td {
     padding: 0.75rem;
     border-bottom: 1px solid #e5e7eb;
 }
 
-.handbook-detail-container tr:hover {
+.markdown-container tr:hover {
     background-color: #f9fafb;
 }
 
-.handbook-detail-container tr:last-child td {
+.markdown-container tr:last-child td {
     border-bottom: none;
 }
 
 /* Horizontal Rule */
-.handbook-detail-container hr {
+.markdown-container hr {
     margin: 2rem 0;
     border: none;
     border-top: 2px solid #e5e7eb;
 }
 
 /* Strong and Emphasis */
-.handbook-detail-container strong,
-.handbook-detail-container b {
+.markdown-container strong,
+.markdown-container b {
     font-weight: 700;
     color: #000;
 }
 
-.handbook-detail-container em,
-.handbook-detail-container i {
+.markdown-container em,
+.markdown-container i {
     font-style: italic;
 }
 
 /* Definition Lists */
-.handbook-detail-container dl {
+.markdown-container dl {
     margin: 1rem 0;
 }
 
-.handbook-detail-container dt {
+.markdown-container dt {
     font-weight: 600;
     margin-top: 0.5rem;
     color: #222;
 }
 
-.handbook-detail-container dd {
+.markdown-container dd {
     margin-left: 2rem;
     margin-bottom: 0.5rem;
     color: #555;
@@ -328,29 +328,36 @@
 
 /* Responsive adjustments */
 @media (max-width: 768px) {
-    .handbook-detail-container h1 {
+    .markdown-container h1 {
         font-size: 1.5rem;
     }
 
-    .handbook-detail-container h2 {
+    .markdown-container h2 {
         font-size: 1.25rem;
     }
 
-    .handbook-detail-container h3 {
+    .markdown-container h3 {
         font-size: 1.1rem;
     }
 
-    .handbook-detail-container ul,
-    .handbook-detail-container ol {
+    .markdown-container ul,
+    .markdown-container ol {
         padding-left: 1.5rem;
     }
 
-    .handbook-detail-container table {
+    .markdown-container table {
         font-size: 0.9em;
     }
 
-    .handbook-detail-container th,
-    .handbook-detail-container td {
+    .markdown-container th,
+    .markdown-container td {
         padding: 0.5rem;
     }
+}
+
+.navigation-bar.isSticky {
+    left: 0;
+    right: 0;
+    margin: 0;
+    max-width: unset;
 }

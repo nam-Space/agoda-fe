@@ -1,5 +1,5 @@
-import HotelMapPopup from 'components/Hotel/HotelMapPopup';
-import { useState } from 'react';
+import HotelMapPopup from "components/Hotel/HotelMapPopup";
+import { useState } from "react";
 
 const HotelOverviewSection = ({
     title,
@@ -29,7 +29,7 @@ const HotelOverviewSection = ({
             <div className="mb-6">
                 <h1 className="text-2xl font-bold text-gray-800">{title}</h1>
                 <p className="text-sm text-gray-600">
-                    {address} -{' '}
+                    {address} -{" "}
                     <a
                         href="#"
                         onClick={(e) => {
@@ -43,9 +43,7 @@ const HotelOverviewSection = ({
                 </p>
 
                 {/* SHOW POPUP OUTSIDE <p> TAG! */}
-                {showMap && (
-                    <HotelMapPopup onClose={() => setShowMap(false)} />
-                )}
+                {showMap && <HotelMapPopup onClose={() => setShowMap(false)} />}
 
                 <div className="flex space-x-2 mt-4">
                     {tags.map((tag, index) => (
@@ -59,20 +57,28 @@ const HotelOverviewSection = ({
                 </div>
             </div>
 
-           {/* Highlights Section */}
-           <div className="highlights-section grid grid-cols-5 gap-4 mb-6">
-            {highlights.map((highlight, index) => (
-                <div key={index} className="flex flex-col items-center text-center">
-                    {highlight.icon ? (
-                        <img src={highlight.icon} alt="Icon" className="w-8 h-8 mb-1" />
-                    ) : (
-                    <span className="w-8 h-8 mb-1 flex items-center justify-center" />
-                    )}
-                    <p className="text-sm text-gray-600 leading-5">{highlight.text}</p>
+            {/* Highlights Section */}
+            <div className="highlights-section grid grid-cols-5 gap-4 mb-6">
+                {highlights.map((highlight, index) => (
+                    <div
+                        key={index}
+                        className="flex flex-col items-center text-center"
+                    >
+                        {highlight.icon ? (
+                            <img
+                                src={highlight.icon}
+                                alt="Icon"
+                                className="w-8 h-8 mb-1"
+                            />
+                        ) : (
+                            <span className="w-8 h-8 mb-1 flex items-center justify-center" />
+                        )}
+                        <p className="text-sm text-gray-600 leading-5">
+                            {highlight.text}
+                        </p>
                     </div>
                 ))}
-                </div>
-
+            </div>
 
             {/* Room and Space Section
             <div className="room-space-section mb-6">
@@ -89,35 +95,48 @@ const HotelOverviewSection = ({
 
             {/* Promotion Section */}
             <div className="new-section bg-white border border-gray-300 rounded-lg p-4 mt-6">
-                <h2 className="text-lg font-bold text-gray-800 mb-4">{promotionTitle}</h2>
-                <div className="grid grid-cols-4 gap-4 mb-6">
+                <h2 className="text-lg font-bold text-gray-800 mb-4">
+                    {promotionTitle}
+                </h2>
+                <div className="grid grid-cols-4 gap-3 mb-6">
                     {promotionCategories.map((category, index) => (
                         <div key={index}>
-                            <h3 className="text-sm font-bold text-gray-800">{category.title}</h3>
-                            <ul className="text-sm text-gray-600">
+                            <h3 className="text-sm font-bold text-gray-800">
+                                {category.title}
+                            </h3>
+                            <div className="text-sm text-gray-600 grid gap-3 mt-3">
                                 {category.items.map((item, idx) => (
-                                    <li key={idx}>✔ {item}</li>
+                                    <div key={idx}>✔ {item}</div>
                                 ))}
-                            </ul>
+                            </div>
                         </div>
                     ))}
                 </div>
 
                 <hr className="border-t border-gray-300 mb-4" />
-                <h2 className="text-lg font-bold text-gray-800 mb-4">Cơ sở vật chất</h2>
-                <ul className="grid grid-cols-2 gap-4 text-sm text-gray-600">
+                <h2 className="text-lg font-bold text-gray-800 mb-4">
+                    Cơ sở vật chất
+                </h2>
+                <div className="grid grid-cols-2 gap-3 text-sm text-gray-600 mb-6">
                     {facilities.map((facility, index) => (
-                        <li key={index}>✔ {facility}</li>
+                        <div key={index}>✔ {facility}</div>
                     ))}
-                </ul>
+                </div>
 
                 <hr className="border-t border-gray-300 mb-4" />
-                <h2 className="text-lg font-bold text-gray-800 mb-4">Về chúng tôi</h2>
+                <h2 className="text-lg font-bold text-gray-800 mb-4">
+                    Về chúng tôi
+                </h2>
                 <p className="text-sm text-gray-600 mb-4">
-                    {isExpanded ? aboutText : `${aboutText.substring(0, 100)}...`}
+                    {isExpanded
+                        ? aboutText
+                        : `${aboutText.substring(0, 100)}...`}
                 </p>
-                <button onClick={toggleReadMore} className="text-blue-600 hover:underline">
-                    {isExpanded ? 'Thu gọn' : 'Đọc thêm'}
+                <button
+                    onClick={toggleReadMore}
+                    className="text-blue-600 hover:underline"
+                >
+                    {isExpanded ? "Thu gọn" : "Đọc thêm"}
                 </button>
 
                 <hr className="border-t border-gray-300 mb-4" />
