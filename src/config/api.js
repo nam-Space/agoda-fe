@@ -280,7 +280,7 @@ export const getPromotionDetail = (promotionId, params) => {
 export const getImageUrl = (imagePath) => {
     if (!imagePath) return '';
     if (imagePath.startsWith('http')) return imagePath;
-    return `http://127.0.0.1:8000${imagePath}`;
+    return `${process.env.REACT_APP_BE_URL}${imagePath}`;
 };
 //Country
 export const getCountries = (params) => {
