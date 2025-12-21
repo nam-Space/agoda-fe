@@ -1,23 +1,68 @@
 // SearchBar.jsx
-import { People, Search } from '@mui/icons-material';
-import { useState } from 'react';
-import { DatePicker } from 'antd';
-import moment from 'moment';
-import { callSearchRoomQuery } from '../../config/api';
+import { People, Search } from "@mui/icons-material";
+import { useState, useEffect } from "react";
+import { DatePicker, Radio, Select, Popover, List } from "antd";
+import dayjs from "dayjs";
+import { callSearchRoomQuery, callLocationSuggestions } from "../../config/api";
 
-const SearchBar = ({ onSearch = () => console.log('onSearch not provided') }) => {
+const { Option } = Select;
+
+const disabledDate = (current) => {
+  // Disable ngày hiện tại và ngày đã qua
+  return current && current < dayjs().startOf("day");
+};
+
+const SearchBar = ({
+  onSearch = () => console.log("onSearch not provided"),
+  initialValues = {},
+}) => {
   const [selectedDate1, setSelectedDate1] = useState(null);
   const [selectedDate2, setSelectedDate2] = useState(null);
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [rooms, setRooms] = useState(1);
   const [adults, setAdults] = useState(2);
   const [children, setChildren] = useState(0);
-  const [searchQuery, setSearchQuery] = useState('The Song House Vung Tau');
+  const [searchQuery, setSearchQuery] = useState("The Song House Vung Tau");
+  const [stayType, setStayType] = useState("overnight");
+  const [suggestions, setSuggestions] = useState([]);
+  const [popoverOpen, setPopoverOpen] = useState(false);
+  const [peoplePopoverOpen, setPeoplePopoverOpen] = useState(false);
 
-  const toggleDropdown = () => setIsDropdownOpen(!isDropdownOpen);
+  useEffect(() => {
+    if (initialValues.startDate) setSelectedDate1(initialValues.startDate);
+    if (initialValues.endDate) setSelectedDate2(initialValues.endDate);
+    if (initialValues.adult) setAdults(parseInt(initialValues.adult) || 2);
+    if (initialValues.child) setChildren(parseInt(initialValues.child) || 0);
+    if (initialValues.room) setRooms(parseInt(initialValues.room) || 1);
+    if (initialValues.stay_type) setStayType(initialValues.stay_type);
+    if (initialValues.location) setSearchQuery(initialValues.location); // assuming location is hotel name or city
+  }, [initialValues]);
+
+  const handleInputChange = async (e) => {
+    const value = e.target.value;
+    setSearchQuery(value);
+    if (value.length > 2) {
+      try {
+        const response = await callLocationSuggestions(value, "hotel");
+        setSuggestions(response?.data || []);
+        setPopoverOpen(true);
+      } catch (error) {
+        console.error("Error fetching suggestions:", error);
+        setSuggestions([]);
+      }
+    } else {
+      setSuggestions([]);
+      setPopoverOpen(false);
+    }
+  };
+
+  const handleSuggestionClick = (suggestion) => {
+    setSearchQuery(suggestion.name || suggestion);
+    setPopoverOpen(false);
+  };
 
   const increment = (setter) => setter((prev) => prev + 1);
-  const decrement = (setter, min = 0) => setter((prev) => (prev > min ? prev - 1 : min));
+  const decrement = (setter, min = 0) =>
+    setter((prev) => (prev > min ? prev - 1 : min));
 
   // Handler cho RangePicker
   const handleRangeChange = (dates, dateStrings) => {
@@ -27,7 +72,10 @@ const SearchBar = ({ onSearch = () => console.log('onSearch not provided') }) =>
 
   const handleSearch = async () => {
     try {
-      const query = `hotel_name=${encodeURIComponent(searchQuery)}&adults=${adults}&children=${children}&start_date=${selectedDate1}&end_date=${selectedDate2}`;
+      const endDate = stayType === "dayuse" ? selectedDate1 : selectedDate2;
+      const query = `hotel_name=${encodeURIComponent(
+        searchQuery
+      )}&adults=${adults}&children=${children}&start_date=${selectedDate1}&end_date=${endDate}&stay_type=${stayType}`;
       const response = await callSearchRoomQuery(query);
 
       console.log("API raw response:", response);
@@ -36,105 +84,207 @@ const SearchBar = ({ onSearch = () => console.log('onSearch not provided') }) =>
       const roomsData = hotelInfo?.rooms || [];
 
       onSearch({
-        hotelId: hotelInfo?.id || 'default-id',
+        hotelId: hotelInfo?.id || "default-id",
         hotel: hotelInfo,
         rooms: roomsData,
         startDate: selectedDate1,
-        endDate: selectedDate2,
+        endDate: endDate,
         capacity: adults + children,
         adults,
         children,
         roomsCount: rooms,
+        stay_type: stayType,
       });
     } catch (err) {
-      console.error('Search failed:', err);
+      console.error("Search failed:", err);
+      const endDate = stayType === "dayuse" ? selectedDate1 : selectedDate2;
       onSearch({
-        hotelId: 'default-id',
+        hotelId: "default-id",
         hotel: null,
         rooms: [],
         startDate: selectedDate1,
-        endDate: selectedDate2,
+        endDate: endDate,
         adults,
         children,
         roomsCount: rooms,
+        stay_type: stayType,
       });
     }
   };
 
   return (
-    <div className="search-bar bg-blue-900 shadow p-4 flex justify-center items-center text-white relative">
-      {/* Search input */}
-      <div className="flex items-center bg-white text-black rounded px-4 py-2 w-full max-w-md">
-        <Search className="text-gray-600 mr-2" />
-        <input
-          type="text"
-          placeholder="Nhập tên khách sạn..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="border-none outline-none w-full"
-        />
-      </div>
-
-      {/* Filters */}
-      <div className="filters flex space-x-4 items-center px-4 py-2">
-        <DatePicker.RangePicker
-          format="YYYY-MM-DD"
-          value={selectedDate1 && selectedDate2 ? [selectedDate1 ? moment(selectedDate1) : null, selectedDate2 ? moment(selectedDate2) : null] : []}
-          onChange={handleRangeChange}
-          placeholder={["Chọn ngày nhận phòng", "Chọn ngày trả phòng"]}
-          className="bg-white text-black rounded px-4 py-2"
-          allowClear
-        />
-        <div className="relative">
-          <button
-            onClick={toggleDropdown}
-            className="flex items-center bg-white text-black rounded px-4 py-2"
+    <div className="search-bar bg-blue-900 shadow px-8 py-8 mx-10 rounded flex justify-center text-white relative">
+      <div className="flex flex-row items-center gap-4 w-full max-w-7xl">
+        {/* Stay Type */}
+        <div className="w-30 mr-3">
+          <Select
+            value={stayType}
+            onChange={setStayType}
+            className="bg-white text-black rounded w-full"
           >
-            <People className="mr-2 text-gray-600" />
-            <span>{adults} người lớn, {rooms} phòng</span>
+            <Option value="overnight">Qua đêm</Option>
+            <Option value="dayuse">Trong ngày</Option>
+          </Select>
+        </div>
+
+        <div className="w-[250px] max-w-md">
+          <Popover
+            content={
+              suggestions.length > 0 ? (
+                <List
+                  size="small"
+                  dataSource={suggestions}
+                  renderItem={(item) => (
+                    <List.Item
+                      onClick={() => handleSuggestionClick(item)}
+                      style={{ cursor: "pointer" }}
+                    >
+                      {item.name || item}
+                    </List.Item>
+                  )}
+                />
+              ) : null
+            }
+            trigger="focus"
+            open={popoverOpen && suggestions.length > 0}
+            onOpenChange={setPopoverOpen}
+            placement="bottomLeft"
+          >
+            <div className="flex items-center bg-white text-black rounded px-4 py-2">
+              <Search className="text-gray-600 mr-2" />
+              <input
+                type="text"
+                placeholder="Nhập tên khách sạn..."
+                value={searchQuery}
+                onChange={handleInputChange}
+                className="border-none outline-none w-full"
+              />
+            </div>
+          </Popover>
+        </div>
+        {/* Date Picker */}
+        <div className="ml-3 flex-1 max-w-sm">
+          {stayType === "dayuse" ? (
+            <DatePicker
+              format="YYYY-MM-DD"
+              value={selectedDate1 ? dayjs(selectedDate1) : null}
+              onChange={(date) => {
+                const dateString = date ? date.format("YYYY-MM-DD") : null;
+                setSelectedDate1(dateString);
+                setSelectedDate2(dateString); // For dayuse, start and end are the same
+              }}
+              placeholder="Chọn ngày"
+              className="bg-white text-black rounded w-full"
+              style={{ fontSize: "32px" }}
+              disabledDate={disabledDate}
+              allowClear
+            />
+          ) : (
+            <DatePicker.RangePicker
+              format="YYYY-MM-DD"
+              value={
+                selectedDate1 && selectedDate2
+                  ? [
+                      selectedDate1 ? dayjs(selectedDate1) : null,
+                      selectedDate2 ? dayjs(selectedDate2) : null,
+                    ]
+                  : []
+              }
+              onChange={handleRangeChange}
+              placeholder={["Chọn ngày nhận phòng", "Chọn ngày trả phòng"]}
+              className="bg-white text-black rounded w-full"
+              style={{ fontSize: "32px" }}
+              disabledDate={disabledDate}
+              allowClear
+            />
+          )}
+        </div>
+
+        {/* People Button */}
+        <div className="w-[250px]">
+          <Popover
+            content={
+              <div className="p-4 w-64">
+                <div className="flex justify-between items-center mb-2">
+                  <span>Phòng</span>
+                  <div className="flex items-center space-x-2">
+                    <button
+                      onClick={() => decrement(setRooms, 1)}
+                      className="border rounded px-2 py-1"
+                    >
+                      -
+                    </button>
+                    <span>{rooms}</span>
+                    <button
+                      onClick={() => increment(setRooms)}
+                      className="border rounded px-2 py-1"
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
+                <div className="flex justify-between items-center mb-2">
+                  <span>Người lớn</span>
+                  <div className="flex items-center space-x-2">
+                    <button
+                      onClick={() => decrement(setAdults, 1)}
+                      className="border rounded px-2 py-1"
+                    >
+                      -
+                    </button>
+                    <span>{adults}</span>
+                    <button
+                      onClick={() => increment(setAdults)}
+                      className="border rounded px-2 py-1"
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span>Trẻ em</span>
+                  <div className="flex items-center space-x-2">
+                    <button
+                      onClick={() => decrement(setChildren, 0)}
+                      className="border rounded px-2 py-1"
+                    >
+                      -
+                    </button>
+                    <span>{children}</span>
+                    <button
+                      onClick={() => increment(setChildren)}
+                      className="border rounded px-2 py-1"
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
+              </div>
+            }
+            trigger="click"
+            open={peoplePopoverOpen}
+            onOpenChange={setPeoplePopoverOpen}
+            placement="bottom"
+          >
+            <button className="flex items-center bg-white text-black rounded px-4 py-2 w-full justify-center">
+              <People className="mr-2 text-gray-600" />
+              <span>
+                {adults} người lớn, {rooms} phòng
+              </span>
+            </button>
+          </Popover>
+        </div>
+
+        {/* Search Button */}
+        <div className="w-32">
+          <button
+            onClick={handleSearch}
+            className="bg-blue-700 text-white px-4 py-2 rounded w-full hover:bg-blue-800"
+          >
+            Cập nhật
           </button>
         </div>
       </div>
-
-      {/* Search button */}
-      <button
-        onClick={handleSearch}
-        className="bg-blue-700 text-white px-4 py-2 rounded"
-      >
-        Cập nhật
-      </button>
-
-      {/* Dropdown rooms/adults/children */}
-      {isDropdownOpen && (
-        // <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 bg-white shadow-lg rounded-lg p-4 w-64 z-50">
-          <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 bg-white text-gray-800 shadow-lg rounded-lg p-4 w-64 z-50">
-
-          <div className="flex justify-between items-center mb-2">
-            <span>Phòng</span>
-            <div className="flex items-center space-x-2">
-              <button onClick={() => decrement(setRooms, 1)} className="border rounded px-2 py-1">-</button>
-              <span>{rooms}</span>
-              <button onClick={() => increment(setRooms)} className="border rounded px-2 py-1">+</button>
-            </div>
-          </div>
-          <div className="flex justify-between items-center mb-2">
-            <span>Người lớn</span>
-            <div className="flex items-center space-x-2">
-              <button onClick={() => decrement(setAdults, 1)} className="border rounded px-2 py-1">-</button>
-              <span>{adults}</span>
-              <button onClick={() => increment(setAdults)} className="border rounded px-2 py-1">+</button>
-            </div>
-          </div>
-          <div className="flex justify-between items-center">
-            <span>Trẻ em</span>
-            <div className="flex items-center space-x-2">
-              <button onClick={() => decrement(setChildren, 0)} className="border rounded px-2 py-1">-</button>
-              <span>{children}</span>
-              <button onClick={() => increment(setChildren)} className="border rounded px-2 py-1">+</button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

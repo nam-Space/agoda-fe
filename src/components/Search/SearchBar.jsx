@@ -1,25 +1,107 @@
-import React, { useState } from 'react';
-import { Card, Row, Col, DatePicker, Button, Input, Popover, InputNumber, Divider } from 'antd';
-import { SearchOutlined, EnvironmentOutlined, UserOutlined, PlusOutlined, MinusOutlined } from '@ant-design/icons';
-import dayjs from 'dayjs';
+import React, { useState, useEffect, useCallback } from "react";
+import {
+  Card,
+  Row,
+  Col,
+  DatePicker,
+  Button,
+  Input,
+  Popover,
+  InputNumber,
+  Divider,
+  Select,
+} from "antd";
+import {
+  SearchOutlined,
+  EnvironmentOutlined,
+  UserOutlined,
+  PlusOutlined,
+  MinusOutlined,
+} from "@ant-design/icons";
+import dayjs from "dayjs";
+import { getCities } from "config/api";
 
 const { RangePicker } = DatePicker;
 
-const SearchForm = ({ onSearch }) => {
+const SearchForm = ({ onSearch, initialValues = {} }) => {
   const [searchValues, setSearchValues] = useState({
-    location: '',
+    location: initialValues.location || "",
+    cityId: initialValues.cityId || "",
     dates: [null, null],
-    rooms: 0,
-    adults: 0,
-    children: 0,
+    rooms: initialValues.room || 1,
+    adults: initialValues.adult || 1,
+    children: initialValues.child || 0,
+    stay_type: initialValues.stay_type || "overnight",
   });
+
+  useEffect(() => {
+    if (initialValues.startDate && initialValues.endDate) {
+      setSearchValues((prev) => ({
+        ...prev,
+        dates: [dayjs(initialValues.startDate), dayjs(initialValues.endDate)],
+      }));
+    }
+    setSearchValues((prev) => ({
+      ...prev,
+      location: initialValues.location || "",
+      cityId: initialValues.cityId || "",
+      stay_type: initialValues.stay_type || "overnight",
+    }));
+    setLocationInput(initialValues.location || "");
+  }, [
+    initialValues.startDate,
+    initialValues.endDate,
+    initialValues.location,
+    initialValues.cityId,
+    initialValues.stay_type,
+  ]);
 
   const [locationPopoverOpen, setLocationPopoverOpen] = useState(false);
   const [guestPopoverOpen, setGuestPopoverOpen] = useState(false);
   const [datePickerOpen, setDatePickerOpen] = useState(false);
 
-  const handleSearch = () => {
-    onSearch(searchValues);
+  const [locationInput, setLocationInput] = useState(
+    initialValues.location || ""
+  );
+  const [suggestions, setSuggestions] = useState([]);
+  const [loadingSuggestions, setLoadingSuggestions] = useState(false);
+
+  const fetchSuggestions = useCallback(async (query) => {
+    if (query.length < 2) {
+      setSuggestions([]);
+      return;
+    }
+    setLoadingSuggestions(true);
+    try {
+      const res = await getCities({ name: query });
+      setSuggestions(res.data || []);
+    } catch (error) {
+      console.error("Error fetching suggestions:", error);
+      setSuggestions([]);
+    }
+    setLoadingSuggestions(false);
+  }, []);
+
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      fetchSuggestions(locationInput);
+    }, 300);
+    return () => clearTimeout(timeoutId);
+  }, [locationInput, fetchSuggestions]);
+
+  const updateLocationAndSearch = (item) => {
+    const newValues = {
+      ...searchValues,
+      location: item.name,
+      cityId: item.id,
+    };
+    setSearchValues(newValues);
+    setLocationInput(item.name);
+    setLocationPopoverOpen(false);
+    // Nếu đủ info, tự động search
+    if (newValues.dates[0] && newValues.dates[1] && newValues.adults) {
+      onSearch(newValues);
+    }
   };
 
   const handleBackdropClick = () => {
@@ -28,36 +110,32 @@ const SearchForm = ({ onSearch }) => {
     setDatePickerOpen(false);
   };
 
-  // Popular destinations for location popover
-  const popularDestinations = [
-    'Nha Trang',
-    'Hà Nội',
-    'Hồ Chí Minh',
-    'Đà Nẵng',
-    'Hội An',
-    'Phú Quốc',
-    'Đà Lạt',
-    'Sapa'
-  ];
-
   const LocationPopoverContent = () => (
     <div className="w-64">
-      <div className="text-sm font-medium text-gray-600 mb-3">Điểm đến phổ biến</div>
-      <div className="space-y-1">
-        {popularDestinations.slice(0, 5).map(destination => (
-          <div
-            key={destination}
-            className="p-2 hover:bg-gray-50 cursor-pointer rounded flex items-center"
-            onClick={() => {
-              setSearchValues({ ...searchValues, location: destination });
-              setLocationPopoverOpen(false);
-            }}
-          >
-            <EnvironmentOutlined className="text-gray-400 mr-2" />
-            <span>{destination}</span>
-          </div>
-        ))}
+      <div className="text-sm font-medium text-gray-600 mb-3">
+        Điểm đến gợi ý
       </div>
+      {loadingSuggestions ? (
+        <div className="text-center py-4">Đang tải...</div>
+      ) : (
+        <div className="space-y-1 max-h-60 overflow-y-auto">
+          {suggestions.map((item, index) => (
+            <div
+              key={index}
+              className="p-2 hover:bg-gray-50 cursor-pointer rounded flex items-center"
+              onClick={() => updateLocationAndSearch(item)}
+            >
+              <EnvironmentOutlined className="text-gray-400 mr-2" />
+              <span>{item.name}</span>
+            </div>
+          ))}
+          {suggestions.length === 0 && locationInput.length >= 2 && (
+            <div className="text-center py-4 text-gray-500">
+              Không tìm thấy kết quả
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 
@@ -73,22 +151,28 @@ const SearchForm = ({ onSearch }) => {
             type="text"
             shape="circle"
             icon={<MinusOutlined />}
-            onClick={() => setSearchValues({ 
-              ...searchValues, 
-              rooms: Math.max(1, searchValues.rooms - 1) 
-            })}
+            onClick={() =>
+              setSearchValues({
+                ...searchValues,
+                rooms: Math.max(1, searchValues.rooms - 1),
+              })
+            }
             disabled={searchValues.rooms <= 1}
             className="border border-gray-300"
           />
-          <span className="w-8 text-center font-medium">{searchValues.rooms}</span>
+          <span className="w-8 text-center font-medium">
+            {searchValues.rooms}
+          </span>
           <Button
             type="text"
             shape="circle"
             icon={<PlusOutlined />}
-            onClick={() => setSearchValues({ 
-              ...searchValues, 
-              rooms: Math.min(10, searchValues.rooms + 1) 
-            })}
+            onClick={() =>
+              setSearchValues({
+                ...searchValues,
+                rooms: Math.min(10, searchValues.rooms + 1),
+              })
+            }
             disabled={searchValues.rooms >= 10}
             className="border border-gray-300"
           />
@@ -108,22 +192,28 @@ const SearchForm = ({ onSearch }) => {
             type="text"
             shape="circle"
             icon={<MinusOutlined />}
-            onClick={() => setSearchValues({ 
-              ...searchValues, 
-              adults: Math.max(1, searchValues.adults - 1) 
-            })}
+            onClick={() =>
+              setSearchValues({
+                ...searchValues,
+                adults: Math.max(1, searchValues.adults - 1),
+              })
+            }
             disabled={searchValues.adults <= 1}
             className="border border-gray-300"
           />
-          <span className="w-8 text-center font-medium">{searchValues.adults}</span>
+          <span className="w-8 text-center font-medium">
+            {searchValues.adults}
+          </span>
           <Button
             type="text"
             shape="circle"
             icon={<PlusOutlined />}
-            onClick={() => setSearchValues({ 
-              ...searchValues, 
-              adults: Math.min(10, searchValues.adults + 1) 
-            })}
+            onClick={() =>
+              setSearchValues({
+                ...searchValues,
+                adults: Math.min(10, searchValues.adults + 1),
+              })
+            }
             disabled={searchValues.adults >= 10}
             className="border border-gray-300"
           />
@@ -143,22 +233,28 @@ const SearchForm = ({ onSearch }) => {
             type="text"
             shape="circle"
             icon={<MinusOutlined />}
-            onClick={() => setSearchValues({ 
-              ...searchValues, 
-              children: Math.max(0, searchValues.children - 1) 
-            })}
+            onClick={() =>
+              setSearchValues({
+                ...searchValues,
+                children: Math.max(0, searchValues.children - 1),
+              })
+            }
             disabled={searchValues.children <= 0}
             className="border border-gray-300"
           />
-          <span className="w-8 text-center font-medium">{searchValues.children}</span>
+          <span className="w-8 text-center font-medium">
+            {searchValues.children}
+          </span>
           <Button
             type="text"
             shape="circle"
             icon={<PlusOutlined />}
-            onClick={() => setSearchValues({ 
-              ...searchValues, 
-              children: Math.min(10, searchValues.children + 1) 
-            })}
+            onClick={() =>
+              setSearchValues({
+                ...searchValues,
+                children: Math.min(10, searchValues.children + 1),
+              })
+            }
             disabled={searchValues.children >= 10}
             className="border border-gray-300"
           />
@@ -169,7 +265,9 @@ const SearchForm = ({ onSearch }) => {
 
   const getGuestSummary = () => {
     const totalGuests = searchValues.adults + searchValues.children;
-    return `${totalGuests} người lớn${searchValues.children > 0 ? `, ${searchValues.children} trẻ em` : ''}, ${searchValues.rooms} phòng`;
+    return `${totalGuests} người lớn${
+      searchValues.children > 0 ? `, ${searchValues.children} trẻ em` : ""
+    }, ${searchValues.rooms} phòng`;
   };
 
   return (
@@ -181,7 +279,7 @@ const SearchForm = ({ onSearch }) => {
           onClick={handleBackdropClick}
         />
       )}
-      
+
       <Card className="mb-6 shadow-lg relative z-20">
         <Row gutter={[16, 16]} align="middle">
           {/* Destination */}
@@ -198,10 +296,11 @@ const SearchForm = ({ onSearch }) => {
                 <Input
                   size="large"
                   prefix={<EnvironmentOutlined className="text-gray-400" />}
-                  value={searchValues.location}
-                  readOnly
+                  value={locationInput}
+                  onChange={(e) => setLocationInput(e.target.value)}
                   className="cursor-pointer"
                   placeholder="Chọn điểm đến"
+                  onFocus={() => setLocationPopoverOpen(true)}
                 />
               </Popover>
             </div>
@@ -214,19 +313,21 @@ const SearchForm = ({ onSearch }) => {
                 size="large"
                 className="w-full"
                 value={searchValues.dates}
-                onChange={(dates) => setSearchValues({ ...searchValues, dates: dates || [] })}
+                onChange={(dates) =>
+                  setSearchValues({ ...searchValues, dates: dates || [] })
+                }
                 format="DD/MM/YYYY"
                 open={datePickerOpen}
                 onOpenChange={setDatePickerOpen}
                 dropdownClassName="z-30"
-                placeholder={['Nhận phòng', 'Trả phòng']}
+                placeholder={["Nhận phòng", "Trả phòng"]}
               />
             </div>
           </Col>
 
           {/* Guests & Rooms */}
           <Col xs={24} md={6}>
-            <div className="space-y-2">
+            <div className="space-y-2 mt-2">
               <Popover
                 content={<GuestPopoverContent />}
                 trigger="click"
@@ -253,13 +354,31 @@ const SearchForm = ({ onSearch }) => {
               type="primary"
               size="large"
               icon={<SearchOutlined />}
-              onClick={handleSearch}
+              onClick={() => onSearch(searchValues)}
               className="w-full bg-blue-600 hover:bg-blue-700 border-blue-600 hover:border-blue-700"
             >
               Tìm kiếm
             </Button>
           </Col>
         </Row>
+
+        {/* Stay Type */}
+        <Col xs={24} md={4}>
+          <div className="space-y-2">
+            <Select
+              size="large"
+              value={searchValues.stay_type}
+              onChange={(value) =>
+                setSearchValues({ ...searchValues, stay_type: value })
+              }
+              className="w-full"
+              placeholder="Loại lưu trú"
+            >
+              <Select.Option value="overnight">Qua đêm</Select.Option>
+              <Select.Option value="dayuse">Trong ngày</Select.Option>
+            </Select>
+          </div>
+        </Col>
       </Card>
     </>
   );
