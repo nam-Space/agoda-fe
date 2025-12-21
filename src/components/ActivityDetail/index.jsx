@@ -28,7 +28,7 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { callFetchDetailActivity } from "config/api";
 import { ACTIVITY_TYPE } from "constants/activity";
 import { callFetchActivity } from "config/api";
-import { formatCurrency } from "utils/formatCurrency";
+import { formatCurrency, getPriceAfterDiscount } from "utils/formatCurrency";
 import { callFetchActivityPackageByActivityIdAndDateLaunch } from "config/api";
 import _ from "lodash";
 import { INF } from "constants/activity";
@@ -54,7 +54,8 @@ export default function ActivityDetail() {
     const [activity, setActivity] = useState({});
     const [activityPackages, setActivityPackages] = useState([]);
     const [minPrice, setMinPrice] = useState(INF);
-    const [minPriceDiscount, setMinPriceDiscount] = useState(0);
+    const [minPriceDiscountPercent, setMinPriceDiscountPercent] = useState(INF);
+    const [minPriceDiscountAmount, setMinPriceDiscountAmount] = useState(0);
     const [activeKey, setActiveKey] = useState(["1"]);
     const [loadingActivityPackages, setLoadingActivityPackages] =
         useState(false);
@@ -171,7 +172,8 @@ export default function ActivityDetail() {
             groupById(activityPackages).map((item) => dateSelectedGeneral)
         );
         setMinPrice(INF);
-        setMinPriceDiscount(0);
+        setMinPriceDiscountPercent(INF);
+        setMinPriceDiscountAmount(INF);
     }, [activityPackages]);
 
     const handleChange = (key) => {
@@ -201,15 +203,18 @@ export default function ActivityDetail() {
 
         if (price < minPrice) {
             setMinPrice(price);
-            setMinPriceDiscount(
+            setMinPriceDiscountPercent(
                 activity_date?.promotion?.discount_percent || 0
+            );
+            setMinPriceDiscountAmount(
+                activity_date?.promotion?.discount_amount || 0
             );
         }
 
         return price;
     };
 
-    const getPriceDiscount = (item, index) => {
+    const getDiscountPercent = (item, index) => {
         const activity_date = item.activity_package.activities_dates.find(
             (activities_date) =>
                 activities_date.date_launch.substring(0, 10) ===
@@ -217,6 +222,18 @@ export default function ActivityDetail() {
         );
 
         const discount = activity_date?.promotion?.discount_percent || 0;
+
+        return discount;
+    };
+
+    const getDiscountAmount = (item, index) => {
+        const activity_date = item.activity_package.activities_dates.find(
+            (activities_date) =>
+                activities_date.date_launch.substring(0, 10) ===
+                dateTickets[index]
+        );
+
+        const discount = activity_date?.promotion?.discount_amount || 0;
 
         return discount;
     };
@@ -523,7 +540,7 @@ export default function ActivityDetail() {
                                                         item.id && (
                                                         <div className="flex justify-between items-center">
                                                             <div>
-                                                                {getPriceDiscount(
+                                                                {getDiscountPercent(
                                                                     item,
                                                                     index
                                                                 ) > 0 && (
@@ -542,19 +559,20 @@ export default function ActivityDetail() {
                                                                     <span className="text-red-600 font-semibold text-[22px]">
                                                                         {formatCurrency(
                                                                             Math.max(
-                                                                                getPrice(
-                                                                                    item,
-                                                                                    index
-                                                                                ) -
-                                                                                    (getPrice(
+                                                                                getPriceAfterDiscount(
+                                                                                    getPrice(
                                                                                         item,
                                                                                         index
-                                                                                    ) *
-                                                                                        getPriceDiscount(
-                                                                                            item,
-                                                                                            index
-                                                                                        )) /
-                                                                                        100,
+                                                                                    ),
+                                                                                    getDiscountAmount(
+                                                                                        item,
+                                                                                        index
+                                                                                    ),
+                                                                                    getDiscountPercent(
+                                                                                        item,
+                                                                                        index
+                                                                                    )
+                                                                                ),
                                                                                 0
                                                                             )
                                                                         )}{" "}
@@ -817,7 +835,7 @@ export default function ActivityDetail() {
                                                             </div>
                                                         </div>
                                                         <div className="flex gap-2 items-center">
-                                                            {getPriceDiscount(
+                                                            {getDiscountPercent(
                                                                 item,
                                                                 index
                                                             ) > 0 && (
@@ -836,19 +854,20 @@ export default function ActivityDetail() {
                                                                 <span className="text-red-600 font-semibold text-[22px]">
                                                                     {formatCurrency(
                                                                         Math.max(
-                                                                            getPrice(
-                                                                                item,
-                                                                                index
-                                                                            ) -
-                                                                                (getPriceDiscount(
+                                                                            getPriceAfterDiscount(
+                                                                                getPrice(
                                                                                     item,
                                                                                     index
-                                                                                ) *
-                                                                                    getPrice(
-                                                                                        item,
-                                                                                        index
-                                                                                    )) /
-                                                                                    100,
+                                                                                ),
+                                                                                getDiscountAmount(
+                                                                                    item,
+                                                                                    index
+                                                                                ),
+                                                                                getDiscountPercent(
+                                                                                    item,
+                                                                                    index
+                                                                                )
+                                                                            ),
                                                                             0
                                                                         )
                                                                     )}{" "}
@@ -1129,7 +1148,8 @@ export default function ActivityDetail() {
                                             </h1>
 
                                             <div>
-                                                {minPriceDiscount > 0 && (
+                                                {minPriceDiscountPercent >
+                                                    0 && (
                                                     <p className="text-sm text-gray-500 line-through">
                                                         {formatCurrency(
                                                             minPrice
@@ -1141,10 +1161,11 @@ export default function ActivityDetail() {
                                                 <div className="flex items-center">
                                                     <span className="text-red-600 font-semibold text-[22px]">
                                                         {formatCurrency(
-                                                            minPrice -
-                                                                (minPrice *
-                                                                    minPriceDiscount) /
-                                                                    100
+                                                            getPriceAfterDiscount(
+                                                                minPrice,
+                                                                minPriceDiscountAmount,
+                                                                minPriceDiscountPercent
+                                                            )
                                                         )}{" "}
                                                         ₫
                                                     </span>
@@ -1216,16 +1237,7 @@ export default function ActivityDetail() {
                                                           getSinglePriceAdult(
                                                               selectedTickerOption,
                                                               selectedIndexTicket
-                                                          ) -
-                                                              (getSinglePriceAdult(
-                                                                  selectedTickerOption,
-                                                                  selectedIndexTicket
-                                                              ) *
-                                                                  getPriceDiscount(
-                                                                      selectedTickerOption,
-                                                                      selectedIndexTicket
-                                                                  )) /
-                                                                  100
+                                                          )
                                                       )} ₫ X
                                                 
                                                     ${
@@ -1250,16 +1262,7 @@ export default function ActivityDetail() {
                                                           getSinglePriceChild(
                                                               selectedTickerOption,
                                                               selectedIndexTicket
-                                                          ) -
-                                                              (getSinglePriceChild(
-                                                                  selectedTickerOption,
-                                                                  selectedIndexTicket
-                                                              ) *
-                                                                  getPriceDiscount(
-                                                                      selectedTickerOption,
-                                                                      selectedIndexTicket
-                                                                  )) /
-                                                                  100
+                                                          )
                                                       )} ₫ X
                                                 
                                                     ${

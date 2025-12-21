@@ -55,7 +55,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import dayjs from "dayjs";
 import { toast } from "react-toastify";
 import { callFetchCar } from "config/api";
-import { formatCurrency } from "utils/formatCurrency";
+import { formatCurrency, getPriceAfterDiscount } from "utils/formatCurrency";
 import { useAppSelector } from "../../redux/hooks";
 import { SERVICE_TYPE } from "constants/booking";
 import { callBook } from "config/api";
@@ -1134,22 +1134,37 @@ export default function BookingVehicles() {
                                                 </div>
                                             </div>
                                             <div className="text-right">
-                                                <div className="text-2xl font-bold w-max">
+                                                {vehicle?.promotion
+                                                    ?.discount_percent > 0 && (
+                                                    <p className="text-sm text-gray-500 line-through">
+                                                        {formatCurrency(
+                                                            Math.round(
+                                                                vehicle.price_per_km *
+                                                                    distance *
+                                                                    vehicle.capacity
+                                                            )
+                                                        )}{" "}
+                                                        ₫
+                                                    </p>
+                                                )}
+                                                <p className="text-2xl font-bold w-max">
                                                     {formatCurrency(
                                                         Math.round(
-                                                            vehicle.price_per_km *
-                                                                distance *
-                                                                vehicle.capacity
+                                                            getPriceAfterDiscount(
+                                                                vehicle.price_per_km *
+                                                                    distance *
+                                                                    vehicle.capacity,
+                                                                vehicle
+                                                                    ?.promotion
+                                                                    ?.discount_amount,
+                                                                vehicle
+                                                                    ?.promotion
+                                                                    ?.discount_percent
+                                                            )
                                                         )
                                                     )}{" "}
                                                     ₫
-                                                </div>
-                                                {/* <Button
-                                                type="primary"
-                                                className="mt-2 bg-blue-500"
-                                            >
-                                                Chọn
-                                            </Button> */}
+                                                </p>
                                             </div>
                                         </div>
                                     </Card>
