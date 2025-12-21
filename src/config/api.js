@@ -269,6 +269,10 @@ export const getPromotions = (params) => {
     return axios.get("/api/promotions/", { params });
 };
 
+export const getPromotionsAdmin = (query) => {
+    return axios.get(`/api/promotions/promotions-admin/?${query}`);
+};
+
 export const getPromotionDetail = (promotionId, params) => {
     return axios.get(`/api/promotions/${promotionId}/`, { params });
 };
