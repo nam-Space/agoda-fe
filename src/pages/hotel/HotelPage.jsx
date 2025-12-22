@@ -48,7 +48,9 @@ const HotelPage = () => {
     const [adult, setAdult] = useState(searchParams.get("adult"));
     const [child, setChild] = useState(searchParams.get("child"));
     const [room, setRoom] = useState(searchParams.get("room"));
-    const [stay_type, setStayType] = useState(searchParams.get("stay_type"));
+    const [stay_type, setStayType] = useState(
+        searchParams.get("stay_type") || "overnight"
+    );
     const { hotelDetail, isLoadingHotelDetail, error } = useAppSelector(
         (state) => state.hotel
     );

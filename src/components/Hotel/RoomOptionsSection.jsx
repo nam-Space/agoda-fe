@@ -139,8 +139,19 @@ const RoomOptionsSection = ({
         roomId,
         roomPrice,
         checkInDate,
-        checkOutDate
+        checkOutDate,
+        roomSelected
     ) => {
+        if (roomSelected.stay_type === "dayuse") {
+            if (startDate) {
+                if (!selectedRoomForBooking) {
+                    setShowTimePicker(true);
+                    setSelectedRoomForBooking(roomSelected);
+                    return;
+                }
+            }
+        }
+
         // Lấy ngày nhận/trả phòng, số người, số phòng
         // Đảm bảo gửi dạng datetime ISO (YYYY-MM-DDT00:00:00)
         const toISODateTime = (dateStr) => {
@@ -152,11 +163,6 @@ const RoomOptionsSection = ({
         const checkOut = toISODateTime(checkOutDate);
         const numGuests = capacity || 1;
         if (!checkIn || !checkOut) {
-            // window.scrollTo({ top: 0, behavior: "smooth" });
-            // toast.warn("Vui lòng chọn ngày nhận phòng và trả phòng!", {
-            //   position: "bottom-right",
-            // });
-            // return;
             setFocusDatePicker(true);
             return;
         }
@@ -200,24 +206,33 @@ const RoomOptionsSection = ({
             selectedRoomForBooking.id,
             selectedRoomForBooking.price_per_day,
             checkInDateTime,
-            checkOutDateTime
+            checkOutDateTime,
+            selectedRoomForBooking
         );
         setShowTimePicker(false);
         setSelectedRoomForBooking(null);
     };
 
-    const handleBookNow = async (roomId, roomPrice) => {
-        const room = rooms.find((r) => r.id === roomId);
-        if (!room) return;
+    const handleBookNow = async (roomSelected) => {
+        // room.id,
+        // room.price_per_night
+        // const room = rooms.find((r) => r.id === roomId);
+        if (!roomSelected) return;
 
-        if (room.stay_type === "dayuse") {
-            setSelectedRoomForBooking(room);
-            setShowTimePicker(true);
-            return;
-        }
+        // if (room.stay_type === "dayuse") {
+        //     setSelectedRoomForBooking(room);
+        //     setShowTimePicker(true);
+        //     return;
+        // }
 
         // For overnight, proceed as before
-        await proceedWithBooking(roomId, roomPrice, startDate, endDate);
+        await proceedWithBooking(
+            roomSelected.id,
+            roomSelected.price_per_night,
+            startDate,
+            endDate,
+            roomSelected
+        );
     };
 
     if (loading) return <div>Đang tải dữ liệu phòng...</div>;
@@ -433,8 +448,9 @@ const RoomOptionsSection = ({
                                         className="bg-blue-600 text-white font-bold rounded-lg px-4 py-2 hover:bg-blue-700 mt-4"
                                         onClick={() =>
                                             handleBookNow(
-                                                room.id,
-                                                room.price_per_night
+                                                // room.id,
+                                                // room.price_per_night
+                                                room
                                             )
                                         }
                                     >
