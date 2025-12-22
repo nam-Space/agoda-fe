@@ -40,7 +40,7 @@ const SearchBar = ({
         if (initialValues.room) setRooms(parseInt(initialValues.room) || 1);
         if (initialValues.stay_type) setStayType(initialValues.stay_type);
         if (initialValues.location) setSearchQuery(initialValues.location); // assuming location is hotel name or city
-    }, [initialValues]);
+    }, [JSON.stringify(initialValues)]);
 
     const handleInputChange = async (e) => {
         const value = e.target.value;
@@ -129,6 +129,24 @@ const SearchBar = ({
     return (
         <div className="search-bar sticky z-[5] top-0 left-0 bg-blue-900 shadow py-[24px]">
             <div className="max-w-6xl mx-auto flex justify-center items-center gap-3 text-white">
+                {/* Stay Type */}
+                <div className="w-30">
+                    <Select
+                        defaultValue={stayType}
+                        value={stayType}
+                        onChange={(val) => {
+                            console.log("valSelect", val);
+                            setStayType(val);
+                            setSelectedDate1(null);
+                            setSelectedDate2(null);
+                        }}
+                        className="w-full"
+                        size="large"
+                    >
+                        <Option value="overnight">Qua đêm</Option>
+                        <Option value="dayuse">Trong ngày</Option>
+                    </Select>
+                </div>
                 <div className="w-[350px] max-w-md">
                     <Popover
                         content={
@@ -178,7 +196,13 @@ const SearchBar = ({
                                     : null;
                                 setSelectedDate1(dateString);
                                 setSelectedDate2(dateString); // For dayuse, start and end are the same
+                                if (dateString) {
+                                    setFocusDatePicker(false);
+                                }
                             }}
+                            autoFocus={focusDatePicker}
+                            open={focusDatePicker}
+                            onFocus={() => setFocusDatePicker(true)}
                             placeholder="Chọn ngày"
                             className="bg-white text-black rounded w-full py-2"
                             disabledDate={disabledDate}
