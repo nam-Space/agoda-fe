@@ -1,6 +1,6 @@
 import { Spin, message } from "antd";
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useSearchParams } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import {
     clearHotelDetail,
@@ -35,18 +35,20 @@ import { stripHtml } from "utils/renderHtml";
 
 const HotelPage = () => {
     const { hotelSlug } = useParams();
+    const [searchParams] = useSearchParams();
     const dispatch = useAppDispatch();
     const [debugData, setDebugData] = useState(null);
-    const [searchParams, setSearchParams] = useState({
-        capacity: null,
-        startDate: null,
-        endDate: null,
-        roomsCount: null,
-    });
     const [focusDatePicker, setFocusDatePicker] = useState(false);
     const [searchedHotel, setSearchedHotel] = useState(null);
     const [searchedRooms, setSearchedRooms] = useState([]); // ✅ thêm
 
+    // Lấy params từ URL
+    const [startDate, setStartDate] = useState(searchParams.get("startDate"));
+    const [endDate, setEndDate] = useState(searchParams.get("endDate"));
+    const [adult, setAdult] = useState(searchParams.get("adult"));
+    const [child, setChild] = useState(searchParams.get("child"));
+    const [room, setRoom] = useState(searchParams.get("room"));
+    const [stay_type, setStayType] = useState(searchParams.get("stay_type"));
     const { hotelDetail, isLoadingHotelDetail, error } = useAppSelector(
         (state) => state.hotel
     );
@@ -175,9 +177,20 @@ const HotelPage = () => {
         endDate,
         hotel,
         rooms,
+        adults,
+        children,
+        stay_type,
         roomsCount,
     }) => {
-        setSearchParams({ capacity, startDate, endDate, roomsCount });
+        // setSearchParams({ capacity, startDate, endDate, roomsCount });
+        console.log("startDate", startDate);
+        console.log("endDate", endDate);
+        setStartDate(startDate);
+        setEndDate(endDate);
+        setAdult(adults);
+        setChild(children);
+        setStayType(stay_type);
+        setRoom(roomsCount);
 
         if (hotel) {
             console.log("Hotel Info:", hotel);
@@ -419,6 +432,15 @@ const HotelPage = () => {
                 onSearch={handleSearch}
                 focusDatePicker={focusDatePicker}
                 setFocusDatePicker={setFocusDatePicker}
+                initialValues={{
+                    location: hotelData?.name || "",
+                    startDate,
+                    endDate,
+                    adult,
+                    child,
+                    room,
+                    stay_type,
+                }}
             />
             <BreadcrumbSection
                 breadcrumbs={breadcrumbs}
@@ -523,6 +545,7 @@ const HotelPage = () => {
                                 room_type={`Phòng tiêu chuẩn ${
                                     hotelData?.room_type || ""
                                 }`}
+                                stay_type={stay_type}
                                 roomImage={getImageUrl(
                                     hotelData?.images?.[0]?.image
                                 )}
@@ -550,12 +573,10 @@ const HotelPage = () => {
                                     },
                                 ]}
                                 hotelId={hotelId}
-                                capacity={searchParams.capacity}
-                                startDate={searchParams.startDate}
-                                endDate={searchParams.endDate}
-                                roomsCount={searchParams.roomsCount}
-                                searchParams={searchParams}
-                                setSearchParams={setSearchParams}
+                                capacity={adult + child}
+                                startDate={startDate}
+                                endDate={endDate}
+                                roomsCount={room}
                                 focusDatePicker={focusDatePicker}
                                 setFocusDatePicker={setFocusDatePicker}
                             />
