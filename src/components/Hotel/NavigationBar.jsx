@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { formatCurrency } from "utils/formatCurrency";
 
 const NavigationBar = ({ scrollToSection, hotel }) => {
     const navigationBarRef = useRef(null);
@@ -8,7 +9,7 @@ const NavigationBar = ({ scrollToSection, hotel }) => {
 
     const displayPrice =
         hotel?.min_price && !isNaN(hotel.min_price)
-            ? Number(hotel.min_price).toLocaleString("vi-VN") + " VND"
+            ? formatCurrency(Number(hotel.min_price).toFixed(0)) + " VND"
             : "Liên hệ";
 
     useEffect(() => {
@@ -54,7 +55,7 @@ const NavigationBar = ({ scrollToSection, hotel }) => {
 
             <div
                 ref={navigationBarRef}
-                className="navigation-bar z-[3] sticky top-[88px] bg-white border border-gray-300 rounded-lg my-4 max-w-6xl mx-auto"
+                className="navigation-bar z-[3] sticky top-[88px] bg-white border border-gray-300 my-4 max-w-6xl mx-auto"
             >
                 <div className="p-4 max-w-6xl mx-auto flex items-center justify-between">
                     {/* Navigation Links */}
