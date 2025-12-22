@@ -74,7 +74,7 @@ const RoomOptionsSection = ({
 
             setLoading(true);
             try {
-                let query = `hotel_id=${effectiveHotelId}`;
+                let query = `current=1&pageSize=50&hotel_id=${effectiveHotelId}`;
                 if (capacity != null) query += `&capacity=${capacity}`;
                 if (startDate != null) query += `&start_date=${startDate}`;
                 if (endDate != null) query += `&end_date=${endDate}`;
