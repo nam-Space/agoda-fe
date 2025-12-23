@@ -1,12 +1,13 @@
 import { SearchOutlined } from "@ant-design/icons";
-import { Button, Card, Input, Pagination, Select } from "antd";
+import { Card, Input, Pagination, Select } from "antd";
 import { callFetchCountry } from "config/api";
 import { callFetchCity } from "config/api";
 import { callFetchHandbook } from "config/api";
 import { HANDBOOK_CATEGORIES } from "constants/handbook";
 import React, { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { getImage } from "utils/imageUrl";
+import bgImg from "../../images/travel-guide/background.webp";
 
 const TravelGuide = () => {
     const [searchValue, setSearchValue] = useState("");
@@ -88,7 +89,7 @@ const TravelGuide = () => {
             <div
                 className="relative h-[500px] bg-cover bg-center flex flex-col justify-start pt-12"
                 style={{
-                    backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url('https://www.agoda.com/wp-content/uploads/2025/07/Hero-Image_TG-home2-1478x700-1.webp')`,
+                    backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url(${bgImg})`,
                     backgroundSize: "cover",
                     backgroundPosition: "center",
                 }}

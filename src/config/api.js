@@ -470,6 +470,11 @@ export const callUpsertUserHandbookInteraction = (data) => {
   });
 };
 
+// Booking
+export const callCancelBooking = (id) => {
+  return axios.post(`/api/bookings/${id}/cancel/`)
+}
+
 // Payment
 export const callFetchPayment = (query) => {
   return axios.get(`/api/payments/payments/?${query}`);

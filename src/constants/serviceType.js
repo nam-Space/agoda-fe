@@ -37,6 +37,7 @@ export const PAYMENT_STATUS = {
   CANCELLED: 4,
   UNPAID: 5,
   PAID: 6,
+  REFUNDED: 7
 };
 
 export const PAYMENT_STATUS_VI = {

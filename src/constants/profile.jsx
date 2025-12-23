@@ -60,3 +60,9 @@ export const planForTripsBlueIcon = [
         link: "/",
     },
 ];
+
+export const ServiceTab = {
+    INCOMING: "incoming",
+    SUCCESSFUL: "successful",
+    CANCELLED: "cancelled",
+};

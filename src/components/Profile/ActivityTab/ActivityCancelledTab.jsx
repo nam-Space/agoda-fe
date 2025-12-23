@@ -10,8 +10,10 @@ import { PAYMENT_STATUS } from "constants/serviceType";
 import { MessageOutlined } from "@ant-design/icons";
 import { getImage } from "utils/imageUrl";
 import dayjs from "dayjs";
+import { ServiceTab } from "constants/profile";
+import { formatCurrency } from "utils/formatCurrency";
 
-const ActivityCancelledTab = () => {
+const ActivityCancelledTab = ({ currentTab, setCurrentTab }) => {
     const user = useAppSelector((state) => state.account.user);
     const [isLoading, setIsLoading] = useState(false);
     const [payments, setPayments] = useState([]);
@@ -71,12 +73,19 @@ const ActivityCancelledTab = () => {
     };
 
     useEffect(() => {
-        if (user?.id) {
+        if (user?.id && currentTab === ServiceTab.CANCELLED) {
             handleGetPayments(
-                `current=${meta.currentPage}&pageSize=${meta.itemsPerPage}&booking__user_id=${user.id}&booking__service_type=${ServiceType.ACTIVITY}&status=${PAYMENT_STATUS.CANCELLED}&${sortVal}&booking__booking_code=${bookingCode}`
+                `current=${meta.currentPage}&pageSize=${meta.itemsPerPage}&booking__user_id=${user.id}&booking__service_type=${ServiceType.ACTIVITY}&status=${PAYMENT_STATUS.REFUNDED}&${sortVal}&booking__booking_code=${bookingCode}`
             );
         }
-    }, [user, sortVal, bookingCode, meta.currentPage, meta.itemsPerPage]);
+    }, [
+        user,
+        sortVal,
+        bookingCode,
+        meta.currentPage,
+        meta.itemsPerPage,
+        currentTab,
+    ]);
 
     return (
         <div>
@@ -153,37 +162,64 @@ const ActivityCancelledTab = () => {
                                     </div>
 
                                     {/* Info */}
-                                    <div className="flex-grow">
-                                        <h3 className="text-lg text-gray-900 mb-4">
-                                            <span className="font-bold">
-                                                {
-                                                    payment?.booking
-                                                        ?.activity_date_detail?.[0]
-                                                        ?.activity_name
-                                                }
-                                            </span>{" "}
-                                            -{" "}
-                                            <span>
-                                                {
-                                                    payment?.booking
-                                                        ?.activity_date_detail?.[0]
-                                                        ?.activity_package_name
-                                                }
-                                            </span>
-                                        </h3>
-
-                                        <div className="flex gap-8">
-                                            <div>
-                                                <p className="text-gray-600 text-sm mb-1">
-                                                    Ngày tổ chức
-                                                </p>
-                                                <p className="font-semibold text-gray-900">
-                                                    {dayjs(
+                                    <div className="flex items-center justify-between gap-8 flex-1">
+                                        <div className="flex-grow">
+                                            <h3 className="text-lg text-gray-900 mb-4">
+                                                <span className="font-bold">
+                                                    {
                                                         payment?.booking
                                                             ?.activity_date_detail?.[0]
-                                                            ?.date_launch
-                                                    ).format("YYYY-MM-DD")}
+                                                            ?.activity_name
+                                                    }
+                                                </span>{" "}
+                                                -{" "}
+                                                <span>
+                                                    {
+                                                        payment?.booking
+                                                            ?.activity_date_detail?.[0]
+                                                            ?.activity_package_name
+                                                    }
+                                                </span>
+                                            </h3>
+
+                                            <div className="flex gap-8">
+                                                <div>
+                                                    <p className="text-gray-600 text-sm mb-1">
+                                                        Ngày tổ chức
+                                                    </p>
+                                                    <p className="font-semibold text-gray-900">
+                                                        {dayjs(
+                                                            payment?.booking
+                                                                ?.activity_date_detail?.[0]
+                                                                ?.date_launch
+                                                        ).format("YYYY-MM-DD")}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            {payment?.booking?.discount_amount >
+                                                0 && (
+                                                <p className="text-sm text-gray-500 line-through">
+                                                    {formatCurrency(
+                                                        payment?.booking
+                                                            ?.total_price
+                                                    )}{" "}
+                                                    ₫
                                                 </p>
+                                            )}
+
+                                            <div className="flex items-center">
+                                                <span className="text-red-600 font-semibold text-[22px] w-max">
+                                                    {formatCurrency(
+                                                        Math.max(
+                                                            payment?.booking
+                                                                ?.final_price,
+                                                            0
+                                                        )
+                                                    )}{" "}
+                                                    ₫
+                                                </span>
                                             </div>
                                         </div>
                                     </div>
@@ -207,6 +243,7 @@ const ActivityCancelledTab = () => {
                                 showQuickJumper
                                 total={meta.totalItems}
                                 onChange={onChangePagination}
+                                current={meta.currentPage}
                             />
                         </div>
                     </div>

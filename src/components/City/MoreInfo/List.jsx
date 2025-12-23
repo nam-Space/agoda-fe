@@ -63,7 +63,7 @@ const List = ({ cityId }) => {
                             link="#"
                             stars={hotel.avg_star}
                             reviewText="Tuyệt vời"
-                            reviewCount={`${hotel.review_count} nhận xét`}
+                            reviewCount={`Dựa trên ${hotel.review_count} nhận xét`}
                             snippet={hotel.best_comment}
                             reviewer={hotel.owner?.first_name || "Ẩn danh"}
                             reviewerCountry="Việt Nam"

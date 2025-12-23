@@ -1,39 +1,57 @@
-import React from "react";
+import React, { useState } from "react";
 import ActivityIncomingTab from "./ActivityTab/ActivityIncomingTab";
 import ActivitySuccessfulTab from "./ActivityTab/ActivitySuccessfulTab";
 import ActivityCancelledTab from "./ActivityTab/ActivityCancelledTab";
 import { Tabs } from "antd";
+import { ServiceTab } from "constants/profile";
 
 const Activity = () => {
+    const [currentTab, setCurrentTab] = useState(ServiceTab.INCOMING);
+
     const items = [
         {
-            key: "1",
+            key: ServiceTab.INCOMING,
             label: <p className="font-semibold">Sắp tới</p>,
-            children: <ActivityIncomingTab />,
+            children: (
+                <ActivityIncomingTab
+                    currentTab={currentTab}
+                    setCurrentTab={setCurrentTab}
+                />
+            ),
         },
         {
-            key: "2",
+            key: ServiceTab.SUCCESSFUL,
             label: <p className="font-semibold">Hoàn tất</p>,
-            children: <ActivitySuccessfulTab />,
+            children: (
+                <ActivitySuccessfulTab
+                    currentTab={currentTab}
+                    setCurrentTab={setCurrentTab}
+                />
+            ),
         },
         {
-            key: "3",
+            key: ServiceTab.CANCELLED,
             label: <p className="font-semibold">Đã hủy</p>,
-            children: <ActivityCancelledTab />,
+            children: (
+                <ActivityCancelledTab
+                    currentTab={currentTab}
+                    setCurrentTab={setCurrentTab}
+                />
+            ),
         },
     ];
 
     const onChange = (key) => {
-        console.log(key);
+        setCurrentTab(key);
     };
 
     return (
         <div>
             <Tabs
                 className="tab-profile-container"
-                defaultActiveKey="1"
                 items={items}
                 onChange={onChange}
+                activeKey={currentTab}
             />
         </div>
     );

@@ -9,7 +9,6 @@ const Item = ({
     name,
     link,
     stars = 0,
-    score = "—",
     reviewText = "",
     reviewCount = "",
     snippet = "",
@@ -21,7 +20,7 @@ const Item = ({
     return (
         <Link
             to={`/hotel/${createHotelSlug(name, id)}`}
-            className="bg-white rounded-xl shadow border border-gray-200 flex flex-col h-full overflow-hidden transition-transform duration-200 hover:scale-105 hover:shadow-xl"
+            className="bg-white rounded-xl border border-gray-200 flex flex-col h-full"
         >
             <img
                 src={image}
@@ -29,7 +28,7 @@ const Item = ({
                 className="w-full h-40 object-cover rounded-t-xl"
             />
             <div className="flex-1 flex flex-col px-5 pt-4 pb-6">
-                <div className="flex items-start justify-between">
+                <div className="flex items-start justify-between gap-3">
                     <div>
                         <span className="font-semibold text-blue-600 text-base leading-tight line-clamp-2">
                             {name}
@@ -45,14 +44,13 @@ const Item = ({
                             )}
                         </div>
                     </div>
-                    <div className="text-right ml-2 min-w-[120px]">
+                    <div className="text-right">
                         <div className="font-bold text-lg text-green-700">
-                            {score}{" "}
-                            <span className="font-normal text-gray-700">
+                            <span className="font-normal text-gray-700 text-[14px]">
                                 {reviewText}
                             </span>
                         </div>
-                        <div className="text-gray-400 text-sm">
+                        <div className="text-gray-400 text-[12px] w-max">
                             {reviewCount}
                         </div>
                     </div>
