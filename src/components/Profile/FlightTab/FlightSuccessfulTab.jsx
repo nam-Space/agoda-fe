@@ -11,8 +11,10 @@ import { PAYMENT_STATUS } from "constants/serviceType";
 import { MessageOutlined } from "@ant-design/icons";
 import { getImage } from "utils/imageUrl";
 import ModalFlightDetail from "./ModalFlightDetail";
+import { ServiceTab } from "constants/profile";
+import { formatCurrency } from "utils/formatCurrency";
 
-const FlightSuccessfulTab = () => {
+const FlightSuccessfulTab = ({ currentTab, setCurrentTab }) => {
     const user = useAppSelector((state) => state.account.user);
     const [selectedFlight, setSelectedFlight] = useState({});
     const [isModalDetailOpen, setIsModalDetailOpen] = useState(false);
@@ -74,7 +76,7 @@ const FlightSuccessfulTab = () => {
     };
 
     useEffect(() => {
-        if (user?.id) {
+        if (user?.id && currentTab === ServiceTab.SUCCESSFUL) {
             handleGetPayments(
                 `current=${meta.currentPage}&pageSize=${
                     meta.itemsPerPage
@@ -87,7 +89,14 @@ const FlightSuccessfulTab = () => {
                 }&${sortVal}&booking__booking_code=${bookingCode}`
             );
         }
-    }, [user, sortVal, bookingCode, meta.currentPage, meta.itemsPerPage]);
+    }, [
+        user,
+        sortVal,
+        bookingCode,
+        meta.currentPage,
+        meta.itemsPerPage,
+        currentTab,
+    ]);
 
     return (
         <div>
@@ -139,9 +148,36 @@ const FlightSuccessfulTab = () => {
                                     <span className="font-semibold">
                                         Mã: {payment.booking.booking_code}
                                     </span>
-                                    <span className="text-green-600 font-medium">
-                                        Đã hoàn tất
-                                    </span>
+                                    <div className="flex flex-col items-end">
+                                        <span className="text-green-600 font-medium">
+                                            Đã hoàn tất
+                                        </span>
+                                        <div className="flex items-center gap-3">
+                                            {payment?.booking?.discount_amount >
+                                                0 && (
+                                                <p className="text-sm text-gray-500 line-through">
+                                                    {formatCurrency(
+                                                        payment?.booking
+                                                            ?.total_price
+                                                    )}{" "}
+                                                    ₫
+                                                </p>
+                                            )}
+
+                                            <div className="flex items-center">
+                                                <span className="text-red-600 font-semibold text-[22px] w-max">
+                                                    {formatCurrency(
+                                                        Math.max(
+                                                            payment?.booking
+                                                                ?.final_price,
+                                                            0
+                                                        )
+                                                    )}{" "}
+                                                    ₫
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
 
                                 {/* Booking Details */}
@@ -267,6 +303,7 @@ const FlightSuccessfulTab = () => {
                                 showQuickJumper
                                 total={meta.totalItems}
                                 onChange={onChangePagination}
+                                current={meta.currentPage}
                             />
                         </div>
                     </div>

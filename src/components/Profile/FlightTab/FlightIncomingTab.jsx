@@ -1,4 +1,4 @@
-import { Button, Card, Empty, Pagination, Spin } from "antd";
+import { Button, Card, Empty, Pagination, Popconfirm, Spin } from "antd";
 import { planForTrips } from "constants/profile";
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
@@ -10,8 +10,12 @@ import { PAYMENT_STATUS } from "constants/serviceType";
 import { MessageOutlined } from "@ant-design/icons";
 import { getImage } from "utils/imageUrl";
 import ModalFlightDetail from "./ModalFlightDetail";
+import { ServiceTab } from "constants/profile";
+import { callCancelBooking } from "config/api";
+import { toast } from "react-toastify";
+import { formatCurrency } from "utils/formatCurrency";
 
-const FlightIncomingTab = () => {
+const FlightIncomingTab = ({ currentTab, setCurrentTab }) => {
     const user = useAppSelector((state) => state.account.user);
     const [selectedFlight, setSelectedFlight] = useState({});
     const [isModalDetailOpen, setIsModalDetailOpen] = useState(false);
@@ -42,8 +46,18 @@ const FlightIncomingTab = () => {
         });
     };
 
+    const handleCancelBooking = async (payment) => {
+        const res = await callCancelBooking(payment.booking.id);
+        if (res.isSuccess) {
+            toast.success("Hủy chuyến bay thành công!", {
+                position: "bottom-right",
+            });
+            setCurrentTab(ServiceTab.CANCELLED);
+        }
+    };
+
     useEffect(() => {
-        if (user?.id) {
+        if (user?.id && currentTab === ServiceTab.INCOMING) {
             handleGetPayments(
                 `current=${meta.currentPage}&pageSize=${
                     meta.itemsPerPage
@@ -54,7 +68,7 @@ const FlightIncomingTab = () => {
                 )}&status=${PAYMENT_STATUS.SUCCESS}`
             );
         }
-    }, [user, meta.currentPage, meta.itemsPerPage]);
+    }, [user, meta.currentPage, meta.itemsPerPage, currentTab]);
 
     return (
         <div>
@@ -90,9 +104,36 @@ const FlightIncomingTab = () => {
                                     <span className="font-semibold">
                                         Mã: {payment.booking.booking_code}
                                     </span>
-                                    <span className="text-green-600 font-medium">
-                                        Đã xác nhận
-                                    </span>
+                                    <div className="flex flex-col items-end">
+                                        <span className="text-green-600 font-medium">
+                                            Đã xác nhận
+                                        </span>
+                                        <div className="flex items-center gap-3">
+                                            {payment?.booking?.discount_amount >
+                                                0 && (
+                                                <p className="text-sm text-gray-500 line-through">
+                                                    {formatCurrency(
+                                                        payment?.booking
+                                                            ?.total_price
+                                                    )}{" "}
+                                                    ₫
+                                                </p>
+                                            )}
+
+                                            <div className="flex items-center">
+                                                <span className="text-red-600 font-semibold text-[22px] w-max">
+                                                    {formatCurrency(
+                                                        Math.max(
+                                                            payment?.booking
+                                                                ?.final_price,
+                                                            0
+                                                        )
+                                                    )}{" "}
+                                                    ₫
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
 
                                 {/* Booking Details */}
@@ -213,14 +254,27 @@ const FlightIncomingTab = () => {
 
                                 {/* Action Buttons */}
                                 <div className="px-6 py-4 flex gap-4 justify-end border-t">
-                                    <Button
-                                        type="primary"
-                                        danger
-                                        size="large"
-                                        className="px-8"
+                                    <Popconfirm
+                                        placement="leftTop"
+                                        title={"Xác nhận hủy chuyến bay"}
+                                        description={
+                                            "Bạn chắc chắn muốn hủy chuyến bay?"
+                                        }
+                                        onConfirm={() =>
+                                            handleCancelBooking(payment)
+                                        }
+                                        okText={"Xác nhận"}
+                                        cancelText={"Hủy"}
                                     >
-                                        Hủy hoạt động
-                                    </Button>
+                                        <Button
+                                            type="primary"
+                                            danger
+                                            size="large"
+                                            className="px-8"
+                                        >
+                                            Hủy chuyến bay
+                                        </Button>
+                                    </Popconfirm>
                                 </div>
                             </Card>
                         ))}
@@ -230,6 +284,7 @@ const FlightIncomingTab = () => {
                                 showQuickJumper
                                 total={meta.totalItems}
                                 onChange={onChangePagination}
+                                current={meta.currentPage}
                             />
                         </div>
                     </div>

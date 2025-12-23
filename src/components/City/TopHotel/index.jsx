@@ -5,9 +5,9 @@ import FilterGroup from "./FilterGroup";
 import HotelCard from "./HotelCard";
 import SortBar from "./SortBar";
 import { RANGE_PRICE_HOTEL } from "constants/hotel";
-import { callGetHotels } from "config/api";
 import { createHotelSlug } from "utils/slugHelpers";
 import { getImage } from "utils/imageUrl";
+import { callFetchHotel } from "config/api";
 // HotelList component
 const HotelList = ({ hotels, loading }) => {
     if (loading)
@@ -127,36 +127,22 @@ const TopHotel = () => {
         { label: "Được đánh giá tốt nhất", value: "sort=total_positive-desc" },
     ];
 
-    // useEffect(() => {
-    //     if (cityId) {
-    //         dispatch(
-    //             fetchHotelsByCity({
-    //                 cityId,
-    //                 currentPage,
-    //                 pageSize,
-    //                 filters: {
-    //                     ...filters,
-    //                     recommended: true,
-    //                 },
-    //             })
-    //         );
-    //     }
-    // }, [dispatch, cityId, currentPage, pageSize, filters]);
-
     const handleGetHotels = async (body) => {
         setIsLoadingHotels(true);
-        const res = await callGetHotels({ ...body });
-        setIsLoadingHotels(false);
-        setMeta({
-            ...meta,
-            total: res.meta.totalItems,
-            totalPages: res.meta.totalPages,
-        });
+        const res = await callFetchHotel({ ...body });
+
         if (res.isSuccess) {
             setHotels(res.data);
+            setMeta({
+                current: res.meta.currentPage,
+                pageSize: res.meta.itemsPerPage,
+                total: res.meta.totalItems,
+                totalPages: res.meta.totalPages,
+            });
         } else {
             setError(res.message || "Đã có lỗi xảy ra khi tải khách sạn");
         }
+        setIsLoadingHotels(false);
     };
 
     useEffect(() => {
@@ -164,38 +150,33 @@ const TopHotel = () => {
             const [sort, valToSort] = valueSort.split("=");
             handleGetHotels({
                 cityId,
-                currentPage: meta.current,
+                current: meta.current,
                 pageSize: meta.pageSize,
-                filters: {
-                    ...(filterSearch.avg_star !== -1
-                        ? { avg_star: filterSearch.avg_star }
-                        : {}),
-                    ...(valuePrices[0] >= 0
-                        ? {
-                              min_avg_price: RANGE_PRICE_HOTEL * valuePrices[0],
-                          }
-                        : {}),
-                    ...(valuePrices[1] <= 100
-                        ? {
-                              max_avg_price: RANGE_PRICE_HOTEL * valuePrices[1],
-                          }
-                        : {}),
-                    ...(sort === "recommended"
-                        ? { recommended: true }
-                        : { sort: valToSort }),
-                },
+                ...(filterSearch.avg_star !== -1
+                    ? { avg_star: filterSearch.avg_star }
+                    : {}),
+                ...(valuePrices[0] >= 0
+                    ? {
+                          min_avg_price: RANGE_PRICE_HOTEL * valuePrices[0],
+                      }
+                    : {}),
+                ...(valuePrices[1] <= 100
+                    ? {
+                          max_avg_price: RANGE_PRICE_HOTEL * valuePrices[1],
+                      }
+                    : {}),
+                ...(sort === "recommended"
+                    ? { recommended: true }
+                    : { sort: valToSort }),
             });
         }
     }, [
         cityId,
-        filterSearch,
+        JSON.stringify(filterSearch),
         JSON.stringify(valuePrices),
         meta.current,
         meta.pageSize,
     ]);
-
-    // const handleSortChange = (idx) => dispatch(setSortBy(idx));
-    // const handlePageChange = (page) => dispatch(setCurrentPage(page));
 
     const onChangePagination = (pageNumber, pageSize) => {
         setMeta({
@@ -273,6 +254,7 @@ const TopHotel = () => {
                                 showQuickJumper
                                 total={meta.total}
                                 onChange={onChangePagination}
+                                current={meta.current}
                             />
                         </div>
                     )}

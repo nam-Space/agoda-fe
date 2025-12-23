@@ -1,19 +1,14 @@
-import { PlusOutlined, SearchOutlined } from "@ant-design/icons";
-import { DatePicker, Input, InputNumber, Popover, Radio, Select } from "antd";
-import { result } from "lodash";
+import { DatePicker, Input, InputNumber, Popover, Radio } from "antd";
 import React, { useEffect, useState } from "react";
 import { HiOutlineUsers } from "react-icons/hi2";
 import { IoAirplaneOutline, IoLocationOutline } from "react-icons/io5";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import {
     callFetchAirport,
-    callFetchHotel,
     callFetchHotelQuery,
     callFetchLocationMapInAllWorld,
 } from "../../../config/api";
 import { toast } from "react-toastify";
-
-const { RangePicker } = DatePicker;
 
 const AirportTab = () => {
     const navigate = useNavigate();
@@ -340,7 +335,7 @@ const AirportTab = () => {
                                     }
                                     className="mt-[12px]"
                                     value={formFromAirportIn.airportIn.name}
-                                    onChange={(e) =>
+                                    onChange={(e) => {
                                         setFormFromAirportIn({
                                             ...formFromAirportIn,
                                             airportIn: {
@@ -348,8 +343,12 @@ const AirportTab = () => {
                                                 lng: null, // lng
                                                 name: e.target.value,
                                             },
-                                        })
-                                    }
+                                        });
+                                        setPopoverFromAirportIn({
+                                            ...popoverFromAirportIn,
+                                            airportIn: !!e.target.value,
+                                        });
+                                    }}
                                 />
                             </Popover>
                             <Popover
@@ -407,7 +406,7 @@ const AirportTab = () => {
                                     }
                                     className="mt-[12px]"
                                     value={formFromAirportIn.locationTo.name}
-                                    onChange={(e) =>
+                                    onChange={(e) => {
                                         setFormFromAirportIn({
                                             ...formFromAirportIn,
                                             locationTo: {
@@ -415,8 +414,12 @@ const AirportTab = () => {
                                                 lng: null, // lng
                                                 name: e.target.value,
                                             },
-                                        })
-                                    }
+                                        });
+                                        setPopoverFromAirportIn({
+                                            ...popoverFromAirportIn,
+                                            locationTo: !!e.target.value,
+                                        });
+                                    }}
                                 />
                             </Popover>
                         </>
@@ -491,7 +494,7 @@ const AirportTab = () => {
                                     }
                                     className="mt-[12px]"
                                     value={formFromLocationIn.locationIn.name}
-                                    onChange={(e) =>
+                                    onChange={(e) => {
                                         setFormFromLocationIn({
                                             ...formFromLocationIn,
                                             locationIn: {
@@ -499,8 +502,12 @@ const AirportTab = () => {
                                                 lng: null, // lng
                                                 name: e.target.value,
                                             },
-                                        })
-                                    }
+                                        });
+                                        setPopoverFromLocationIn({
+                                            ...popoverFromLocationIn,
+                                            locationIn: !!e.target.value,
+                                        });
+                                    }}
                                 />
                             </Popover>
                             <Popover
@@ -558,7 +565,7 @@ const AirportTab = () => {
                                     }
                                     className="mt-[12px]"
                                     value={formFromLocationIn.airportTo.name}
-                                    onChange={(e) =>
+                                    onChange={(e) => {
                                         setFormFromLocationIn({
                                             ...formFromLocationIn,
                                             airportTo: {
@@ -566,8 +573,12 @@ const AirportTab = () => {
                                                 lng: null, // lng
                                                 name: e.target.value,
                                             },
-                                        })
-                                    }
+                                        });
+                                        setPopoverFromLocationIn({
+                                            ...popoverFromLocationIn,
+                                            airportTo: !!e.target.value,
+                                        });
+                                    }}
                                 />
                             </Popover>
                         </>

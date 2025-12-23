@@ -1,4 +1,4 @@
-import { Button, Card, Empty, Pagination, Spin } from "antd";
+import { Button, Card, Empty, Pagination, Popconfirm, Spin } from "antd";
 import { callFetchPayment } from "config/api";
 import { planForTrips } from "constants/profile";
 import React, { useEffect, useState } from "react";
@@ -9,8 +9,12 @@ import dayjs from "dayjs";
 import { MessageOutlined } from "@ant-design/icons";
 import { getImage } from "utils/imageUrl";
 import { PAYMENT_STATUS } from "constants/serviceType";
+import { ServiceTab } from "constants/profile";
+import { callCancelBooking } from "config/api";
+import { toast } from "react-toastify";
+import { formatCurrency } from "utils/formatCurrency";
 
-const HotelIncomingTab = () => {
+const HotelIncomingTab = ({ currentTab, setCurrentTab }) => {
     const user = useAppSelector((state) => state.account.user);
     const [isLoading, setIsLoading] = useState(false);
     const [payments, setPayments] = useState([]);
@@ -39,8 +43,18 @@ const HotelIncomingTab = () => {
         });
     };
 
+    const handleCancelBooking = async (payment) => {
+        const res = await callCancelBooking(payment.booking.id);
+        if (res.isSuccess) {
+            toast.success("Hủy đặt phòng thành công!", {
+                position: "bottom-right",
+            });
+            setCurrentTab(ServiceTab.CANCELLED);
+        }
+    };
+
     useEffect(() => {
-        if (user?.id) {
+        if (user?.id && currentTab === ServiceTab.INCOMING) {
             handleGetPayments(
                 `current=${meta.currentPage}&pageSize=${
                     meta.itemsPerPage
@@ -51,7 +65,7 @@ const HotelIncomingTab = () => {
                 )}&status=${PAYMENT_STATUS.SUCCESS}`
             );
         }
-    }, [user, meta.currentPage, meta.itemsPerPage]);
+    }, [user, meta.currentPage, meta.itemsPerPage, currentTab]);
 
     return (
         <div>
@@ -112,49 +126,76 @@ const HotelIncomingTab = () => {
                                     </div>
 
                                     {/* Info */}
-                                    <div className="flex-grow">
-                                        <h3 className="text-lg font-bold text-gray-900 mb-4">
-                                            {
-                                                payment?.booking
-                                                    ?.room_details?.[0]?.room
-                                                    ?.hotel?.name
-                                            }{" "}
-                                            -{" "}
-                                            {
-                                                payment?.booking
-                                                    ?.room_details?.[0]?.room
-                                                    ?.room_type
-                                            }
-                                        </h3>
+                                    <div className="flex items-center justify-between gap-8 flex-1">
+                                        <div className="flex-grow">
+                                            <h3 className="text-lg font-bold text-gray-900 mb-4">
+                                                {
+                                                    payment?.booking
+                                                        ?.room_details?.[0]
+                                                        ?.room?.hotel?.name
+                                                }{" "}
+                                                -{" "}
+                                                {
+                                                    payment?.booking
+                                                        ?.room_details?.[0]
+                                                        ?.room?.room_type
+                                                }
+                                            </h3>
 
-                                        <div className="flex gap-8">
-                                            <div>
-                                                <p className="text-gray-600 text-sm mb-1">
-                                                    Nhận phòng
-                                                </p>
-                                                <p className="font-semibold text-gray-900">
-                                                    {dayjs(
-                                                        payment?.booking
-                                                            ?.room_details?.[0]
-                                                            ?.check_in
-                                                    ).format(
-                                                        "YYYY-MM-DD HH:mm:ss"
-                                                    )}
-                                                </p>
+                                            <div className="flex gap-8">
+                                                <div>
+                                                    <p className="text-gray-600 text-sm mb-1">
+                                                        Nhận phòng
+                                                    </p>
+                                                    <p className="font-semibold text-gray-900">
+                                                        {dayjs(
+                                                            payment?.booking
+                                                                ?.room_details?.[0]
+                                                                ?.check_in
+                                                        ).format(
+                                                            "YYYY-MM-DD HH:mm:ss"
+                                                        )}
+                                                    </p>
+                                                </div>
+                                                <div>
+                                                    <p className="text-gray-600 text-sm mb-1">
+                                                        Trả phòng
+                                                    </p>
+                                                    <p className="font-semibold text-gray-900">
+                                                        {dayjs(
+                                                            payment?.booking
+                                                                ?.room_details?.[0]
+                                                                ?.check_out
+                                                        ).format(
+                                                            "YYYY-MM-DD HH:mm:ss"
+                                                        )}
+                                                    </p>
+                                                </div>
                                             </div>
-                                            <div>
-                                                <p className="text-gray-600 text-sm mb-1">
-                                                    Trả phòng
-                                                </p>
-                                                <p className="font-semibold text-gray-900">
-                                                    {dayjs(
+                                        </div>
+                                        <div>
+                                            {payment?.booking?.discount_amount >
+                                                0 && (
+                                                <p className="text-sm text-gray-500 line-through">
+                                                    {formatCurrency(
                                                         payment?.booking
-                                                            ?.room_details?.[0]
-                                                            ?.check_out
-                                                    ).format(
-                                                        "YYYY-MM-DD HH:mm:ss"
-                                                    )}
+                                                            ?.total_price
+                                                    )}{" "}
+                                                    ₫
                                                 </p>
+                                            )}
+
+                                            <div className="flex items-center">
+                                                <span className="text-red-600 font-semibold text-[22px] w-max">
+                                                    {formatCurrency(
+                                                        Math.max(
+                                                            payment?.booking
+                                                                ?.final_price,
+                                                            0
+                                                        )
+                                                    )}{" "}
+                                                    ₫
+                                                </span>
                                             </div>
                                         </div>
                                     </div>
@@ -162,14 +203,27 @@ const HotelIncomingTab = () => {
 
                                 {/* Action Buttons */}
                                 <div className="px-6 py-4 flex gap-4 justify-end border-t">
-                                    <Button
-                                        type="primary"
-                                        danger
-                                        size="large"
-                                        className="px-8"
+                                    <Popconfirm
+                                        placement="leftTop"
+                                        title={"Xác nhận hủy đặt phòng"}
+                                        description={
+                                            "Bạn chắc chắn muốn hủy đặt phòng?"
+                                        }
+                                        onConfirm={() =>
+                                            handleCancelBooking(payment)
+                                        }
+                                        okText={"Xác nhận"}
+                                        cancelText={"Hủy"}
                                     >
-                                        Hủy đặt phòng
-                                    </Button>
+                                        <Button
+                                            type="primary"
+                                            danger
+                                            size="large"
+                                            className="px-8"
+                                        >
+                                            Hủy đặt phòng
+                                        </Button>
+                                    </Popconfirm>
                                 </div>
                             </Card>
                         ))}
@@ -179,6 +233,7 @@ const HotelIncomingTab = () => {
                                 showQuickJumper
                                 total={meta.totalItems}
                                 onChange={onChangePagination}
+                                current={meta.currentPage}
                             />
                         </div>
                     </div>

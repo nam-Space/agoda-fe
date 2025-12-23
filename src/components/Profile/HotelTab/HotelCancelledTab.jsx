@@ -10,8 +10,10 @@ import dayjs from "dayjs";
 import { PAYMENT_STATUS } from "constants/serviceType";
 import { MessageOutlined } from "@ant-design/icons";
 import { getImage } from "utils/imageUrl";
+import { ServiceTab } from "constants/profile";
+import { formatCurrency } from "utils/formatCurrency";
 
-const HotelCancelledTab = () => {
+const HotelCancelledTab = ({ currentTab, setCurrentTab }) => {
     const user = useAppSelector((state) => state.account.user);
     const [isLoading, setIsLoading] = useState(false);
     const [payments, setPayments] = useState([]);
@@ -70,13 +72,22 @@ const HotelCancelledTab = () => {
         });
     };
 
+    console.log("currentTab", currentTab);
+
     useEffect(() => {
-        if (user?.id) {
+        if (user?.id && currentTab === ServiceTab.CANCELLED) {
             handleGetPayments(
-                `current=${meta.currentPage}&pageSize=${meta.itemsPerPage}&booking__user_id=${user.id}&booking__service_type=${ServiceType.HOTEL}&status=${PAYMENT_STATUS.CANCELLED}&${sortVal}&booking__booking_code=${bookingCode}`
+                `current=${meta.currentPage}&pageSize=${meta.itemsPerPage}&booking__user_id=${user.id}&booking__service_type=${ServiceType.HOTEL}&status=${PAYMENT_STATUS.REFUNDED}&${sortVal}&booking__booking_code=${bookingCode}`
             );
         }
-    }, [user, sortVal, bookingCode, meta.currentPage, meta.itemsPerPage]);
+    }, [
+        user,
+        sortVal,
+        bookingCode,
+        meta.currentPage,
+        meta.itemsPerPage,
+        currentTab,
+    ]);
 
     return (
         <div>
@@ -153,49 +164,76 @@ const HotelCancelledTab = () => {
                                     </div>
 
                                     {/* Info */}
-                                    <div className="flex-grow">
-                                        <h3 className="text-lg font-bold text-gray-900 mb-4">
-                                            {
-                                                payment?.booking
-                                                    ?.room_details?.[0]?.room
-                                                    ?.hotel?.name
-                                            }{" "}
-                                            -{" "}
-                                            {
-                                                payment?.booking
-                                                    ?.room_details?.[0]?.room
-                                                    ?.room_type
-                                            }
-                                        </h3>
+                                    <div className="flex items-center justify-between gap-8 flex-1">
+                                        <div className="flex-grow">
+                                            <h3 className="text-lg font-bold text-gray-900 mb-4">
+                                                {
+                                                    payment?.booking
+                                                        ?.room_details?.[0]
+                                                        ?.room?.hotel?.name
+                                                }{" "}
+                                                -{" "}
+                                                {
+                                                    payment?.booking
+                                                        ?.room_details?.[0]
+                                                        ?.room?.room_type
+                                                }
+                                            </h3>
 
-                                        <div className="flex gap-8">
-                                            <div>
-                                                <p className="text-gray-600 text-sm mb-1">
-                                                    Nhận phòng
-                                                </p>
-                                                <p className="font-semibold text-gray-900">
-                                                    {dayjs(
-                                                        payment?.booking
-                                                            ?.room_details?.[0]
-                                                            ?.check_in
-                                                    ).format(
-                                                        "YYYY-MM-DD HH:mm:ss"
-                                                    )}
-                                                </p>
+                                            <div className="flex gap-8">
+                                                <div>
+                                                    <p className="text-gray-600 text-sm mb-1">
+                                                        Nhận phòng
+                                                    </p>
+                                                    <p className="font-semibold text-gray-900">
+                                                        {dayjs(
+                                                            payment?.booking
+                                                                ?.room_details?.[0]
+                                                                ?.check_in
+                                                        ).format(
+                                                            "YYYY-MM-DD HH:mm:ss"
+                                                        )}
+                                                    </p>
+                                                </div>
+                                                <div>
+                                                    <p className="text-gray-600 text-sm mb-1">
+                                                        Trả phòng
+                                                    </p>
+                                                    <p className="font-semibold text-gray-900">
+                                                        {dayjs(
+                                                            payment?.booking
+                                                                ?.room_details?.[0]
+                                                                ?.check_out
+                                                        ).format(
+                                                            "YYYY-MM-DD HH:mm:ss"
+                                                        )}
+                                                    </p>
+                                                </div>
                                             </div>
-                                            <div>
-                                                <p className="text-gray-600 text-sm mb-1">
-                                                    Trả phòng
-                                                </p>
-                                                <p className="font-semibold text-gray-900">
-                                                    {dayjs(
+                                        </div>
+                                        <div>
+                                            {payment?.booking?.discount_amount >
+                                                0 && (
+                                                <p className="text-sm text-gray-500 line-through">
+                                                    {formatCurrency(
                                                         payment?.booking
-                                                            ?.room_details?.[0]
-                                                            ?.check_out
-                                                    ).format(
-                                                        "YYYY-MM-DD HH:mm:ss"
-                                                    )}
+                                                            ?.total_price
+                                                    )}{" "}
+                                                    ₫
                                                 </p>
+                                            )}
+
+                                            <div className="flex items-center">
+                                                <span className="text-red-600 font-semibold text-[22px] w-max">
+                                                    {formatCurrency(
+                                                        Math.max(
+                                                            payment?.booking
+                                                                ?.final_price,
+                                                            0
+                                                        )
+                                                    )}{" "}
+                                                    ₫
+                                                </span>
                                             </div>
                                         </div>
                                     </div>
@@ -218,6 +256,7 @@ const HotelCancelledTab = () => {
                                 showQuickJumper
                                 total={meta.totalItems}
                                 onChange={onChangePagination}
+                                current={meta.currentPage}
                             />
                         </div>
                     </div>
