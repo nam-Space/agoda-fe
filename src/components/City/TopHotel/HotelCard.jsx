@@ -161,7 +161,7 @@ const HotelCard = ({ hotel }) => {
                         Giá trung bình mỗi đêm
                     </div>
                     <div className="font-bold text-red-600 text-2xl">
-                        {formatCurrency(+hotel.price)}đ
+                        {formatCurrency((+hotel.price)?.toFixed(0))}đ
                     </div>
                 </div>
 

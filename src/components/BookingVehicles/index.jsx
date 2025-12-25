@@ -61,6 +61,8 @@ import { SERVICE_TYPE } from "constants/booking";
 import { callBook } from "config/api";
 import { callFetchDetailUserCarInteractionByCarId } from "config/api";
 import { callUpsertUserCarInteraction } from "config/api";
+import { CAR_BOOKING_STATUS } from "constants/booking";
+import { DRIVER_STATUS } from "constants/drive";
 
 const { Option } = Select;
 const { RangePicker } = DatePicker;
@@ -150,7 +152,7 @@ export default function BookingVehicles() {
     const handleGetCars = async () => {
         try {
             const res = await callFetchCar(
-                `current=1&pageSize=10&recommended=true`
+                `current=1&pageSize=20&driver_status=${DRIVER_STATUS.IDLE}&recommended=true`
             );
             if (res.isSuccess) {
                 setVehicleData(res.data);
@@ -337,6 +339,7 @@ export default function BookingVehicles() {
                     distance_km: distance,
                     total_time_estimate: distance / selectedItem.avg_speed,
                     passenger_quantity_booking: formFromAirportIn.capacity,
+                    status: CAR_BOOKING_STATUS.STARTING,
                 },
             };
 

@@ -4,3 +4,10 @@ export const SERVICE_TYPE = {
     FLIGHT: 3,
     ACTIVITY: 4
 }
+
+export const CAR_BOOKING_STATUS = {
+    STARTING: 0,
+    PICKED: 1,
+    MOVING: 2,
+    ARRIVED: 3
+}
