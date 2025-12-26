@@ -958,15 +958,6 @@ export default function BookingContactActivityStep2() {
                                         )}
                                     </div>
                                 )}
-
-                                {/* <div className="flex justify-between items-center pt-3 border-t border-gray-200">
-                                    <span className="font-semibold text-gray-900">
-                                        Tổng quý khách trả
-                                    </span>
-                                    <span className="text-2xl font-bold text-red-600">
-                                        {formatCurrency(getPrice())} ₫
-                                    </span>
-                                </div> */}
                             </div>
                             {/* Price Summary Card: chỉ hiện nếu không phải flight */}
                             {service_type !== ServiceType.FLIGHT && (
@@ -1055,8 +1046,12 @@ export default function BookingContactActivityStep2() {
                                             </span>
                                             <span className="text-2xl font-bold text-red-600">
                                                 {formatCurrency(
-                                                    booking.final_price ||
-                                                        booking.total_price
+                                                    booking.final_price?.toFixed(
+                                                        0
+                                                    ) ||
+                                                        booking.total_price?.toFixed(
+                                                            0
+                                                        )
                                                 )}{" "}
                                                 ₫
                                             </span>

@@ -1084,8 +1084,12 @@ export default function BookingContactActivity() {
                                             </span>
                                             <span className="text-2xl font-bold text-red-600">
                                                 {formatCurrency(
-                                                    booking.final_price ||
-                                                        booking.total_price
+                                                    booking.final_price?.toFixed(
+                                                        0
+                                                    ) ||
+                                                        booking.total_price?.toFixed(
+                                                            0
+                                                        )
                                                 )}{" "}
                                                 ₫
                                             </span>
