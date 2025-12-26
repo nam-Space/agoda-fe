@@ -105,6 +105,7 @@ const HotelSuccessfulTab = ({ currentTab, setCurrentTab }) => {
                         style={{ width: 300 }}
                         onChange={handleChange}
                         options={sortOptions}
+                        value={sortVal}
                     />
                     <Input.Search
                         placeholder="Tìm kiếm theo mã đặt phòng"

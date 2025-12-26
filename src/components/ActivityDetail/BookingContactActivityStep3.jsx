@@ -1406,7 +1406,10 @@ export default function BookingContactActivityStep3() {
                                     Tổng quý khách trả
                                 </span>
                                 <span className="text-2xl font-bold text-red-600">
-                                    {formatCurrency(booking.total_price)} ₫
+                                    {formatCurrency(
+                                        booking.total_price?.toFixed(0)
+                                    )}{" "}
+                                    ₫
                                 </span>
                             </div>
 

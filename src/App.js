@@ -37,6 +37,7 @@ import TravelGuidePage from 'pages/TravelGuidePage';
 import TravelGuideCountryPage from 'pages/TravelGuideCountryPage';
 import TravelGuideCityPage from 'pages/TravelGuideCityPage';
 import TravelGuideDetailPage from 'pages/TravelGuideDetailPage';
+import ProfileCarPage from 'pages/ProfileCarPage';
 
 function App() {
   const dispatch = useAppDispatch();
@@ -216,6 +217,11 @@ function App() {
           path: "activity",
           element:
             <ProfileActivityPage />
+        },
+        {
+          path: "car",
+          element:
+            <ProfileCarPage />
         },
         {
           path: "chat",

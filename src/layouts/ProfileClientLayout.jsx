@@ -6,10 +6,11 @@ import { PiBuildingApartmentFill } from "react-icons/pi";
 import { BiSolidPlaneAlt } from "react-icons/bi";
 import { LuFerrisWheel } from "react-icons/lu";
 import { AiFillMessage } from "react-icons/ai";
-import { Link, useLocation, useParams } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { useSocket } from "contexts/SocketProvider";
 import { Badge } from "antd";
 import { useAppSelector } from "../redux/hooks";
+import { FaCar } from "react-icons/fa";
 
 const ProfileClientLayout = ({ children }) => {
     const location = useLocation();
@@ -45,6 +46,12 @@ const ProfileClientLayout = ({ children }) => {
             icon: <LuFerrisWheel className="text-[24px]" />,
             text: "Hoạt động",
             active: location.pathname === "/profile/activity",
+        },
+        {
+            link: "/profile/car",
+            icon: <FaCar className="text-[24px]" />,
+            text: "Chuyến taxi",
+            active: location.pathname === "/profile/car",
         },
         {
             link: "/profile/chat",
