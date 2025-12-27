@@ -27,9 +27,7 @@ const FlightSuccessfulTab = ({ currentTab, setCurrentTab }) => {
         totalItems: 0,
     });
 
-    const [sortVal, setSortVal] = useState(
-        "sort=booking__flight_details__flight__legs__departure_time-desc"
-    );
+    const [sortVal, setSortVal] = useState("sort=created_at-asc");
     const [bookingCode, setBookingCode] = useState("");
 
     const sortOptions = [
@@ -39,15 +37,6 @@ const FlightSuccessfulTab = ({ currentTab, setCurrentTab }) => {
                 <div className="flex items-center gap-[4px]">
                     <FaSort />
                     Sắp xếp theo: Ngày đặt vé
-                </div>
-            ),
-        },
-        {
-            value: "sort=booking__flight_details__flight__legs__departure_time-desc",
-            label: (
-                <div className="flex items-center gap-[4px]">
-                    <FaSort />
-                    Sắp xếp theo: Ngày xuất phát
                 </div>
             ),
         },

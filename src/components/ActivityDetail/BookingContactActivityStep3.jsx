@@ -1107,7 +1107,7 @@ export default function BookingContactActivityStep3() {
                                         </span>
                                         <span className="text-sm text-gray-900 line-through">
                                             {formatCurrency(
-                                                booking?.total_price
+                                                booking?.total_price?.toFixed(0)
                                             )}
                                         </span>
                                     </div>
@@ -1121,13 +1121,15 @@ export default function BookingContactActivityStep3() {
                                         </span>
                                         <span className="text-sm text-green-600 font-semibold line-through">
                                             {formatCurrency(
-                                                (activityDateBooking?.total_price *
-                                                    (activityDateBooking
-                                                        ?.activity_date
-                                                        ?.promotion
-                                                        ?.discount_percent ||
-                                                        0)) /
+                                                (
+                                                    (activityDateBooking?.total_price *
+                                                        (activityDateBooking
+                                                            ?.activity_date
+                                                            ?.promotion
+                                                            ?.discount_percent ||
+                                                            0)) /
                                                     100
+                                                )?.toFixed(0)
                                             )}{" "}
                                             ₫
                                         </span>
@@ -1217,7 +1219,7 @@ export default function BookingContactActivityStep3() {
                                         </span>
                                         <span className="text-sm text-gray-900 line-through">
                                             {formatCurrency(
-                                                booking?.total_price
+                                                booking?.total_price?.toFixed(0)
                                             )}
                                         </span>
                                     </div>
@@ -1230,11 +1232,14 @@ export default function BookingContactActivityStep3() {
                                         </span>
                                         <span className="text-sm text-green-600 font-semibold line-through">
                                             {formatCurrency(
-                                                (carBooking?.total_price *
-                                                    (carBooking?.car?.promotion
-                                                        ?.discount_percent ||
-                                                        0)) /
+                                                (
+                                                    (carBooking?.total_price *
+                                                        (carBooking?.car
+                                                            ?.promotion
+                                                            ?.discount_percent ||
+                                                            0)) /
                                                     100
+                                                )?.toFixed(0)
                                             )}{" "}
                                             ₫
                                         </span>
@@ -1354,7 +1359,9 @@ export default function BookingContactActivityStep3() {
                                                     </span>
                                                     <span className="text-sm text-gray-900 line-through">
                                                         {formatCurrency(
-                                                            flightDetail?.total_price
+                                                            flightDetail?.total_price?.toFixed(
+                                                                0
+                                                            )
                                                         )}{" "}
                                                         ₫
                                                     </span>
@@ -1370,13 +1377,15 @@ export default function BookingContactActivityStep3() {
                                                     </span>
                                                     <span className="text-sm text-green-600 font-semibold line-through">
                                                         {formatCurrency(
-                                                            (flightDetail?.total_price *
-                                                                (flightDetail
-                                                                    ?.flight
-                                                                    ?.promotion
-                                                                    ?.discount_percent ||
-                                                                    0)) /
+                                                            (
+                                                                (flightDetail?.total_price *
+                                                                    (flightDetail
+                                                                        ?.flight
+                                                                        ?.promotion
+                                                                        ?.discount_percent ||
+                                                                        0)) /
                                                                 100
+                                                            )?.toFixed(0)
                                                         )}{" "}
                                                         ₫
                                                     </span>
@@ -1396,7 +1405,10 @@ export default function BookingContactActivityStep3() {
                                         </span>
                                     </span>
                                     <span className="text-sm text-gray-900">
-                                        {formatCurrency(booking.total_price)} ₫
+                                        {formatCurrency(
+                                            booking.total_price?.toFixed(0)
+                                        )}{" "}
+                                        ₫
                                     </span>
                                 </div>
                             </div>
