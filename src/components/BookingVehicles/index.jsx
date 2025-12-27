@@ -322,7 +322,9 @@ export default function BookingVehicles() {
                 user: user?.id,
                 service_type: SERVICE_TYPE.CAR,
                 total_price: Math.round(
-                    selectedItem.price_per_km * distance * selectedItem.capacity
+                    selectedItem.price_per_km *
+                        distance *
+                        (formFromAirportIn?.capacity || 0)
                 ),
                 car_detail: {
                     car: selectedItem.id,
@@ -379,7 +381,9 @@ export default function BookingVehicles() {
                 user: user?.id,
                 service_type: SERVICE_TYPE.CAR,
                 total_price: Math.round(
-                    selectedItem.price_per_km * distance * selectedItem.capacity
+                    selectedItem.price_per_km *
+                        distance *
+                        (formFromLocationIn?.capacity || 0)
                 ),
                 car_detail: {
                     car: selectedItem.id,
@@ -1144,7 +1148,9 @@ export default function BookingVehicles() {
                                                             Math.round(
                                                                 vehicle.price_per_km *
                                                                     distance *
-                                                                    vehicle.capacity
+                                                                    (formFromAirportIn?.capacity ||
+                                                                        formFromLocationIn?.capacity ||
+                                                                        0)
                                                             )
                                                         )}{" "}
                                                         ₫
@@ -1156,7 +1162,9 @@ export default function BookingVehicles() {
                                                             getPriceAfterDiscount(
                                                                 vehicle.price_per_km *
                                                                     distance *
-                                                                    vehicle.capacity,
+                                                                    (formFromAirportIn?.capacity ||
+                                                                        formFromLocationIn?.capacity ||
+                                                                        0),
                                                                 vehicle
                                                                     ?.promotion
                                                                     ?.discount_amount,
