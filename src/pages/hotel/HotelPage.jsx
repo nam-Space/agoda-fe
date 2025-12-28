@@ -468,6 +468,8 @@ const HotelPage = () => {
                                     ? `https://maps.google.com/?q=${hotelData.lat},${hotelData.lng}`
                                     : "#"
                             }
+                            lat={hotelData?.lat}
+                            lng={hotelData?.lng}
                             tags={[
                                 { text: "Domestic Deal", color: "bg-blue-600" },
                                 {

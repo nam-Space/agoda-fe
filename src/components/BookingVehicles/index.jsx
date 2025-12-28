@@ -1,9 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import {
     DatePicker,
-    Select,
     Button,
     Card,
     Rate,
@@ -17,12 +16,10 @@ import {
     Popover,
 } from "antd";
 import {
-    SearchOutlined,
     UserOutlined,
     CalendarOutlined,
     CarOutlined,
     CheckCircleOutlined,
-    ShieldCheckOutlined,
     CreditCardOutlined,
     MinusOutlined,
     PlusOutlined,
@@ -51,7 +48,7 @@ import { MapContainer, Marker, Popup, TileLayer } from "react-leaflet";
 import MarkerClusterGroup from "react-leaflet-cluster";
 import { IoAirplaneOutline, IoLocationOutline } from "react-icons/io5";
 import { HiOutlineUsers } from "react-icons/hi2";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import dayjs from "dayjs";
 import { toast } from "react-toastify";
 import { callFetchCar } from "config/api";
@@ -63,14 +60,17 @@ import { callFetchDetailUserCarInteractionByCarId } from "config/api";
 import { callUpsertUserCarInteraction } from "config/api";
 import { CAR_BOOKING_STATUS } from "constants/booking";
 import { DRIVER_STATUS } from "constants/drive";
-
-const { Option } = Select;
-const { RangePicker } = DatePicker;
+import Groq from "groq-sdk";
 
 export default function BookingVehicles() {
     const navigate = useNavigate();
     const { state } = useLocation();
     const { option, formFromAirportIn, formFromLocationIn } = state;
+    const groq = new Groq({
+        apiKey: process.env.REACT_APP_GROQ_API_KEY,
+        dangerouslyAllowBrowser: true,
+    });
+    const [cityName, setCityName] = useState("");
     const user = useAppSelector((state) => state.account.user);
     const [vehicleData, setVehicleData] = useState([]);
     const [selectedItem, setSelectedItem] = useState(vehicleData[0]);
@@ -149,11 +149,9 @@ export default function BookingVehicles() {
             resultsAirportTo: [],
         });
 
-    const handleGetCars = async () => {
+    const handleGetCars = async (query) => {
         try {
-            const res = await callFetchCar(
-                `current=1&pageSize=20&driver_status=${DRIVER_STATUS.IDLE}&recommended=true`
-            );
+            const res = await callFetchCar(query);
             if (res.isSuccess) {
                 setVehicleData(res.data);
             }
@@ -165,8 +163,29 @@ export default function BookingVehicles() {
     };
 
     useEffect(() => {
-        handleGetCars();
-    }, []);
+        if (cityName) {
+            handleGetCars(
+                `current=1&pageSize=20&driver_status=${DRIVER_STATUS.IDLE}&driver_area_name=${cityName}&recommended=true`
+            );
+        }
+    }, [cityName]);
+
+    async function getGroqChatCompletion(prompt) {
+        try {
+            return groq.chat.completions.create({
+                messages: [
+                    {
+                        role: "user",
+                        content: prompt,
+                    },
+                ],
+                model: "openai/gpt-oss-20b",
+            });
+        } catch (e) {
+            console.log("error", e);
+            return null;
+        }
+    }
 
     const lat1 =
         option === "from-airport"
@@ -219,6 +238,19 @@ export default function BookingVehicles() {
     } else {
         zoomLevel = 3; // Cách xa nhau nhiều, zoom thấp
     }
+
+    const handleGetCityByAI = async () => {
+        const chatCompletion = await getGroqChatCompletion(
+            `Chào bạn, Mình có địa điểm có kinh độ ${long1} và vĩ độ ${lat1}, mình muốn biết địa điểm này gần nhất với thành phố nào ở Việt Nam. Bạn trả lời ngắn gọn thôi, có dấu có cách, không cần thêm tiền tố với hậu tố đằng sau đâu, và cả các ký tự đặc biệt nữa (Ví dụ: Huế, Hồ Chí Minh, Hà Nội, Phú Quốc, Hạ Long, Hội An...)`
+        );
+        setCityName(chatCompletion?.choices?.[0]?.message?.content || "");
+    };
+
+    useEffect(() => {
+        if (lat1 && long1) {
+            handleGetCityByAI();
+        }
+    }, [lat1, long1]);
 
     const paymentMethods = [
         {
