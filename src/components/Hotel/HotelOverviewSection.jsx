@@ -15,6 +15,8 @@ const HotelOverviewSection = ({
     aboutLink,
     hotSaleText,
     hotSaleCount,
+    lat,
+    lng,
 }) => {
     const [isExpanded, setIsExpanded] = useState(false);
     const [showMap, setShowMap] = useState(false);
@@ -30,20 +32,24 @@ const HotelOverviewSection = ({
                 <h1 className="text-2xl font-bold text-gray-800">{title}</h1>
                 <p className="text-sm text-gray-600">
                     {address} -{" "}
-                    <a
-                        href="#"
-                        onClick={(e) => {
-                            e.preventDefault();
+                    <span
+                        onClick={() => {
                             setShowMap(true);
                         }}
-                        className="text-blue-600 hover:underline"
+                        className="text-blue-600 hover:underline cursor-pointer"
                     >
                         TRÊN BẢN ĐỒ
-                    </a>
+                    </span>
                 </p>
 
                 {/* SHOW POPUP OUTSIDE <p> TAG! */}
-                {showMap && <HotelMapPopup onClose={() => setShowMap(false)} />}
+                {showMap && (
+                    <HotelMapPopup
+                        onClose={() => setShowMap(false)}
+                        lat={lat}
+                        lng={lng}
+                    />
+                )}
 
                 <div className="flex space-x-2 mt-4">
                     {tags.map((tag, index) => (

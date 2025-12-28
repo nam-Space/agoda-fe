@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import logoImg from "../images/header/logo.svg";
+import logoImg from "../images/header/logo.png";
 import viImg from "../images/header/vi.svg";
 import enImg from "../images/header/en.svg";
 import koreanImg from "../images/header/korea.png";
@@ -21,7 +21,6 @@ import Cookies from "js-cookie";
 import { getUserAvatar } from "utils/imageUrl";
 import { ROLE_VI } from "constants/role";
 import { useSocket } from "contexts/SocketProvider";
-import { FaCircleXmark, FaXmark } from "react-icons/fa6";
 
 const HeaderClient = () => {
     const dispatch = useAppDispatch();

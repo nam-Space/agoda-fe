@@ -600,6 +600,7 @@ const AirportTab = () => {
                                         timeStart: value.toString(),
                                     });
                                 }}
+                                placeholder="Chọn thời gian"
                             />
                             <InputNumber
                                 addonBefore={<span>Người lớn</span>}
@@ -634,6 +635,7 @@ const AirportTab = () => {
                                 onOk={(val) => {
                                     console.log(val);
                                 }}
+                                placeholder="Chọn thời gian"
                             />
                             <InputNumber
                                 addonBefore={<span>Người lớn</span>}
