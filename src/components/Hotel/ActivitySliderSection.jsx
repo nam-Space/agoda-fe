@@ -3,62 +3,40 @@ import { Link, useNavigate } from "react-router-dom";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation } from "swiper/modules";
 import { IoIosStar } from "react-icons/io";
-import { Empty, Tag } from "antd";
+import { Empty, Spin, Tag } from "antd";
 import { BsLightningChargeFill } from "react-icons/bs";
 import { formatCurrency } from "utils/formatCurrency";
 import { callFetchActivity } from "config/api";
 import { ACTIVITY_TYPE } from "constants/activity";
 
 const ActivitySlider = ({ cityId, cityName }) => {
-    const sliderRef = useRef(null);
     const [activities, setActivities] = useState([]);
-    const [filteredActivities, setFilteredActivities] = useState([]);
-    const [categories, setCategories] = useState([
+    const [isLoading, setIsLoading] = useState(false);
+    const categories = [
         "all",
         ...Object.entries(ACTIVITY_TYPE).map(([key, _]) => key),
-    ]);
+    ];
     const [selectedCategory, setSelectedCategory] = useState("all");
 
-    // const typeMap = ['all', Object.entries(ACTIVITY_TYPE).map(([key, _]) => key)];
+    const fetchActivities = async (query) => {
+        setIsLoading(true);
+        const res = await callFetchActivity(query);
+        if (res.data) {
+            const formatted = res.data;
+            setActivities(formatted);
+        }
+        setIsLoading(false);
+    };
 
-    // Fetch API
     useEffect(() => {
-        const fetchActivities = async () => {
-            try {
-                const res = await callFetchActivity(
-                    `current=1&pageSize=10&recommended=true&city_id=${cityId}`
-                );
-                if (res.data) {
-                    const formatted = res.data;
-                    setActivities(formatted);
-                    setFilteredActivities(formatted);
-
-                    // const uniqueCategories = Array.from(
-                    //     new Set(formatted.map((a) => a.category))
-                    // );
-                    // setCategories([
-                    //     "Tất cả",
-                    //     ...uniqueCategories.map((c) => categoryMap[c] || c),
-                    // ]);
-                }
-            } catch (err) {
-                console.error("Fetch activities error:", err);
-            }
-        };
-
-        fetchActivities();
-    }, [cityId]);
-
-    // Filter category
-    useEffect(() => {
-        if (selectedCategory === "all") {
-            setFilteredActivities(activities);
-        } else {
-            setFilteredActivities(
-                activities.filter((a) => a.category === selectedCategory)
+        if (selectedCategory) {
+            fetchActivities(
+                `current=1&pageSize=10&recommended=true&city_id=${cityId}&category=${
+                    selectedCategory === "all" ? "" : selectedCategory
+                }`
             );
         }
-    }, [selectedCategory, activities]);
+    }, [cityId, selectedCategory]);
 
     return (
         <section className="bg-white shadow-md rounded-2xl p-6">
@@ -86,110 +64,101 @@ const ActivitySlider = ({ cityId, cityName }) => {
                 </div>
 
                 {/* Slider */}
-                <div className="relative">
-                    <div
-                        ref={sliderRef}
-                        className="flex overflow-x-auto gap-4 scroll-smooth scrollbar-hide"
-                    >
-                        {filteredActivities.length === 0 ? (
-                            // <div className="w-full text-center py-8 text-gray-500">
-                            //     Không có hoạt động nào được tìm thấy.
-                            // </div>
-                            <Empty
-                                description="Không có hoạt động nào được tìm thấy."
-                                className="bg-[#abb6cb1f] w-full mx-0 py-[70px] rounded-[16px]"
-                            />
-                        ) : (
-                            <Swiper
-                                slidesPerView={4}
-                                spaceBetween={8}
-                                navigation={true}
-                                modules={[Navigation]}
-                            >
-                                {activities.map((item, index) => (
-                                    <SwiperSlide key={index}>
-                                        <div className="rounded-[16px] border-[1px] border-[#d5d9e2] overflow-hidden">
-                                            <Link
-                                                to={`/activity/detail/${item.id}`}
-                                            >
-                                                <img
-                                                    src={`${process.env.REACT_APP_BE_URL}${item?.images?.[0]?.image}`}
-                                                    className="w-full h-[170px] object-cover"
-                                                />
-                                                <div className="pt-[12px] px-[16px] pb-[16px]">
-                                                    <p className="font-semibold text-[20px] leading-[24px] line-clamp-2 min-h-[48px]">
-                                                        {item.name}
-                                                    </p>
-                                                    <div className="flex items-center gap-[4px]">
-                                                        <IoIosStar className="text-[#b54c01] text-[12px]" />
-                                                        <p className="font-semibold">
-                                                            {item.avg_star?.toFixed(
-                                                                1
-                                                            )}
-                                                        </p>
-                                                        <p className="text-[13px] text-[#5e6b82]">
-                                                            (49)
-                                                        </p>
-                                                        <p className="text-[#5e6b82]">
-                                                            •
-                                                        </p>
-                                                        <p className="text-[13px] text-[#5e6b82]">
-                                                            298 người đã đặt
-                                                        </p>
-                                                    </div>
-                                                    <div className="flex items-center mt-[4px]">
-                                                        <Tag
-                                                            color="blue"
-                                                            className="p-[4px]"
-                                                        >
-                                                            <BsLightningChargeFill className="text-[14px]" />
-                                                        </Tag>
-                                                        <Tag
-                                                            color="blue"
-                                                            className="p-[4px] text-[13px] leading-[14px]"
-                                                        >
-                                                            Hủy miễn phí
-                                                        </Tag>
-                                                    </div>
-                                                    <div className="flex justify-end mt-[52px]">
-                                                        <Tag
-                                                            color="#c53829"
-                                                            className="p-[4px] text-[13px] leading-[14px] mr-0"
-                                                        >
-                                                            Giảm 0%
-                                                        </Tag>
-                                                    </div>
-                                                    <div className="mt-[4px] flex items-center justify-end gap-[4px]">
-                                                        <p className="text-[13px] text-end line-through">
-                                                            {formatCurrency(
-                                                                item.avg_price.toFixed(
-                                                                    0
-                                                                )
-                                                            )}{" "}
-                                                            ₫
-                                                        </p>
-                                                        <div className="flex items-center justify-end gap-[8px]">
-                                                            <p className="text-[16px] font-bold text-end text-[#c53829]">
-                                                                {formatCurrency(
-                                                                    item.avg_price.toFixed(
-                                                                        0
-                                                                    )
-                                                                )}
-                                                            </p>
-                                                            <p className="text-[12px] mt-[2px] font-semibold text-end text-[#c53829]">
-                                                                ₫
-                                                            </p>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </Link>
-                                        </div>
-                                    </SwiperSlide>
-                                ))}
-                            </Swiper>
-                        )}
+                {isLoading ? (
+                    <div className="flex justify-center items-center py-[100px]">
+                        <Spin size="large" />
                     </div>
-                </div>
+                ) : activities.length === 0 ? (
+                    <Empty
+                        description="Không có hoạt động nào được tìm thấy."
+                        className="bg-[#abb6cb1f] w-full mx-0 py-[70px] rounded-[16px]"
+                    />
+                ) : (
+                    <Swiper
+                        slidesPerView={4}
+                        spaceBetween={8}
+                        navigation={true}
+                        modules={[Navigation]}
+                    >
+                        {activities.map((item, index) => (
+                            <SwiperSlide key={index}>
+                                <div className="rounded-[16px] border-[1px] border-[#d5d9e2] overflow-hidden">
+                                    <Link to={`/activity/detail/${item.id}`}>
+                                        <img
+                                            src={`${process.env.REACT_APP_BE_URL}${item?.images?.[0]?.image}`}
+                                            alt={item.name}
+                                            className="w-full h-[170px] object-cover"
+                                        />
+                                        <div className="pt-[12px] px-[16px] pb-[16px]">
+                                            <p className="font-semibold text-[20px] leading-[24px] line-clamp-2 min-h-[48px]">
+                                                {item.name}
+                                            </p>
+                                            <div className="flex items-center gap-[4px]">
+                                                <IoIosStar className="text-[#b54c01] text-[12px]" />
+                                                <p className="font-semibold">
+                                                    {item.avg_star?.toFixed(1)}
+                                                </p>
+                                                <p className="text-[13px] text-[#5e6b82]">
+                                                    (49)
+                                                </p>
+                                                <p className="text-[#5e6b82]">
+                                                    •
+                                                </p>
+                                                <p className="text-[13px] text-[#5e6b82]">
+                                                    298 người đã đặt
+                                                </p>
+                                            </div>
+                                            <div className="flex items-center mt-[4px]">
+                                                <Tag
+                                                    color="blue"
+                                                    className="p-[4px]"
+                                                >
+                                                    <BsLightningChargeFill className="text-[14px]" />
+                                                </Tag>
+                                                <Tag
+                                                    color="blue"
+                                                    className="p-[4px] text-[13px] leading-[14px]"
+                                                >
+                                                    Hủy miễn phí
+                                                </Tag>
+                                            </div>
+                                            <div className="flex justify-end mt-[52px]">
+                                                <Tag
+                                                    color="#c53829"
+                                                    className="p-[4px] text-[13px] leading-[14px] mr-0"
+                                                >
+                                                    Giảm 0%
+                                                </Tag>
+                                            </div>
+                                            <div className="mt-[4px] flex items-center justify-end gap-[4px]">
+                                                <p className="text-[13px] text-end line-through">
+                                                    {formatCurrency(
+                                                        item.avg_price.toFixed(
+                                                            0
+                                                        )
+                                                    )}{" "}
+                                                    ₫
+                                                </p>
+                                                <div className="flex items-center justify-end gap-[8px]">
+                                                    <p className="text-[16px] font-bold text-end text-[#c53829]">
+                                                        {formatCurrency(
+                                                            item.avg_price.toFixed(
+                                                                0
+                                                            )
+                                                        )}
+                                                    </p>
+                                                    <p className="text-[12px] mt-[2px] font-semibold text-end text-[#c53829]">
+                                                        ₫
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </Link>
+                                </div>
+                            </SwiperSlide>
+                        ))}
+                    </Swiper>
+                )}
             </div>
         </section>
     );
