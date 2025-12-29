@@ -14,6 +14,8 @@ import {
     Checkbox,
     Radio,
     Popover,
+    Spin,
+    Empty,
 } from "antd";
 import {
     UserOutlined,
@@ -48,9 +50,8 @@ import { MapContainer, Marker, Popup, TileLayer } from "react-leaflet";
 import MarkerClusterGroup from "react-leaflet-cluster";
 import { IoAirplaneOutline, IoLocationOutline } from "react-icons/io5";
 import { HiOutlineUsers } from "react-icons/hi2";
-import { useLocation, useNavigate } from "react-router-dom";
+import { createSearchParams, useLocation, useNavigate } from "react-router-dom";
 import dayjs from "dayjs";
-import { toast } from "react-toastify";
 import { callFetchCar } from "config/api";
 import { formatCurrency, getPriceAfterDiscount } from "utils/formatCurrency";
 import { useAppSelector } from "../../redux/hooks";
@@ -61,18 +62,32 @@ import { callUpsertUserCarInteraction } from "config/api";
 import { CAR_BOOKING_STATUS } from "constants/booking";
 import { DRIVER_STATUS } from "constants/drive";
 import Groq from "groq-sdk";
+import { callFetchAirport } from "config/api";
+import { toast } from "react-toastify";
+import { callFetchLocationMapInAllWorld } from "config/api";
+import { callFetchHotelQuery } from "config/api";
 
 export default function BookingVehicles() {
     const navigate = useNavigate();
-    const { state } = useLocation();
-    const { option, formFromAirportIn, formFromLocationIn } = state;
+    const { state, search } = useLocation();
+    const dataObj = state;
+    const params = new URLSearchParams(search);
+    const rawData = params.get("data");
+    const data = rawData ? JSON.parse(decodeURIComponent(rawData)) : null;
+
+    const option = data?.option || dataObj?.option;
+    const formFromAirportIn =
+        data?.formFromAirportIn || dataObj?.formFromAirportIn;
+    const formFromLocationIn =
+        data?.formFromLocationIn || dataObj?.formFromLocationIn;
+
     const groq = new Groq({
         apiKey: process.env.REACT_APP_GROQ_API_KEY,
         dangerouslyAllowBrowser: true,
     });
-    const [cityName, setCityName] = useState("");
     const user = useAppSelector((state) => state.account.user);
     const [vehicleData, setVehicleData] = useState([]);
+    const [isLoadingCars, setIsLoadingCars] = useState(false);
     const [selectedItem, setSelectedItem] = useState(vehicleData[0]);
     const [openExtra, setOpenExtra] = useState(false);
     const [extras, setExtras] = useState({
@@ -90,6 +105,16 @@ export default function BookingVehicles() {
             locationTo: false,
         });
     const [popoverFromLocationInBooking, setPopoverFromLocationInBooking] =
+        useState({
+            locationIn: false,
+            airportTo: false,
+        });
+    const [loadingFromAirportInBooking, setLoadingFromAirportInBooking] =
+        useState({
+            airportIn: false,
+            locationTo: false,
+        });
+    const [loadingFromLocationInBooking, setLoadingFromLocationInBooking] =
         useState({
             locationIn: false,
             airportTo: false,
@@ -150,25 +175,11 @@ export default function BookingVehicles() {
         });
 
     const handleGetCars = async (query) => {
-        try {
-            const res = await callFetchCar(query);
-            if (res.isSuccess) {
-                setVehicleData(res.data);
-            }
-        } catch (e) {
-            toast.error(e.message, {
-                position: "bottom-right",
-            });
+        const res = await callFetchCar(query);
+        if (res.isSuccess) {
+            setVehicleData(res.data);
         }
     };
-
-    useEffect(() => {
-        if (cityName) {
-            handleGetCars(
-                `current=1&pageSize=20&driver_status=${DRIVER_STATUS.IDLE}&driver_area_name=${cityName}&recommended=true`
-            );
-        }
-    }, [cityName]);
 
     async function getGroqChatCompletion(prompt) {
         try {
@@ -240,10 +251,17 @@ export default function BookingVehicles() {
     }
 
     const handleGetCityByAI = async () => {
+        setIsLoadingCars(true);
         const chatCompletion = await getGroqChatCompletion(
             `Chào bạn, Mình có địa điểm có kinh độ ${long1} và vĩ độ ${lat1}, mình muốn biết địa điểm này gần nhất với thành phố nào ở Việt Nam. Bạn trả lời ngắn gọn thôi, có dấu có cách, không cần thêm tiền tố với hậu tố đằng sau đâu, và cả các ký tự đặc biệt nữa (Ví dụ: Huế, Hồ Chí Minh, Hà Nội, Phú Quốc, Hạ Long, Hội An...)`
         );
-        setCityName(chatCompletion?.choices?.[0]?.message?.content || "");
+        const cityName = chatCompletion?.choices?.[0]?.message?.content || "";
+        if (cityName) {
+            await handleGetCars(
+                `current=1&pageSize=20&driver_status=${DRIVER_STATUS.IDLE}&driver_area_name=${cityName}&recommended=true`
+            );
+        }
+        setIsLoadingCars(false);
     };
 
     useEffect(() => {
@@ -251,6 +269,188 @@ export default function BookingVehicles() {
             handleGetCityByAI();
         }
     }, [lat1, long1]);
+
+    const handleGetAirport = async (type) => {
+        try {
+            if (type === "location-in") {
+                setLoadingFromLocationInBooking({
+                    ...loadingFromLocationInBooking,
+                    airportTo: true,
+                });
+                const res = await callFetchAirport(
+                    `current=1&pageSize=10&name=${formFromLocationInBooking.airportTo.name}`
+                );
+                if (res.isSuccess) {
+                    setResultFromLocationInBooking({
+                        ...resultFromLocationInBooking,
+                        resultsAirportTo: res.data,
+                    });
+                }
+                setLoadingFromLocationInBooking({
+                    ...loadingFromLocationInBooking,
+                    airportTo: false,
+                });
+            } else {
+                setLoadingFromAirportInBooking({
+                    ...loadingFromAirportInBooking,
+                    airportIn: true,
+                });
+                const res = await callFetchAirport(
+                    `current=1&pageSize=10&name=${formFromAirportInBooking.airportIn.name}`
+                );
+                if (res.isSuccess) {
+                    setResultFromAirportInBooking({
+                        ...resultFromAirportInBooking,
+                        resultsAirportIn: res.data,
+                    });
+                }
+                setLoadingFromAirportInBooking({
+                    ...loadingFromAirportInBooking,
+                    airportIn: false,
+                });
+            }
+        } catch (e) {
+            toast.error(e.message, {
+                position: "bottom-right",
+            });
+        }
+    };
+
+    const handleGetLocation = async (type) => {
+        try {
+            if (type === "location-in") {
+                setLoadingFromLocationInBooking({
+                    ...loadingFromLocationInBooking,
+                    locationIn: true,
+                });
+                const res = await callFetchLocationMapInAllWorld(
+                    encodeURIComponent(
+                        formFromLocationInBooking.locationIn.name
+                    )
+                );
+                if (res?.data?.features && res?.data?.features?.length > 0) {
+                    setResultFromLocationInBooking({
+                        ...resultFromLocationInBooking,
+                        resultsLocationIn: res.data.features,
+                    });
+                }
+                setLoadingFromLocationInBooking({
+                    ...loadingFromLocationInBooking,
+                    locationIn: false,
+                });
+            } else {
+                setLoadingFromAirportInBooking({
+                    ...loadingFromAirportInBooking,
+                    locationTo: true,
+                });
+                const res = await callFetchHotelQuery(
+                    `current=1&pageSize=10&name=${formFromAirportInBooking.locationTo.name}`
+                );
+                if (res.isSuccess) {
+                    setResultFromAirportInBooking({
+                        ...resultFromAirportInBooking,
+                        resultsLocationTo: res.data,
+                    });
+                }
+                setLoadingFromAirportInBooking({
+                    ...loadingFromAirportInBooking,
+                    locationTo: false,
+                });
+            }
+        } catch (e) {
+            toast.error(e.message, {
+                position: "bottom-right",
+            });
+        }
+    };
+
+    useEffect(() => {
+        if (!popoverFromAirportInBooking.airportIn) return;
+        if (!formFromAirportInBooking.airportIn.name) {
+            setResultFromAirportInBooking({
+                ...resultFromAirportInBooking,
+                resultsAirportIn: [],
+            });
+            return;
+        }
+
+        setLoadingFromAirportInBooking({
+            ...loadingFromAirportInBooking,
+            airportIn: true,
+        });
+
+        const timeoutId = setTimeout(() => {
+            handleGetAirport("airport-in");
+        }, 500); // debounce 500ms
+
+        return () => clearTimeout(timeoutId);
+    }, [formFromAirportInBooking.airportIn.name]);
+
+    useEffect(() => {
+        if (!popoverFromAirportInBooking.locationTo) return;
+        if (!formFromAirportInBooking.locationTo.name) {
+            setResultFromAirportInBooking({
+                ...resultFromAirportInBooking,
+                resultsAirportIn: [],
+            });
+            return;
+        }
+
+        setLoadingFromAirportInBooking({
+            ...loadingFromAirportInBooking,
+            locationTo: true,
+        });
+
+        const timeoutId = setTimeout(() => {
+            handleGetLocation("airport-in");
+        }, 500); // debounce 500ms
+
+        return () => clearTimeout(timeoutId);
+    }, [formFromAirportInBooking.locationTo.name]);
+
+    useEffect(() => {
+        if (!popoverFromLocationInBooking.locationIn) return;
+        if (!formFromLocationInBooking.locationIn.name) {
+            setResultFromLocationInBooking({
+                ...resultFromLocationInBooking,
+                resultsLocationIn: [],
+            });
+            return;
+        }
+
+        setLoadingFromLocationInBooking({
+            ...loadingFromLocationInBooking,
+            locationIn: true,
+        });
+
+        const timeoutId = setTimeout(() => {
+            handleGetLocation("location-in");
+        }, 500); // debounce 500ms
+
+        return () => clearTimeout(timeoutId);
+    }, [formFromLocationInBooking.locationIn.name]);
+
+    useEffect(() => {
+        if (!popoverFromLocationInBooking.airportTo) return;
+        if (!formFromLocationInBooking.airportTo.name) {
+            setResultFromLocationInBooking({
+                ...resultFromLocationInBooking,
+                resultsLocationIn: [],
+            });
+            return;
+        }
+
+        setLoadingFromLocationInBooking({
+            ...loadingFromLocationInBooking,
+            airportTo: true,
+        });
+
+        const timeoutId = setTimeout(() => {
+            handleGetAirport("location-in");
+        }, 500); // debounce 500ms
+
+        return () => clearTimeout(timeoutId);
+    }, [formFromLocationInBooking.airportTo.name]);
 
     const paymentMethods = [
         {
@@ -335,21 +535,84 @@ export default function BookingVehicles() {
         }));
     };
 
+    const handleSearchToBooking = () => {
+        if (optionBooking === "from-airport") {
+            if (
+                !formFromAirportInBooking.airportIn.lat ||
+                !formFromAirportInBooking.airportIn.lng ||
+                !formFromAirportInBooking.locationTo.lat ||
+                !formFromAirportInBooking.locationTo.lng
+            ) {
+                toast.error("Vui lòng chọn địa điểm", {
+                    position: "bottom-right",
+                });
+                return;
+            }
+
+            if (!formFromAirportInBooking.timeStart) {
+                toast.error("Vui lòng nhập thời gian khởi hành", {
+                    position: "bottom-right",
+                });
+                return;
+            }
+            if (!formFromAirportInBooking.capacity) {
+                toast.error("Vui lòng điền số lượng người đi", {
+                    position: "bottom-right",
+                });
+                return;
+            }
+
+            const query = createSearchParams({
+                data: encodeURIComponent(
+                    JSON.stringify({
+                        option: optionBooking,
+                        formFromAirportIn: formFromAirportInBooking,
+                    })
+                ),
+            }).toString();
+
+            window.location.href = `/booking-vehicles?${query}`;
+        } else {
+            if (
+                !formFromLocationInBooking.airportTo.lat ||
+                !formFromLocationInBooking.airportTo.lng ||
+                !formFromLocationInBooking.locationIn.lat ||
+                !formFromLocationInBooking.locationIn.lng
+            ) {
+                toast.error("Vui lòng chọn địa điểm", {
+                    position: "bottom-right",
+                });
+                return;
+            }
+
+            if (!formFromLocationInBooking.timeStart) {
+                toast.error("Vui lòng nhập thời gian khởi hành", {
+                    position: "bottom-right",
+                });
+                return;
+            }
+            if (!formFromLocationInBooking.capacity) {
+                toast.error("Vui lòng điền số lượng người đi", {
+                    position: "bottom-right",
+                });
+                return;
+            }
+
+            const query = createSearchParams({
+                data: encodeURIComponent(
+                    JSON.stringify({
+                        option: optionBooking,
+                        formFromLocationIn: formFromLocationInBooking,
+                    })
+                ),
+            }).toString();
+
+            window.location.href = `/booking-vehicles?${query}`;
+        }
+    };
+
     const handleSubmit = async () => {
-        // console.log(
-        //     "formFromAirportIn.timeStart",
-        //     dayjs(formFromAirportIn.timeStart).toISOString()
-        // );
-
         if (option === "from-airport") {
-            // navigate(`/booking-contact-information`, {
-            //     state: {
-            //         option,
-            //         formFromAirportIn,
-            //         car: selectedItem,
-            //     },
-            // });
-
             const body = {
                 user: user?.id,
                 service_type: SERVICE_TYPE.CAR,
@@ -606,39 +869,52 @@ export default function BookingVehicles() {
                                         <Popover
                                             content={
                                                 <div>
-                                                    {resultFromAirportInBooking.resultsAirportIn.map(
-                                                        (place, idx) => (
-                                                            <li
-                                                                key={idx}
-                                                                style={{
-                                                                    padding:
-                                                                        "8px",
-                                                                    borderBottom:
-                                                                        "1px solid #eee",
-                                                                    cursor: "pointer",
-                                                                }}
-                                                                onClick={() => {
-                                                                    setFormFromAirportInBooking(
-                                                                        {
-                                                                            ...formFromAirportInBooking,
-                                                                            airportIn:
-                                                                                {
-                                                                                    lat: place.lat, // lat
-                                                                                    lng: place.lng, // lng
-                                                                                    name: place.name,
-                                                                                },
-                                                                        }
-                                                                    );
-                                                                    setPopoverFromAirportInBooking(
-                                                                        {
-                                                                            ...popoverFromAirportInBooking,
-                                                                            airportIn: false,
-                                                                        }
-                                                                    );
-                                                                }}
-                                                            >
-                                                                {place.name}
-                                                            </li>
+                                                    {loadingFromAirportInBooking.airportIn ? (
+                                                        <div className="flex justify-center items-center py-[20px]">
+                                                            <Spin size="large" />
+                                                        </div>
+                                                    ) : resultFromAirportInBooking
+                                                          .resultsAirportIn
+                                                          .length === 0 ? (
+                                                        <Empty
+                                                            description="Chưa có thông tin"
+                                                            className="bg-[#abb6cb1f] mx-0 px-[90px] py-[24px] rounded-[16px] mt-[24px] w-full"
+                                                        />
+                                                    ) : (
+                                                        resultFromAirportInBooking.resultsAirportIn.map(
+                                                            (place, idx) => (
+                                                                <li
+                                                                    key={idx}
+                                                                    style={{
+                                                                        padding:
+                                                                            "8px",
+                                                                        borderBottom:
+                                                                            "1px solid #eee",
+                                                                        cursor: "pointer",
+                                                                    }}
+                                                                    onClick={() => {
+                                                                        setFormFromAirportInBooking(
+                                                                            {
+                                                                                ...formFromAirportInBooking,
+                                                                                airportIn:
+                                                                                    {
+                                                                                        lat: place.lat, // lat
+                                                                                        lng: place.lng, // lng
+                                                                                        name: place.name,
+                                                                                    },
+                                                                            }
+                                                                        );
+                                                                        setPopoverFromAirportInBooking(
+                                                                            {
+                                                                                ...popoverFromAirportInBooking,
+                                                                                airportIn: false,
+                                                                            }
+                                                                        );
+                                                                    }}
+                                                                >
+                                                                    {place.name}
+                                                                </li>
+                                                            )
                                                         )
                                                     )}
                                                 </div>
@@ -667,7 +943,7 @@ export default function BookingVehicles() {
                                                     formFromAirportInBooking
                                                         .airportIn.name
                                                 }
-                                                onChange={(e) =>
+                                                onChange={(e) => {
                                                     setFormFromAirportInBooking(
                                                         {
                                                             ...formFromAirportInBooking,
@@ -678,46 +954,67 @@ export default function BookingVehicles() {
                                                                     .value,
                                                             },
                                                         }
-                                                    )
-                                                }
+                                                    );
+                                                    setPopoverFromAirportInBooking(
+                                                        {
+                                                            ...popoverFromAirportInBooking,
+                                                            airportIn:
+                                                                !!e.target
+                                                                    .value,
+                                                        }
+                                                    );
+                                                }}
                                             />
                                         </Popover>
                                         <Popover
                                             content={
                                                 <div>
-                                                    {resultFromAirportInBooking.resultsLocationTo.map(
-                                                        (place, idx) => (
-                                                            <li
-                                                                key={idx}
-                                                                style={{
-                                                                    padding:
-                                                                        "8px",
-                                                                    borderBottom:
-                                                                        "1px solid #eee",
-                                                                    cursor: "pointer",
-                                                                }}
-                                                                onClick={() => {
-                                                                    setFormFromAirportInBooking(
-                                                                        {
-                                                                            ...formFromAirportInBooking,
-                                                                            locationTo:
-                                                                                {
-                                                                                    lat: place.lat, // lat
-                                                                                    lng: place.lng, // lng
-                                                                                    name: place.name,
-                                                                                },
-                                                                        }
-                                                                    );
-                                                                    setPopoverFromAirportInBooking(
-                                                                        {
-                                                                            ...popoverFromAirportInBooking,
-                                                                            locationTo: false,
-                                                                        }
-                                                                    );
-                                                                }}
-                                                            >
-                                                                {place.name}
-                                                            </li>
+                                                    {loadingFromAirportInBooking.locationTo ? (
+                                                        <div className="flex justify-center items-center py-[20px]">
+                                                            <Spin size="large" />
+                                                        </div>
+                                                    ) : resultFromAirportInBooking
+                                                          .resultsLocationTo
+                                                          .length === 0 ? (
+                                                        <Empty
+                                                            description="Chưa có thông tin"
+                                                            className="bg-[#abb6cb1f] mx-0 px-[90px] py-[24px] rounded-[16px] mt-[24px] w-full"
+                                                        />
+                                                    ) : (
+                                                        resultFromAirportInBooking.resultsLocationTo.map(
+                                                            (place, idx) => (
+                                                                <li
+                                                                    key={idx}
+                                                                    style={{
+                                                                        padding:
+                                                                            "8px",
+                                                                        borderBottom:
+                                                                            "1px solid #eee",
+                                                                        cursor: "pointer",
+                                                                    }}
+                                                                    onClick={() => {
+                                                                        setFormFromAirportInBooking(
+                                                                            {
+                                                                                ...formFromAirportInBooking,
+                                                                                locationTo:
+                                                                                    {
+                                                                                        lat: place.lat, // lat
+                                                                                        lng: place.lng, // lng
+                                                                                        name: place.name,
+                                                                                    },
+                                                                            }
+                                                                        );
+                                                                        setPopoverFromAirportInBooking(
+                                                                            {
+                                                                                ...popoverFromAirportInBooking,
+                                                                                locationTo: false,
+                                                                            }
+                                                                        );
+                                                                    }}
+                                                                >
+                                                                    {place.name}
+                                                                </li>
+                                                            )
                                                         )
                                                     )}
                                                 </div>
@@ -746,7 +1043,7 @@ export default function BookingVehicles() {
                                                     formFromAirportInBooking
                                                         .locationTo.name
                                                 }
-                                                onChange={(e) =>
+                                                onChange={(e) => {
                                                     setFormFromAirportInBooking(
                                                         {
                                                             ...formFromAirportInBooking,
@@ -757,8 +1054,16 @@ export default function BookingVehicles() {
                                                                     .value,
                                                             },
                                                         }
-                                                    )
-                                                }
+                                                    );
+                                                    setPopoverFromAirportInBooking(
+                                                        {
+                                                            ...popoverFromAirportInBooking,
+                                                            locationTo:
+                                                                !!e.target
+                                                                    .value,
+                                                        }
+                                                    );
+                                                }}
                                             />
                                         </Popover>
                                     </>
@@ -767,62 +1072,75 @@ export default function BookingVehicles() {
                                         <Popover
                                             content={
                                                 <div>
-                                                    {resultFromLocationInBooking.resultsLocationIn.map(
-                                                        (place, idx) => (
-                                                            <li
-                                                                key={idx}
-                                                                style={{
-                                                                    padding:
-                                                                        "8px",
-                                                                    borderBottom:
-                                                                        "1px solid #eee",
-                                                                    cursor: "pointer",
-                                                                }}
-                                                                onClick={() => {
-                                                                    setFormFromLocationInBooking(
-                                                                        {
-                                                                            ...formFromLocationInBooking,
-                                                                            locationIn:
-                                                                                {
-                                                                                    lat: place
-                                                                                        .geometry
-                                                                                        .coordinates[1], // lat
-                                                                                    lng: place
-                                                                                        .geometry
-                                                                                        .coordinates[0], // lng
-                                                                                    name:
-                                                                                        place
-                                                                                            .properties
-                                                                                            .name ||
-                                                                                        place
-                                                                                            .properties
-                                                                                            .city ||
-                                                                                        "Unknown",
-                                                                                },
-                                                                        }
-                                                                    );
-                                                                    setPopoverFromLocationInBooking(
-                                                                        {
-                                                                            ...popoverFromLocationInBooking,
-                                                                            locationIn: false,
-                                                                        }
-                                                                    );
-                                                                }}
-                                                            >
-                                                                {place
-                                                                    .properties
-                                                                    .name ||
-                                                                    place
+                                                    {loadingFromLocationInBooking.locationIn ? (
+                                                        <div className="flex justify-center items-center py-[20px]">
+                                                            <Spin size="large" />
+                                                        </div>
+                                                    ) : resultFromLocationInBooking
+                                                          .resultsLocationIn
+                                                          .length === 0 ? (
+                                                        <Empty
+                                                            description="Chưa có thông tin"
+                                                            className="bg-[#abb6cb1f] mx-0 px-[90px] py-[24px] rounded-[16px] mt-[24px] w-full"
+                                                        />
+                                                    ) : (
+                                                        resultFromLocationInBooking.resultsLocationIn.map(
+                                                            (place, idx) => (
+                                                                <li
+                                                                    key={idx}
+                                                                    style={{
+                                                                        padding:
+                                                                            "8px",
+                                                                        borderBottom:
+                                                                            "1px solid #eee",
+                                                                        cursor: "pointer",
+                                                                    }}
+                                                                    onClick={() => {
+                                                                        setFormFromLocationInBooking(
+                                                                            {
+                                                                                ...formFromLocationInBooking,
+                                                                                locationIn:
+                                                                                    {
+                                                                                        lat: place
+                                                                                            .geometry
+                                                                                            .coordinates[1], // lat
+                                                                                        lng: place
+                                                                                            .geometry
+                                                                                            .coordinates[0], // lng
+                                                                                        name:
+                                                                                            place
+                                                                                                .properties
+                                                                                                .name ||
+                                                                                            place
+                                                                                                .properties
+                                                                                                .city ||
+                                                                                            "Unknown",
+                                                                                    },
+                                                                            }
+                                                                        );
+                                                                        setPopoverFromLocationInBooking(
+                                                                            {
+                                                                                ...popoverFromLocationInBooking,
+                                                                                locationIn: false,
+                                                                            }
+                                                                        );
+                                                                    }}
+                                                                >
+                                                                    {place
                                                                         .properties
-                                                                        .city ||
-                                                                    "Unknown"}
-                                                                ,{" "}
-                                                                {
-                                                                    place
-                                                                        .properties
-                                                                        .country
-                                                                }
-                                                            </li>
+                                                                        .name ||
+                                                                        place
+                                                                            .properties
+                                                                            .city ||
+                                                                        "Unknown"}
+                                                                    ,{" "}
+                                                                    {
+                                                                        place
+                                                                            .properties
+                                                                            .country
+                                                                    }
+                                                                </li>
+                                                            )
                                                         )
                                                     )}
                                                 </div>
@@ -853,7 +1171,7 @@ export default function BookingVehicles() {
                                                     formFromLocationInBooking
                                                         .locationIn.name
                                                 }
-                                                onChange={(e) =>
+                                                onChange={(e) => {
                                                     setFormFromLocationInBooking(
                                                         {
                                                             ...formFromLocationInBooking,
@@ -864,46 +1182,67 @@ export default function BookingVehicles() {
                                                                     .value,
                                                             },
                                                         }
-                                                    )
-                                                }
+                                                    );
+                                                    setPopoverFromLocationInBooking(
+                                                        {
+                                                            ...popoverFromLocationInBooking,
+                                                            locationIn:
+                                                                !!e.target
+                                                                    .value,
+                                                        }
+                                                    );
+                                                }}
                                             />
                                         </Popover>
                                         <Popover
                                             content={
                                                 <div>
-                                                    {resultFromLocationInBooking.resultsAirportTo.map(
-                                                        (place, idx) => (
-                                                            <li
-                                                                key={idx}
-                                                                style={{
-                                                                    padding:
-                                                                        "8px",
-                                                                    borderBottom:
-                                                                        "1px solid #eee",
-                                                                    cursor: "pointer",
-                                                                }}
-                                                                onClick={() => {
-                                                                    setFormFromLocationInBooking(
-                                                                        {
-                                                                            ...formFromLocationInBooking,
-                                                                            airportTo:
-                                                                                {
-                                                                                    lat: place.lat, // lat
-                                                                                    lng: place.lng, // lng
-                                                                                    name: place.name,
-                                                                                },
-                                                                        }
-                                                                    );
-                                                                    setPopoverFromLocationInBooking(
-                                                                        {
-                                                                            ...popoverFromLocationInBooking,
-                                                                            airportTo: false,
-                                                                        }
-                                                                    );
-                                                                }}
-                                                            >
-                                                                {place.name}
-                                                            </li>
+                                                    {loadingFromLocationInBooking.airportTo ? (
+                                                        <div className="flex justify-center items-center py-[20px]">
+                                                            <Spin size="large" />
+                                                        </div>
+                                                    ) : resultFromLocationInBooking
+                                                          .resultsAirportTo
+                                                          .length === 0 ? (
+                                                        <Empty
+                                                            description="Chưa có thông tin"
+                                                            className="bg-[#abb6cb1f] mx-0 px-[90px] py-[24px] rounded-[16px] mt-[24px] w-full"
+                                                        />
+                                                    ) : (
+                                                        resultFromLocationInBooking.resultsAirportTo.map(
+                                                            (place, idx) => (
+                                                                <li
+                                                                    key={idx}
+                                                                    style={{
+                                                                        padding:
+                                                                            "8px",
+                                                                        borderBottom:
+                                                                            "1px solid #eee",
+                                                                        cursor: "pointer",
+                                                                    }}
+                                                                    onClick={() => {
+                                                                        setFormFromLocationInBooking(
+                                                                            {
+                                                                                ...formFromLocationInBooking,
+                                                                                airportTo:
+                                                                                    {
+                                                                                        lat: place.lat, // lat
+                                                                                        lng: place.lng, // lng
+                                                                                        name: place.name,
+                                                                                    },
+                                                                            }
+                                                                        );
+                                                                        setPopoverFromLocationInBooking(
+                                                                            {
+                                                                                ...popoverFromLocationInBooking,
+                                                                                airportTo: false,
+                                                                            }
+                                                                        );
+                                                                    }}
+                                                                >
+                                                                    {place.name}
+                                                                </li>
+                                                            )
                                                         )
                                                     )}
                                                 </div>
@@ -934,7 +1273,7 @@ export default function BookingVehicles() {
                                                     formFromLocationInBooking
                                                         .airportTo.name
                                                 }
-                                                onChange={(e) =>
+                                                onChange={(e) => {
                                                     setFormFromLocationInBooking(
                                                         {
                                                             ...formFromLocationInBooking,
@@ -945,8 +1284,16 @@ export default function BookingVehicles() {
                                                                     .value,
                                                             },
                                                         }
-                                                    )
-                                                }
+                                                    );
+                                                    setPopoverFromLocationInBooking(
+                                                        {
+                                                            ...popoverFromLocationInBooking,
+                                                            airportTo:
+                                                                !!e.target
+                                                                    .value,
+                                                        }
+                                                    );
+                                                }}
                                             />
                                         </Popover>
                                     </>
@@ -977,6 +1324,7 @@ export default function BookingVehicles() {
                                             onOk={(val) => {
                                                 console.log(val);
                                             }}
+                                            placeholder="Chọn thời gian"
                                         />
                                         <InputNumber
                                             addonBefore={<span>Người lớn</span>}
@@ -1022,6 +1370,7 @@ export default function BookingVehicles() {
                                             onOk={(val) => {
                                                 console.log(val);
                                             }}
+                                            placeholder="Chọn thời gian"
                                         />
                                         <InputNumber
                                             addonBefore={<span>Người lớn</span>}
@@ -1045,7 +1394,10 @@ export default function BookingVehicles() {
                                     </>
                                 )}
 
-                                <div className="text-center text-white bg-[#5392f9] text-[20px] rounded-[8px] cursor-pointer">
+                                <div
+                                    onClick={handleSearchToBooking}
+                                    className="text-center text-white bg-[#5392f9] text-[20px] rounded-[8px] cursor-pointer"
+                                >
                                     Tìm
                                 </div>
                             </div>
@@ -1073,146 +1425,166 @@ export default function BookingVehicles() {
                         </div>
 
                         {/* Vehicle List */}
-                        <div className="space-y-4">
-                            {vehicleData.length > 0 &&
-                                vehicleData.map((vehicle) => (
-                                    <Card
-                                        key={vehicle.id}
-                                        onClick={() => setSelectedItem(vehicle)}
-                                        className={`hover:shadow-md transition-shadow cursor-pointer ${
-                                            selectedItem?.id === vehicle.id
-                                                ? "border-blue-500 border-2"
-                                                : ""
-                                        }`}
-                                    >
-                                        <div className="flex items-center justify-between">
-                                            <div className="flex items-center space-x-4">
-                                                <div className="w-24 h-16 relative">
-                                                    <img
-                                                        src={`${process.env.REACT_APP_BE_URL}${vehicle.image}`}
-                                                        alt={vehicle.name}
-                                                        fill
-                                                        className="object-cover w-full"
-                                                    />
-                                                </div>
-                                                <div className="flex-1">
-                                                    <div className="flex items-center space-x-2 mb-1">
-                                                        <h3 className="font-medium text-lg">
-                                                            {vehicle.name}
-                                                        </h3>
-                                                        {vehicle.highlighted && (
-                                                            <Badge
-                                                                count="Được đề xuất"
-                                                                className="bg-blue-500"
-                                                            />
-                                                        )}
+                        {isLoadingCars ? (
+                            <div className="flex items-center justify-center py-[80px]">
+                                <Spin size="large" />
+                            </div>
+                        ) : (
+                            <div className="space-y-4">
+                                {vehicleData.length === 0 ? (
+                                    <Empty
+                                        description="Chưa có xe taxi"
+                                        className="bg-[#abb6cb1f] mx-0 py-[24px] rounded-[16px] mt-[24px]"
+                                    />
+                                ) : (
+                                    vehicleData.map((vehicle) => (
+                                        <Card
+                                            key={vehicle.id}
+                                            onClick={() =>
+                                                setSelectedItem(vehicle)
+                                            }
+                                            className={`hover:shadow-md transition-shadow cursor-pointer ${
+                                                selectedItem?.id === vehicle.id
+                                                    ? "border-blue-500 border-2"
+                                                    : ""
+                                            }`}
+                                        >
+                                            <div className="flex items-center justify-between">
+                                                <div className="flex items-center space-x-4">
+                                                    <div className="w-24 h-16 relative">
+                                                        <img
+                                                            src={`${process.env.REACT_APP_BE_URL}${vehicle.image}`}
+                                                            alt={vehicle.name}
+                                                            fill
+                                                            className="object-cover w-full"
+                                                        />
                                                     </div>
-                                                    <p className="text-sm text-gray-600 mb-2">
-                                                        {vehicle.description}
-                                                    </p>
-                                                    <div className="flex items-center space-x-4 text-sm">
-                                                        <Tag
-                                                            color={getCategoryColor(
-                                                                vehicle.category
+                                                    <div className="flex-1">
+                                                        <div className="flex items-center space-x-2 mb-1">
+                                                            <h3 className="font-medium text-lg">
+                                                                {vehicle.name}
+                                                            </h3>
+                                                            {vehicle.highlighted && (
+                                                                <Badge
+                                                                    count="Được đề xuất"
+                                                                    className="bg-blue-500"
+                                                                />
                                                             )}
-                                                        >
-                                                            {vehicle.category}
-                                                        </Tag>
-                                                        <div className="flex items-center space-x-1">
-                                                            <Rate
-                                                                disabled
-                                                                defaultValue={
-                                                                    vehicle.avg_star
-                                                                }
-                                                                size="small"
-                                                            />
-                                                            <span>
+                                                        </div>
+                                                        <p className="text-sm text-gray-600 mb-2">
+                                                            {
+                                                                vehicle.description
+                                                            }
+                                                        </p>
+                                                        <div className="flex items-center space-x-4 text-sm">
+                                                            <Tag
+                                                                color={getCategoryColor(
+                                                                    vehicle.category
+                                                                )}
+                                                            >
                                                                 {
-                                                                    vehicle.avg_star
+                                                                    vehicle.category
                                                                 }
-                                                            </span>
-                                                        </div>
-                                                        <div className="flex items-center space-x-2">
+                                                            </Tag>
                                                             <div className="flex items-center space-x-1">
-                                                                <UserOutlined />
+                                                                <Rate
+                                                                    disabled
+                                                                    defaultValue={
+                                                                        vehicle.avg_star
+                                                                    }
+                                                                    size="small"
+                                                                />
                                                                 <span>
-                                                                    Tối đa{" "}
                                                                     {
-                                                                        vehicle.capacity
+                                                                        vehicle.avg_star
                                                                     }
                                                                 </span>
                                                             </div>
-                                                            <div className="flex items-center space-x-1">
-                                                                <CarOutlined />
-                                                                <span>
-                                                                    Tối đa{" "}
-                                                                    {
-                                                                        vehicle.luggage
-                                                                    }
-                                                                </span>
+                                                            <div className="flex items-center space-x-2">
+                                                                <div className="flex items-center space-x-1">
+                                                                    <UserOutlined />
+                                                                    <span>
+                                                                        Tối đa{" "}
+                                                                        {
+                                                                            vehicle.capacity
+                                                                        }
+                                                                    </span>
+                                                                </div>
+                                                                <div className="flex items-center space-x-1">
+                                                                    <CarOutlined />
+                                                                    <span>
+                                                                        Tối đa{" "}
+                                                                        {
+                                                                            vehicle.luggage
+                                                                        }
+                                                                    </span>
+                                                                </div>
                                                             </div>
                                                         </div>
-                                                    </div>
-                                                    <div className="mt-2 space-y-1">
-                                                        <div className="flex items-center space-x-1 text-sm text-green-600">
-                                                            <CheckCircleOutlined />
-                                                            <span>
-                                                                Ăn phụ thu miễn
-                                                                phí
-                                                            </span>
-                                                        </div>
-                                                        <div className="flex items-center space-x-1 text-sm text-green-600">
-                                                            <CheckCircleOutlined />
-                                                            <span>
-                                                                Đã bao gồm Gặp
-                                                                gỡ & Chào hỏi
-                                                                miễn phí
-                                                            </span>
+                                                        <div className="mt-2 space-y-1">
+                                                            <div className="flex items-center space-x-1 text-sm text-green-600">
+                                                                <CheckCircleOutlined />
+                                                                <span>
+                                                                    Ăn phụ thu
+                                                                    miễn phí
+                                                                </span>
+                                                            </div>
+                                                            <div className="flex items-center space-x-1 text-sm text-green-600">
+                                                                <CheckCircleOutlined />
+                                                                <span>
+                                                                    Đã bao gồm
+                                                                    Gặp gỡ &
+                                                                    Chào hỏi
+                                                                    miễn phí
+                                                                </span>
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 </div>
-                                            </div>
-                                            <div className="text-right">
-                                                {vehicle?.promotion
-                                                    ?.discount_percent > 0 && (
-                                                    <p className="text-sm text-gray-500 line-through">
+                                                <div className="text-right">
+                                                    {vehicle?.promotion
+                                                        ?.discount_percent >
+                                                        0 && (
+                                                        <p className="text-sm text-gray-500 line-through">
+                                                            {formatCurrency(
+                                                                Math.round(
+                                                                    vehicle.price_per_km *
+                                                                        distance *
+                                                                        (formFromAirportIn?.capacity ||
+                                                                            formFromLocationIn?.capacity ||
+                                                                            0)
+                                                                )
+                                                            )}{" "}
+                                                            ₫
+                                                        </p>
+                                                    )}
+                                                    <p className="text-2xl font-bold w-max">
                                                         {formatCurrency(
                                                             Math.round(
-                                                                vehicle.price_per_km *
-                                                                    distance *
-                                                                    (formFromAirportIn?.capacity ||
-                                                                        formFromLocationIn?.capacity ||
-                                                                        0)
+                                                                getPriceAfterDiscount(
+                                                                    vehicle.price_per_km *
+                                                                        distance *
+                                                                        (formFromAirportIn?.capacity ||
+                                                                            formFromLocationIn?.capacity ||
+                                                                            0),
+                                                                    vehicle
+                                                                        ?.promotion
+                                                                        ?.discount_amount,
+                                                                    vehicle
+                                                                        ?.promotion
+                                                                        ?.discount_percent
+                                                                )
                                                             )
                                                         )}{" "}
                                                         ₫
                                                     </p>
-                                                )}
-                                                <p className="text-2xl font-bold w-max">
-                                                    {formatCurrency(
-                                                        Math.round(
-                                                            getPriceAfterDiscount(
-                                                                vehicle.price_per_km *
-                                                                    distance *
-                                                                    (formFromAirportIn?.capacity ||
-                                                                        formFromLocationIn?.capacity ||
-                                                                        0),
-                                                                vehicle
-                                                                    ?.promotion
-                                                                    ?.discount_amount,
-                                                                vehicle
-                                                                    ?.promotion
-                                                                    ?.discount_percent
-                                                            )
-                                                        )
-                                                    )}{" "}
-                                                    ₫
-                                                </p>
+                                                </div>
                                             </div>
-                                        </div>
-                                    </Card>
-                                ))}
-                        </div>
+                                        </Card>
+                                    ))
+                                )}
+                            </div>
+                        )}
 
                         {/* Extra Services */}
                         <Card className="mt-6">
