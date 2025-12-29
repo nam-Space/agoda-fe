@@ -1,5 +1,5 @@
 import { SearchOutlined } from "@ant-design/icons";
-import { Input, Popover } from "antd";
+import { Empty, Input, Popover, Spin } from "antd";
 import { callFetchActivity } from "config/api";
 import React, { useEffect, useState } from "react";
 import { FaLocationDot } from "react-icons/fa6";
@@ -11,19 +11,25 @@ const ActivityTab = () => {
     const [keyword, setKeyword] = useState("");
     const [selectedCityId, setSelectedCityId] = useState(-1);
     const [popoverSearch, setPopoverSearch] = useState(false);
+    const [loading, setLoading] = useState(false);
     const [activities, setActivities] = useState([]);
 
     const handleGetActivities = async (query) => {
+        setLoading(true);
         const res = await callFetchActivity(query);
         if (res.isSuccess) {
             setActivities(res.data);
         }
+        setLoading(false);
     };
 
     useEffect(() => {
-        if (popoverSearch) {
+        if (!popoverSearch) return;
+        setLoading(true);
+        const timeoutId = setTimeout(() => {
             handleGetActivities(`current=1&pageSize=10&name=${keyword}`);
-        }
+        }, 500); // debounce 500ms
+        return () => clearTimeout(timeoutId);
     }, [keyword]);
 
     const handleSearch = () => {
@@ -45,35 +51,46 @@ const ActivityTab = () => {
             <Popover
                 content={
                     <div>
-                        {activities.map((item, index) => (
-                            <div
-                                key={index}
-                                style={{
-                                    padding: "8px",
-                                    borderBottom: "1px solid #eee",
-                                    cursor: "pointer",
-                                }}
-                                className="flex gap-[6px] items-center"
-                                onClick={() => {
-                                    setKeyword(item.name);
-                                    setSelectedCityId(item.city.id);
-                                    setPopoverSearch(false);
-                                }}
-                            >
-                                <img
-                                    src={`${process.env.REACT_APP_BE_URL}${item.images[0].image}`}
-                                    alt={item.name}
-                                    className="w-[70px] h-[50px] object-cover"
-                                />
-                                <div>
-                                    <p>{item.name}</p>
-                                    <div className="flex items-center gap-[3px] text-[#5e6b82] text-[14px]">
-                                        <FaLocationDot className="text-[14px]" />
-                                        {item.city.name}
+                        {loading ? (
+                            <div className="flex justify-center items-center py-[20px]">
+                                <Spin size="large" />
+                            </div>
+                        ) : activities.length === 0 ? (
+                            <Empty
+                                description="Chưa có thông tin"
+                                className="bg-[#abb6cb1f] mx-0 px-[90px] py-[24px] rounded-[16px] mt-[24px] w-full"
+                            />
+                        ) : (
+                            activities.map((item, index) => (
+                                <div
+                                    key={index}
+                                    style={{
+                                        padding: "8px",
+                                        borderBottom: "1px solid #eee",
+                                        cursor: "pointer",
+                                    }}
+                                    className="flex gap-[6px] items-center"
+                                    onClick={() => {
+                                        setKeyword(item.name);
+                                        setSelectedCityId(item.city.id);
+                                        setPopoverSearch(false);
+                                    }}
+                                >
+                                    <img
+                                        src={`${process.env.REACT_APP_BE_URL}${item.images[0].image}`}
+                                        alt={item.name}
+                                        className="w-[70px] h-[50px] object-cover"
+                                    />
+                                    <div>
+                                        <p>{item.name}</p>
+                                        <div className="flex items-center gap-[3px] text-[#5e6b82] text-[14px]">
+                                            <FaLocationDot className="text-[14px]" />
+                                            {item.city.name}
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                        ))}
+                            ))
+                        )}
                     </div>
                 }
                 title="Hoạt động"

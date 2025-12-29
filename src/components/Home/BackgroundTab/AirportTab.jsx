@@ -1,4 +1,12 @@
-import { DatePicker, Input, InputNumber, Popover, Radio } from "antd";
+import {
+    DatePicker,
+    Empty,
+    Input,
+    InputNumber,
+    Popover,
+    Radio,
+    Spin,
+} from "antd";
 import React, { useEffect, useState } from "react";
 import { HiOutlineUsers } from "react-icons/hi2";
 import { IoAirplaneOutline, IoLocationOutline } from "react-icons/io5";
@@ -18,6 +26,15 @@ const AirportTab = () => {
         locationTo: false,
     });
     const [popoverFromLocationIn, setPopoverFromLocationIn] = useState({
+        locationIn: false,
+        airportTo: false,
+    });
+
+    const [loadingFromAirportIn, setLoadingFromAirportIn] = useState({
+        airportIn: false,
+        locationTo: false,
+    });
+    const [loadingFromLocationIn, setLoadingFromLocationIn] = useState({
         locationIn: false,
         airportTo: false,
     });
@@ -63,6 +80,10 @@ const AirportTab = () => {
     const handleGetLocation = async (type) => {
         try {
             if (type === "location-in") {
+                setLoadingFromLocationIn({
+                    ...loadingFromLocationIn,
+                    locationIn: true,
+                });
                 const res = await callFetchLocationMapInAllWorld(
                     encodeURIComponent(formFromLocationIn.locationIn.name)
                 );
@@ -72,7 +93,15 @@ const AirportTab = () => {
                         resultsLocationIn: res.data.features,
                     });
                 }
+                setLoadingFromLocationIn({
+                    ...loadingFromLocationIn,
+                    locationIn: false,
+                });
             } else {
+                setLoadingFromAirportIn({
+                    ...loadingFromAirportIn,
+                    locationTo: true,
+                });
                 const res = await callFetchHotelQuery(
                     `current=1&pageSize=10&name=${formFromAirportIn.locationTo.name}`
                 );
@@ -82,6 +111,10 @@ const AirportTab = () => {
                         resultsLocationTo: res.data,
                     });
                 }
+                setLoadingFromAirportIn({
+                    ...loadingFromAirportIn,
+                    locationTo: false,
+                });
             }
         } catch (e) {
             toast.error(e.message, {
@@ -93,6 +126,10 @@ const AirportTab = () => {
     const handleGetAirport = async (type) => {
         try {
             if (type === "location-in") {
+                setLoadingFromLocationIn({
+                    ...loadingFromLocationIn,
+                    airportTo: true,
+                });
                 const res = await callFetchAirport(
                     `current=1&pageSize=10&name=${formFromLocationIn.airportTo.name}`
                 );
@@ -102,7 +139,15 @@ const AirportTab = () => {
                         resultsAirportTo: res.data,
                     });
                 }
+                setLoadingFromLocationIn({
+                    ...loadingFromLocationIn,
+                    airportTo: false,
+                });
             } else {
+                setLoadingFromAirportIn({
+                    ...loadingFromAirportIn,
+                    airportIn: true,
+                });
                 const res = await callFetchAirport(
                     `current=1&pageSize=10&name=${formFromAirportIn.airportIn.name}`
                 );
@@ -112,6 +157,10 @@ const AirportTab = () => {
                         resultsAirportIn: res.data,
                     });
                 }
+                setLoadingFromAirportIn({
+                    ...loadingFromAirportIn,
+                    airportIn: false,
+                });
             }
         } catch (e) {
             toast.error(e.message, {
@@ -130,6 +179,11 @@ const AirportTab = () => {
             return;
         }
 
+        setLoadingFromAirportIn({
+            ...loadingFromAirportIn,
+            airportIn: true,
+        });
+
         const timeoutId = setTimeout(() => {
             handleGetAirport("airport-in");
         }, 500); // debounce 500ms
@@ -146,6 +200,11 @@ const AirportTab = () => {
             });
             return;
         }
+
+        setLoadingFromAirportIn({
+            ...loadingFromAirportIn,
+            locationTo: true,
+        });
 
         const timeoutId = setTimeout(() => {
             handleGetLocation("airport-in");
@@ -164,6 +223,11 @@ const AirportTab = () => {
             return;
         }
 
+        setLoadingFromLocationIn({
+            ...loadingFromLocationIn,
+            locationIn: true,
+        });
+
         const timeoutId = setTimeout(() => {
             handleGetLocation("location-in");
         }, 500); // debounce 500ms
@@ -180,6 +244,11 @@ const AirportTab = () => {
             });
             return;
         }
+
+        setLoadingFromLocationIn({
+            ...loadingFromLocationIn,
+            airportTo: true,
+        });
 
         const timeoutId = setTimeout(() => {
             handleGetAirport("location-in");
@@ -283,35 +352,49 @@ const AirportTab = () => {
                             <Popover
                                 content={
                                     <div>
-                                        {resultFromAirportIn.resultsAirportIn.map(
-                                            (place, idx) => (
-                                                <li
-                                                    key={idx}
-                                                    style={{
-                                                        padding: "8px",
-                                                        borderBottom:
-                                                            "1px solid #eee",
-                                                        cursor: "pointer",
-                                                    }}
-                                                    onClick={() => {
-                                                        setFormFromAirportIn({
-                                                            ...formFromAirportIn,
-                                                            airportIn: {
-                                                                lat: place.lat, // lat
-                                                                lng: place.lng, // lng
-                                                                name: place.name,
-                                                            },
-                                                        });
-                                                        setPopoverFromAirportIn(
-                                                            {
-                                                                ...popoverFromAirportIn,
-                                                                airportIn: false,
-                                                            }
-                                                        );
-                                                    }}
-                                                >
-                                                    {place.name}
-                                                </li>
+                                        {loadingFromAirportIn.airportIn ? (
+                                            <div className="flex justify-center items-center py-[20px]">
+                                                <Spin size="large" />
+                                            </div>
+                                        ) : resultFromAirportIn.resultsAirportIn
+                                              .length === 0 ? (
+                                            <Empty
+                                                description="Chưa có thông tin"
+                                                className="bg-[#abb6cb1f] mx-0 px-[90px] py-[24px] rounded-[16px] mt-[24px] w-full"
+                                            />
+                                        ) : (
+                                            resultFromAirportIn.resultsAirportIn.map(
+                                                (place, idx) => (
+                                                    <li
+                                                        key={idx}
+                                                        style={{
+                                                            padding: "8px",
+                                                            borderBottom:
+                                                                "1px solid #eee",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
+                                                            setFormFromAirportIn(
+                                                                {
+                                                                    ...formFromAirportIn,
+                                                                    airportIn: {
+                                                                        lat: place.lat, // lat
+                                                                        lng: place.lng, // lng
+                                                                        name: place.name,
+                                                                    },
+                                                                }
+                                                            );
+                                                            setPopoverFromAirportIn(
+                                                                {
+                                                                    ...popoverFromAirportIn,
+                                                                    airportIn: false,
+                                                                }
+                                                            );
+                                                        }}
+                                                    >
+                                                        {place.name}
+                                                    </li>
+                                                )
                                             )
                                         )}
                                     </div>
@@ -354,35 +437,51 @@ const AirportTab = () => {
                             <Popover
                                 content={
                                     <div>
-                                        {resultFromAirportIn.resultsLocationTo.map(
-                                            (place, idx) => (
-                                                <li
-                                                    key={idx}
-                                                    style={{
-                                                        padding: "8px",
-                                                        borderBottom:
-                                                            "1px solid #eee",
-                                                        cursor: "pointer",
-                                                    }}
-                                                    onClick={() => {
-                                                        setFormFromAirportIn({
-                                                            ...formFromAirportIn,
-                                                            locationTo: {
-                                                                lat: place.lat, // lat
-                                                                lng: place.lng, // lng
-                                                                name: place.name,
-                                                            },
-                                                        });
-                                                        setPopoverFromAirportIn(
-                                                            {
-                                                                ...popoverFromAirportIn,
-                                                                locationTo: false,
-                                                            }
-                                                        );
-                                                    }}
-                                                >
-                                                    {place.name}
-                                                </li>
+                                        {loadingFromAirportIn.locationTo ? (
+                                            <div className="flex justify-center items-center py-[20px]">
+                                                <Spin size="large" />
+                                            </div>
+                                        ) : resultFromAirportIn
+                                              .resultsLocationTo.length ===
+                                          0 ? (
+                                            <Empty
+                                                description="Chưa có thông tin"
+                                                className="bg-[#abb6cb1f] mx-0 px-[90px] py-[24px] rounded-[16px] mt-[24px] w-full"
+                                            />
+                                        ) : (
+                                            resultFromAirportIn.resultsLocationTo.map(
+                                                (place, idx) => (
+                                                    <li
+                                                        key={idx}
+                                                        style={{
+                                                            padding: "8px",
+                                                            borderBottom:
+                                                                "1px solid #eee",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
+                                                            setFormFromAirportIn(
+                                                                {
+                                                                    ...formFromAirportIn,
+                                                                    locationTo:
+                                                                        {
+                                                                            lat: place.lat, // lat
+                                                                            lng: place.lng, // lng
+                                                                            name: place.name,
+                                                                        },
+                                                                }
+                                                            );
+                                                            setPopoverFromAirportIn(
+                                                                {
+                                                                    ...popoverFromAirportIn,
+                                                                    locationTo: false,
+                                                                }
+                                                            );
+                                                        }}
+                                                    >
+                                                        {place.name}
+                                                    </li>
+                                                )
                                             )
                                         )}
                                     </div>
@@ -428,49 +527,71 @@ const AirportTab = () => {
                             <Popover
                                 content={
                                     <div>
-                                        {resultFromLocationIn.resultsLocationIn.map(
-                                            (place, idx) => (
-                                                <li
-                                                    key={idx}
-                                                    style={{
-                                                        padding: "8px",
-                                                        borderBottom:
-                                                            "1px solid #eee",
-                                                        cursor: "pointer",
-                                                    }}
-                                                    onClick={() => {
-                                                        setFormFromLocationIn({
-                                                            ...formFromLocationIn,
-                                                            locationIn: {
-                                                                lat: place
-                                                                    .geometry
-                                                                    .coordinates[1], // lat
-                                                                lng: place
-                                                                    .geometry
-                                                                    .coordinates[0], // lng
-                                                                name:
-                                                                    place
-                                                                        .properties
-                                                                        .name ||
-                                                                    place
-                                                                        .properties
-                                                                        .city ||
-                                                                    "Unknown",
-                                                            },
-                                                        });
-                                                        setPopoverFromLocationIn(
-                                                            {
-                                                                ...popoverFromLocationIn,
-                                                                locationIn: false,
-                                                            }
-                                                        );
-                                                    }}
-                                                >
-                                                    {place.properties.name ||
-                                                        place.properties.city ||
-                                                        "Unknown"}
-                                                    , {place.properties.country}
-                                                </li>
+                                        {loadingFromLocationIn.locationIn ? (
+                                            <div className="flex justify-center items-center py-[20px]">
+                                                <Spin size="large" />
+                                            </div>
+                                        ) : resultFromLocationIn
+                                              .resultsLocationIn.length ===
+                                          0 ? (
+                                            <Empty
+                                                description="Chưa có thông tin"
+                                                className="bg-[#abb6cb1f] mx-0 px-[90px] py-[24px] rounded-[16px] mt-[24px] w-full"
+                                            />
+                                        ) : (
+                                            resultFromLocationIn.resultsLocationIn.map(
+                                                (place, idx) => (
+                                                    <li
+                                                        key={idx}
+                                                        style={{
+                                                            padding: "8px",
+                                                            borderBottom:
+                                                                "1px solid #eee",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
+                                                            setFormFromLocationIn(
+                                                                {
+                                                                    ...formFromLocationIn,
+                                                                    locationIn:
+                                                                        {
+                                                                            lat: place
+                                                                                .geometry
+                                                                                .coordinates[1], // lat
+                                                                            lng: place
+                                                                                .geometry
+                                                                                .coordinates[0], // lng
+                                                                            name:
+                                                                                place
+                                                                                    .properties
+                                                                                    .name ||
+                                                                                place
+                                                                                    .properties
+                                                                                    .city ||
+                                                                                "Unknown",
+                                                                        },
+                                                                }
+                                                            );
+                                                            setPopoverFromLocationIn(
+                                                                {
+                                                                    ...popoverFromLocationIn,
+                                                                    locationIn: false,
+                                                                }
+                                                            );
+                                                        }}
+                                                    >
+                                                        {place.properties
+                                                            .name ||
+                                                            place.properties
+                                                                .city ||
+                                                            "Unknown"}
+                                                        ,{" "}
+                                                        {
+                                                            place.properties
+                                                                .country
+                                                        }
+                                                    </li>
+                                                )
                                             )
                                         )}
                                     </div>
@@ -513,35 +634,49 @@ const AirportTab = () => {
                             <Popover
                                 content={
                                     <div>
-                                        {resultFromLocationIn.resultsAirportTo.map(
-                                            (place, idx) => (
-                                                <li
-                                                    key={idx}
-                                                    style={{
-                                                        padding: "8px",
-                                                        borderBottom:
-                                                            "1px solid #eee",
-                                                        cursor: "pointer",
-                                                    }}
-                                                    onClick={() => {
-                                                        setFormFromLocationIn({
-                                                            ...formFromLocationIn,
-                                                            airportTo: {
-                                                                lat: place.lat, // lat
-                                                                lng: place.lng, // lng
-                                                                name: place.name,
-                                                            },
-                                                        });
-                                                        setPopoverFromLocationIn(
-                                                            {
-                                                                ...popoverFromLocationIn,
-                                                                airportTo: false,
-                                                            }
-                                                        );
-                                                    }}
-                                                >
-                                                    {place.name}
-                                                </li>
+                                        {loadingFromLocationIn.airportTo ? (
+                                            <div className="flex justify-center items-center py-[20px]">
+                                                <Spin size="large" />
+                                            </div>
+                                        ) : resultFromLocationIn
+                                              .resultsAirportTo.length === 0 ? (
+                                            <Empty
+                                                description="Chưa có thông tin"
+                                                className="bg-[#abb6cb1f] mx-0 px-[90px] py-[24px] rounded-[16px] mt-[24px] w-full"
+                                            />
+                                        ) : (
+                                            resultFromLocationIn.resultsAirportTo.map(
+                                                (place, idx) => (
+                                                    <li
+                                                        key={idx}
+                                                        style={{
+                                                            padding: "8px",
+                                                            borderBottom:
+                                                                "1px solid #eee",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
+                                                            setFormFromLocationIn(
+                                                                {
+                                                                    ...formFromLocationIn,
+                                                                    airportTo: {
+                                                                        lat: place.lat, // lat
+                                                                        lng: place.lng, // lng
+                                                                        name: place.name,
+                                                                    },
+                                                                }
+                                                            );
+                                                            setPopoverFromLocationIn(
+                                                                {
+                                                                    ...popoverFromLocationIn,
+                                                                    airportTo: false,
+                                                                }
+                                                            );
+                                                        }}
+                                                    >
+                                                        {place.name}
+                                                    </li>
+                                                )
                                             )
                                         )}
                                     </div>
