@@ -2,7 +2,7 @@ import { Button, Card, Empty, Input, Pagination, Select, Spin } from "antd";
 import { planForTrips } from "constants/profile";
 import React, { useEffect, useState } from "react";
 import { FaSort } from "react-icons/fa6";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useAppSelector } from "../../../redux/hooks";
 import { callFetchPayment } from "config/api";
 import { ServiceType } from "constants/serviceType";
@@ -12,8 +12,11 @@ import { getImage } from "utils/imageUrl";
 import dayjs from "dayjs";
 import { ServiceTab } from "constants/profile";
 import { formatCurrency } from "utils/formatCurrency";
+import { callRebook } from "config/api";
+import { toast } from "react-toastify";
 
 const ActivityCancelledTab = ({ currentTab, setCurrentTab }) => {
+    const navigate = useNavigate();
     const user = useAppSelector((state) => state.account.user);
     const [isLoading, setIsLoading] = useState(false);
     const [payments, setPayments] = useState([]);
@@ -28,6 +31,19 @@ const ActivityCancelledTab = ({ currentTab, setCurrentTab }) => {
         "sort=booking__activity_date_detail__date_launch"
     );
     const [bookingCode, setBookingCode] = useState("");
+
+    const handleRebook = async (oldBookingId) => {
+        try {
+            const res = await callRebook(oldBookingId);
+            if (res.isSuccess) {
+                navigate(
+                    `/book?booking_id=${res.new_booking_id}&type=${ServiceType.ACTIVITY}&ref=${res.data[0].id}`
+                );
+            }
+        } catch (error) {
+            toast.error("Đặt lại thất bại: " + error.message);
+        }
+    };
 
     const sortOptions = [
         {
@@ -232,6 +248,9 @@ const ActivityCancelledTab = ({ currentTab, setCurrentTab }) => {
                                         type="primary"
                                         size="large"
                                         className="px-8"
+                                        onClick={() =>
+                                            handleRebook(payment.booking.id)
+                                        }
                                     >
                                         Đặt lại
                                     </Button>

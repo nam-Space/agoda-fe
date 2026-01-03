@@ -2,9 +2,9 @@ import { Button, Card, Empty, Input, Pagination, Select, Spin } from "antd";
 import { planForTrips } from "constants/profile";
 import React, { useEffect, useState } from "react";
 import { FaSort } from "react-icons/fa6";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useAppSelector } from "../../../redux/hooks";
-import { callFetchPayment } from "config/api";
+import { callFetchPayment, callRebook } from "config/api";
 import { ServiceType } from "constants/serviceType";
 import dayjs from "dayjs";
 import { PAYMENT_STATUS } from "constants/serviceType";
@@ -12,8 +12,10 @@ import { MessageOutlined } from "@ant-design/icons";
 import { getImage } from "utils/imageUrl";
 import { ServiceTab } from "constants/profile";
 import { formatCurrency } from "utils/formatCurrency";
+import { toast } from "react-toastify";
 
 const HotelCancelledTab = ({ currentTab, setCurrentTab }) => {
+    const navigate = useNavigate();
     const user = useAppSelector((state) => state.account.user);
     const [isLoading, setIsLoading] = useState(false);
     const [payments, setPayments] = useState([]);
@@ -28,6 +30,19 @@ const HotelCancelledTab = ({ currentTab, setCurrentTab }) => {
         "sort=booking__hotel_detail__check_in-asc"
     );
     const [bookingCode, setBookingCode] = useState("");
+
+    const handleRebook = async (oldBookingId) => {
+        try {
+            const res = await callRebook(oldBookingId);
+            if (res.isSuccess) {
+                navigate(
+                    `/book?booking_id=${res.new_booking_id}&type=${ServiceType.HOTEL}&ref=${res.data[0].id}`
+                );
+            }
+        } catch (error) {
+            toast.error("Đặt lại thất bại: " + error.message);
+        }
+    };
 
     const sortOptions = [
         {
@@ -71,8 +86,6 @@ const HotelCancelledTab = ({ currentTab, setCurrentTab }) => {
             itemsPerPage: pageSize,
         });
     };
-
-    console.log("currentTab", currentTab);
 
     useEffect(() => {
         if (user?.id && currentTab === ServiceTab.CANCELLED) {
@@ -187,13 +200,15 @@ const HotelCancelledTab = ({ currentTab, setCurrentTab }) => {
                                                         Nhận phòng
                                                     </p>
                                                     <p className="font-semibold text-gray-900">
-                                                        {dayjs(
-                                                            payment?.booking
-                                                                ?.room_details?.[0]
-                                                                ?.check_in
-                                                        ).format(
-                                                            "YYYY-MM-DD HH:mm:ss"
-                                                        )}
+                                                        {dayjs
+                                                            .utc(
+                                                                payment?.booking
+                                                                    ?.room_details?.[0]
+                                                                    ?.check_in
+                                                            )
+                                                            .format(
+                                                                "YYYY-MM-DD HH:mm:ss"
+                                                            )}
                                                     </p>
                                                 </div>
                                                 <div>
@@ -201,13 +216,15 @@ const HotelCancelledTab = ({ currentTab, setCurrentTab }) => {
                                                         Trả phòng
                                                     </p>
                                                     <p className="font-semibold text-gray-900">
-                                                        {dayjs(
-                                                            payment?.booking
-                                                                ?.room_details?.[0]
-                                                                ?.check_out
-                                                        ).format(
-                                                            "YYYY-MM-DD HH:mm:ss"
-                                                        )}
+                                                        {dayjs
+                                                            .utc(
+                                                                payment?.booking
+                                                                    ?.room_details?.[0]
+                                                                    ?.check_out
+                                                            )
+                                                            .format(
+                                                                "YYYY-MM-DD HH:mm:ss"
+                                                            )}
                                                     </p>
                                                 </div>
                                             </div>
@@ -245,6 +262,9 @@ const HotelCancelledTab = ({ currentTab, setCurrentTab }) => {
                                         type="primary"
                                         size="large"
                                         className="px-8"
+                                        onClick={() =>
+                                            handleRebook(payment.booking.id)
+                                        }
                                     >
                                         Đặt lại
                                     </Button>

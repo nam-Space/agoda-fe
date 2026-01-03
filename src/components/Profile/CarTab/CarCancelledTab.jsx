@@ -2,7 +2,7 @@ import { Button, Card, Empty, Input, Pagination, Select, Spin } from "antd";
 import { planForTrips } from "constants/profile";
 import React, { useEffect, useState } from "react";
 import { FaSort } from "react-icons/fa6";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useAppSelector } from "../../../redux/hooks";
 import { callFetchPayment } from "config/api";
 import { ServiceType } from "constants/serviceType";
@@ -13,8 +13,11 @@ import dayjs from "dayjs";
 import { ServiceTab } from "constants/profile";
 import { formatCurrency } from "utils/formatCurrency";
 import ModalCarDetail from "./ModalCarDetail";
+import { callRebook } from "config/api";
+import { toast } from "react-toastify";
 
 const CarCancelledTab = ({ currentTab, setCurrentTab }) => {
+    const navigate = useNavigate();
     const user = useAppSelector((state) => state.account.user);
     const [isLoading, setIsLoading] = useState(false);
     const [selectedPayment, setSelectedPayment] = useState({});
@@ -31,6 +34,19 @@ const CarCancelledTab = ({ currentTab, setCurrentTab }) => {
         "sort=booking__car_detail__pickup_datetime"
     );
     const [bookingCode, setBookingCode] = useState("");
+
+    const handleRebook = async (oldBookingId) => {
+        try {
+            const res = await callRebook(oldBookingId);
+            if (res.isSuccess) {
+                navigate(
+                    `/book?booking_id=${res.new_booking_id}&type=${ServiceType.CAR}&ref=${res.data[0].id}`
+                );
+            }
+        } catch (error) {
+            toast.error("Đặt lại thất bại: " + error.message);
+        }
+    };
 
     const sortOptions = [
         {
@@ -260,6 +276,9 @@ const CarCancelledTab = ({ currentTab, setCurrentTab }) => {
                                             type="primary"
                                             size="large"
                                             className="px-8"
+                                            onClick={() =>
+                                                handleRebook(payment.booking.id)
+                                            }
                                         >
                                             Đặt lại
                                         </Button>
