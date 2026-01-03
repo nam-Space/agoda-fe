@@ -472,8 +472,12 @@ export const callUpsertUserHandbookInteraction = (data) => {
 
 // Booking
 export const callCancelBooking = (id) => {
-  return axios.post(`/api/bookings/${id}/cancel/`)
-}
+  return axios.post(`/api/bookings/${id}/cancel/`);
+};
+
+export const callRebook = (oldBookingId, data = {}) => {
+  return axios.post(`/api/bookings/${oldBookingId}/rebook/`, data);
+};
 
 // Payment
 export const callFetchPayment = (query) => {

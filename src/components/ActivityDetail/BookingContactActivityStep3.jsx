@@ -1443,7 +1443,8 @@ export default function BookingContactActivityStep3() {
                                                 : "Thanh toán thất bại"}
                                         </p>
                                         <p className="text-xs text-green-700">
-                                            Đơn đặt này không được hoàn tiền
+                                            {/* Đơn đặt này không được hoàn tiền */}
+                                            Đặt đơn thất bại. Vui lòng thử lại.
                                         </p>
                                     </div>
                                 </div>
