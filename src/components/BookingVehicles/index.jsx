@@ -661,14 +661,7 @@ export default function BookingVehicles() {
                 }
 
                 navigate(
-                    `/book?booking_id=${res.booking_id}&type=${body.service_type}&ref=${res.data.id}`,
-                    {
-                        state: {
-                            option,
-                            formFromAirportIn,
-                            car: selectedItem,
-                        },
-                    }
+                    `/book?booking_id=${res.booking_id}&type=${body.service_type}&ref=${res.data.id}`
                 );
             }
         } else {
@@ -719,14 +712,7 @@ export default function BookingVehicles() {
                 }
 
                 navigate(
-                    `/book?booking_id=${res.booking_id}&type=${body.service_type}&ref=${res.data.id}`,
-                    {
-                        state: {
-                            option,
-                            formFromLocationIn,
-                            car: selectedItem,
-                        },
-                    }
+                    `/book?booking_id=${res.booking_id}&type=${body.service_type}&ref=${res.data.id}`
                 );
             }
         }
