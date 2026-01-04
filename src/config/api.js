@@ -552,3 +552,16 @@ export const callUpdateSeatClassPricing = (id, data) => {
 export const callDeleteSeatClassPricing = (id) => {
   return axios.delete(`/api/flights/seat-classes/${id}/`);
 };
+
+// Chatbot
+export const callFetchSession = async (body) => {
+  return axios.post(`/api/chatbots/session/`, { ...body });
+}
+
+export const callCreateNewChat = async (body) => {
+  return axios.post(`/api/chatbots/new/`, { ...body });
+}
+
+export const callFetchChatbotMessages = async (query) => {
+  return axios.get(`/api/chatbots/messages/?${query}`);
+}

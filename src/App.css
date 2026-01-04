@@ -362,3 +362,18 @@
     max-width: unset;
     box-shadow: 0 3px 6px 0 rgba(0, 0, 0, 0.3);
 }
+
+.ant-float-btn-group-wrap {
+    right: 0;
+}
+
+.ant-float-btn-circle {
+    height: 60px;
+    width: 60px;
+}
+.ant-float-btn-circle
+    .ant-float-btn-body
+    .ant-float-btn-content
+    .ant-float-btn-icon {
+    width: 100%;
+}
