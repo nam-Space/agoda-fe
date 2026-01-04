@@ -2,6 +2,7 @@
     "name": "agoda-fe",
     "version": "0.1.0",
     "private": true,
+    "proxy": "https://www.askyourdatabase.com",
     "dependencies": {
         "@ant-design/icons": "^6.0.0",
         "@emotion/react": "^11.14.0",

@@ -25,13 +25,15 @@ export async function sendMessage(
     chatid,
     callbacks
 ) {
-    const response = await fetch(`${process.env.REACT_APP_BE_URL}/api/chatbots/ask/`, {
+    const response = await fetch('/api/ask', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
+            'Authorization': `Bearer ${process.env.REACT_APP_AYD_API_KEY}`,
         },
         body: JSON.stringify({
             question,
+            botid: process.env.REACT_APP_AYD_CHATBOT_ID,
             chatid,
             debug: true,
         }),
