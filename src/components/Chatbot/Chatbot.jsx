@@ -19,8 +19,6 @@ export default function ChatBot() {
     const [executingFunctions, setExecutingFunctions] = useState(new Set());
     const messagesEndRef = useRef(null);
     const streamingContentRef = useRef("");
-    const onTextBuffer = useRef("");
-    const onTextTimeout = useRef(null);
 
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -73,23 +71,11 @@ export default function ChatBot() {
         try {
             await sendMessage(content, currentChatId, {
                 onText: (text) => {
-                    onTextBuffer.current += text;
-
-                    // Nếu chưa có timeout thì tạo timeout cập nhật state
-                    if (!onTextTimeout.current) {
-                        onTextTimeout.current = setTimeout(() => {
-                            // Cập nhật state với buffer
-                            setStreamingContent((prev) => {
-                                const newContent = prev + onTextBuffer.current;
-                                streamingContentRef.current = newContent;
-                                return newContent;
-                            });
-
-                            // Reset buffer & timeout
-                            onTextBuffer.current = "";
-                            onTextTimeout.current = null;
-                        }, 100); // 100ms hoặc bạn thử điều chỉnh phù hợp
-                    }
+                    setStreamingContent((prev) => {
+                        const newContent = prev + text;
+                        streamingContentRef.current = newContent;
+                        return newContent;
+                    });
                 },
                 onSQL: (data) => {
                     const sqlMessage = {
@@ -128,13 +114,7 @@ export default function ChatBot() {
                     }
                 },
                 onEnd: () => {
-                    if (onTextTimeout.current) {
-                        clearTimeout(onTextTimeout.current);
-                        onTextTimeout.current = null;
-                    }
-
-                    const currentContent =
-                        streamingContentRef.current + onTextBuffer.current;
+                    const currentContent = streamingContentRef.current;
                     if (currentContent.trim()) {
                         const assistantMessage = {
                             id: Date.now().toString(),
@@ -144,9 +124,6 @@ export default function ChatBot() {
                         };
                         setMessages((prev) => [...prev, assistantMessage]);
                     }
-
-                    // Reset các biến và state
-                    onTextBuffer.current = "";
                     setStreamingContent("");
                     streamingContentRef.current = "";
                     setIsStreaming(false);
