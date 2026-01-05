@@ -25,7 +25,8 @@ export async function sendMessage(
     chatid,
     callbacks
 ) {
-    const response = await fetch('/api/ask', {
+    console.log('process.env.REACT_APP_CHAT_API_URL', process.env.REACT_APP_CHAT_API_URL)
+    const response = await fetch(process.env.REACT_APP_CHAT_API_URL, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
