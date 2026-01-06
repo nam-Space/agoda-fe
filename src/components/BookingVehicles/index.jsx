@@ -663,6 +663,10 @@ export default function BookingVehicles() {
                 navigate(
                     `/book?booking_id=${res.booking_id}&type=${body.service_type}&ref=${res.data.id}`
                 );
+            } else {
+                toast.error(res.message, {
+                    position: "bottom-right",
+                });
             }
         } else {
             const body = {
@@ -714,6 +718,10 @@ export default function BookingVehicles() {
                 navigate(
                     `/book?booking_id=${res.booking_id}&type=${body.service_type}&ref=${res.data.id}`
                 );
+            } else {
+                toast.error(res.message, {
+                    position: "bottom-right",
+                });
             }
         }
     };

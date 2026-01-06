@@ -40,6 +40,10 @@ const FlightCancelledTab = ({ currentTab, setCurrentTab }) => {
                 navigate(
                     `/book?booking_id=${res.new_booking_id}&type=${ServiceType.FLIGHT}`
                 );
+            } else {
+                toast.error(res.message, {
+                    position: "bottom-right",
+                });
             }
         } catch (error) {
             toast.error("Đặt lại thất bại: " + error.message);

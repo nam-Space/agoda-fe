@@ -50,6 +50,10 @@ const ActivityIncomingTab = ({ currentTab, setCurrentTab }) => {
                 position: "bottom-right",
             });
             setCurrentTab(ServiceTab.CANCELLED);
+        } else {
+            toast.error(res.message, {
+                position: "bottom-right",
+            });
         }
     };
 
