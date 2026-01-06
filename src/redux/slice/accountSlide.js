@@ -29,7 +29,7 @@ const initialState = {
         manager: null,
         hotel_staffs: [],
         hotel: null,
-        chatbot_id: null,
+        chat_id: null,
     },
 
     activeMenu: "home",
@@ -60,7 +60,7 @@ export const accountSlide = createSlice({
             state.user.manager = action.payload.manager;
             state.user.hotel_staffs = action.payload.hotel_staffs;
             state.user.hotel = action.payload.hotel;
-            state.user.chatbot_id = action.payload.chatbot_id;
+            state.user.chat_id = action.payload.chat_id;
         },
         setLogoutAction: (state, action) => {
             localStorage.removeItem("access_token_agoda");
@@ -80,7 +80,7 @@ export const accountSlide = createSlice({
                 manager: null,
                 hotel_staffs: [],
                 hotel: null,
-                chatbot_id: null,
+                chat_id: null,
             };
         },
         setRefreshTokenAction: (state, action) => {
@@ -112,7 +112,7 @@ export const accountSlide = createSlice({
                 state.user.manager = action.payload.data?.manager;
                 state.user.hotel_staffs = action.payload.data?.hotel_staffs;
                 state.user.hotel = action.payload.data?.hotel;
-                state.user.chatbot_id = action.payload.data?.chatbot_id;
+                state.user.chat_id = action.payload.data?.chat_id;
             } else {
                 state.isAuthenticated = false;
                 state.isLoading = false;
