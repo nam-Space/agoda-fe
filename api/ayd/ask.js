@@ -11,11 +11,6 @@ export default async function handler(req, res) {
 
     const { question, chatid, botid, debug = true } = req.body || {};
 
-    console.log('question:', question)
-    console.log('chatid:', chatid)
-    console.log('botid:', botid)
-    console.log('process.env.REACT_APP_AYD_API_KEY:', process.env.REACT_APP_AYD_API_KEY)
-
     if (!question || !chatid) {
         return res.status(400).json({
             error: "question and chatid are required",
