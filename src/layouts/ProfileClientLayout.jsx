@@ -8,9 +8,11 @@ import { LuFerrisWheel } from "react-icons/lu";
 import { AiFillMessage } from "react-icons/ai";
 import { Link, useLocation } from "react-router-dom";
 import { useSocket } from "contexts/SocketProvider";
-import { Badge } from "antd";
+import { Badge, FloatButton } from "antd";
 import { useAppSelector } from "../redux/hooks";
 import { FaCar } from "react-icons/fa";
+import { CommentOutlined } from "@ant-design/icons";
+import ChatBot from "components/Chatbot/Chatbot";
 
 const ProfileClientLayout = ({ children }) => {
     const location = useLocation();
@@ -104,7 +106,14 @@ const ProfileClientLayout = ({ children }) => {
                     <div className="col-start-2 col-span-3">{children}</div>
                 </div>
             </div>
-
+            <FloatButton.Group
+                trigger="click"
+                type="primary"
+                style={{ insetInlineEnd: 24 }}
+                icon={<CommentOutlined className="text-[30px]" />}
+            >
+                <ChatBot />
+            </FloatButton.Group>
             <FooterClient />
         </div>
     );
