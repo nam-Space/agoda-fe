@@ -42,6 +42,10 @@ const CarCancelledTab = ({ currentTab, setCurrentTab }) => {
                 navigate(
                     `/book?booking_id=${res.new_booking_id}&type=${ServiceType.CAR}&ref=${res.data[0].id}`
                 );
+            } else {
+                toast.error(res.message, {
+                    position: "bottom-right",
+                });
             }
         } catch (error) {
             toast.error("Đặt lại thất bại: " + error.message);
