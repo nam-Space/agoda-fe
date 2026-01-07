@@ -1,4 +1,4 @@
-import { Spin, message } from "antd";
+import { FloatButton, Spin, message } from "antd";
 import { useEffect, useState } from "react";
 import { useParams, useSearchParams } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
@@ -32,6 +32,8 @@ import icTable from "../../images/hotel/ic_table.png";
 import { callFetchDetailUserHotelInteractionByHotelId } from "config/api";
 import { callUpsertUserHotelInteraction } from "config/api";
 import { stripHtml } from "utils/renderHtml";
+import { CommentOutlined } from "@ant-design/icons";
+import ChatBot from "components/Chatbot/Chatbot";
 
 const HotelPage = () => {
     const { hotelSlug } = useParams();
@@ -634,6 +636,14 @@ const HotelPage = () => {
                     <ReviewTabView hotelId={isDetailPage ? hotelId : null} />
                 </div>
             </div>
+            <FloatButton.Group
+                trigger="click"
+                type="primary"
+                style={{ insetInlineEnd: 24 }}
+                icon={<CommentOutlined className="text-[30px]" />}
+            >
+                <ChatBot />
+            </FloatButton.Group>
             <FooterClient />
             {focusDatePicker && (
                 <div className="absolute bg-[rgba(0,0,0,0.4)] z-[4] top-0 left-0 right-0 bottom-0"></div>
