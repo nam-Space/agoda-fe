@@ -353,6 +353,10 @@ export default function ActivityDetail() {
                 navigate(
                     `/book?booking_id=${res.booking_id}&type=${body.service_type}&ref=${res.data.id}`
                 );
+            } else {
+                toast.error(res.message, {
+                    position: "bottom-right",
+                });
             }
         } catch (e) {
             toast.error(e.message, {
@@ -696,6 +700,19 @@ export default function ActivityDetail() {
                                                                     </span>
                                                                     <Button
                                                                         size="small"
+                                                                        disabled={
+                                                                            adultTickets[
+                                                                                index
+                                                                            ] +
+                                                                                childTickets[
+                                                                                    index
+                                                                                ] >=
+                                                                            getActivityDate(
+                                                                                item,
+                                                                                index
+                                                                            )
+                                                                                ?.participants_available
+                                                                        }
                                                                         onClick={() =>
                                                                             setAdultTickets(
                                                                                 (
@@ -771,6 +788,19 @@ export default function ActivityDetail() {
                                                                     </span>
                                                                     <Button
                                                                         size="small"
+                                                                        disabled={
+                                                                            adultTickets[
+                                                                                index
+                                                                            ] +
+                                                                                childTickets[
+                                                                                    index
+                                                                                ] >=
+                                                                            getActivityDate(
+                                                                                item,
+                                                                                index
+                                                                            )
+                                                                                ?.participants_available
+                                                                        }
                                                                         onClick={() =>
                                                                             setChildTickets(
                                                                                 (
