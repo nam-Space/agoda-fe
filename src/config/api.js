@@ -389,6 +389,11 @@ export const callFetchRoomQuery = (query) => {
   return axios.get(`/api/rooms/rooms/?${query}`);
 };
 
+// Physical room
+export const callFetchPhysicalRoom = (query) => {
+  return axios.get(`/api/rooms/physical-rooms/?${query}`);
+};
+
 export const callGetRoomDetail = (roomId) => {
   return axios.get(`/api/rooms/rooms/${roomId}/`);
 };
@@ -431,6 +436,10 @@ export const getAirlines = () => {
 // Flight
 export const getFlights = (params) => {
   return axios.get("/api/flights/", { params });
+};
+
+export const getFlightSeats = (flightId, params = {}) => {
+  return axios.get(`/api/flights/${flightId}/seats/`, { params });
 };
 
 export const callFetchFlight = (query) => {
@@ -556,12 +565,12 @@ export const callDeleteSeatClassPricing = (id) => {
 // Chatbot
 export const callFetchSession = async (body) => {
   return axios.post(`/api/chatbots/session/`, { ...body });
-}
+};
 
 export const callCreateNewChat = async (body) => {
   return axios.post(`/api/chatbots/new/`, { ...body });
-}
+};
 
 export const callFetchChatbotMessages = async (query) => {
   return axios.get(`/api/chatbots/messages/?${query}`);
-}
+};
