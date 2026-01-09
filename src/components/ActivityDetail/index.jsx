@@ -901,16 +901,19 @@ export default function ActivityDetail() {
                                                 >
                                                     Thêm vào xe đẩy hàng
                                                 </Button> */}
-                                                        <Button
-                                                            type="primary"
-                                                            size="large"
-                                                            className="bg-blue-500 hover:bg-blue-600 border-blue-500 hover:border-blue-600 rounded-full h-12 font-medium"
-                                                            onClick={
-                                                                handleGoToBooking
-                                                            }
-                                                        >
-                                                            Bước tiếp theo
-                                                        </Button>
+                                                        {getPrice(item, index) >
+                                                            0 && (
+                                                            <Button
+                                                                type="primary"
+                                                                size="large"
+                                                                className="bg-blue-500 hover:bg-blue-600 border-blue-500 hover:border-blue-600 rounded-full h-12 font-medium"
+                                                                onClick={
+                                                                    handleGoToBooking
+                                                                }
+                                                            >
+                                                                Bước tiếp theo
+                                                            </Button>
+                                                        )}
                                                     </div>
                                                 </div>
                                             )}
@@ -1297,26 +1300,30 @@ export default function ActivityDetail() {
                                     {/* Action buttons */}
                                     {(adultTickets[selectedIndexTicket] >= 1 ||
                                         childTickets[selectedIndexTicket] >=
-                                            1) && (
-                                        <div className="space-y-3">
-                                            <Button
-                                                type="primary"
-                                                size="large"
-                                                className="w-full bg-blue-500 hover:bg-blue-600 border-blue-500 hover:border-blue-600 rounded-full h-12 font-medium"
-                                                onClick={handleGoToBooking}
-                                            >
-                                                Bước tiếp theo
-                                            </Button>
+                                            1) &&
+                                        getPrice(
+                                            selectedTickerOption,
+                                            selectedIndexTicket
+                                        ) > 0 && (
+                                            <div className="space-y-3">
+                                                <Button
+                                                    type="primary"
+                                                    size="large"
+                                                    className="w-full bg-blue-500 hover:bg-blue-600 border-blue-500 hover:border-blue-600 rounded-full h-12 font-medium"
+                                                    onClick={handleGoToBooking}
+                                                >
+                                                    Bước tiếp theo
+                                                </Button>
 
-                                            {/* <Button
+                                                {/* <Button
                                                 size="large"
                                                 className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 border-gray-200 hover:border-gray-300 rounded-full h-12 font-medium"
                                                 onClick={() => {}}
                                             >
                                                 Thêm vào xe đẩy hàng
                                             </Button> */}
-                                        </div>
-                                    )}
+                                            </div>
+                                        )}
                                 </>
                             )}
                         </Card>
