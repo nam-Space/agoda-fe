@@ -514,6 +514,19 @@ export default function BookingContactActivity() {
                         <h4 className="font-semibold text-sm text-gray-900 line-clamp-2 mb-1">
                           {roomBooking?.room?.room_type || "Phòng"}
                         </h4>
+
+                        {roomBooking?.physical_rooms &&
+                          roomBooking.physical_rooms.length > 0 && (
+                            <div className="mt-2 text-sm text-gray-600">
+                              <p className="font-medium">Phòng đã chọn:</p>
+                              {roomBooking.physical_rooms.map((pr, idx) => (
+                                <p key={pr.id} className="text-gray-800">
+                                  Phòng - {pr.code} (Tầng {pr.floor}){" "}
+                                  {/* {pr.is_available ? " - Có sẵn" : " - Đã đặt"} */}
+                                </p>
+                              ))}
+                            </div>
+                          )}
                         <div className="flex items-center gap-1 text-xs">
                           <Star className="w-3 h-3 fill-orange-500 text-orange-500" />
                           <span className="font-semibold">
@@ -833,6 +846,16 @@ export default function BookingContactActivity() {
                                 </span>
                               </h3>
                             </div>
+                            {/* dãy ghế */}
+                            {Array.isArray(flightDetail.seats) &&
+                              flightDetail.seats.length > 0 && (
+                                <div className="mt-2 text-sm text-red-700">
+                                  Ghế đã chọn:{" "}
+                                  <span className="font-semibold">
+                                    {flightDetail.seats.join(", ")}
+                                  </span>
+                                </div>
+                              )}
                             <div>
                               <div>
                                 Chuyến bay từ:{" "}
