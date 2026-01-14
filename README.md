@@ -221,7 +221,43 @@ http://localhost:3000
 
 ---
 
-## 11. Kết nối Backend
+## 11. Giao diện
+### 11.1 Giao diện trang chủ
+<img width="1919" height="1079" alt="image" src="https://github.com/user-attachments/assets/2824f842-39c9-4150-81f4-ee59e4b7734e" />
+<img width="1919" height="1079" alt="image" src="https://github.com/user-attachments/assets/5893db28-1e16-43fa-8a28-d047edee5b5c" />
+
+### 11.2 Giao diện thành phố
+<img width="1919" height="1079" alt="image" src="https://github.com/user-attachments/assets/a0a1663e-c3fe-49c0-a45f-bbb2d0695b0f" />
+<img width="1919" height="1079" alt="image" src="https://github.com/user-attachments/assets/6775c6d6-d353-45eb-b286-6524767b4dd0" />
+
+### 11.3 Giao diện khách sạn
+<img width="1919" height="1079" alt="image" src="https://github.com/user-attachments/assets/c1d41ef1-7f09-4336-98a5-b2a3420d619f" />
+<img width="1916" height="1079" alt="image" src="https://github.com/user-attachments/assets/2126ccd9-1a41-49fa-bf85-c67ca032c7d3" />
+
+### 11.4 Giao diện hoạt động
+<img width="1919" height="1079" alt="image" src="https://github.com/user-attachments/assets/4c337548-2de8-4f4b-bda6-79362ed4fed2" />
+<img width="1919" height="1079" alt="image" src="https://github.com/user-attachments/assets/5885ca74-68a9-4977-b119-c8a04833d176" />
+<img width="1917" height="1076" alt="image" src="https://github.com/user-attachments/assets/099bf4c6-25a5-4d5c-917a-6dee199eb795" />
+
+### 11.5 Giao diện chuyến bay
+<img width="1914" height="1075" alt="image" src="https://github.com/user-attachments/assets/0363b94b-56f9-46ed-8cb2-f21d5de361dc" />
+
+### 11.6 Giao diện đặt xe taxi
+<img width="1919" height="1079" alt="image" src="https://github.com/user-attachments/assets/348caae9-fb9d-4c14-970a-2ab613fa0e99" />
+
+### 11.7 Giao diện thanh toán
+<img width="1919" height="1079" alt="image" src="https://github.com/user-attachments/assets/58f21d3b-d6b1-4f09-a497-2a74c85d1251" />
+<img width="1919" height="1079" alt="image" src="https://github.com/user-attachments/assets/0ad75dbe-eb76-40dd-96f6-3d2839ee5b5d" />
+
+### 11.8 Giao diện lịch sử thanh toán cá nhân
+<img width="1919" height="1079" alt="image" src="https://github.com/user-attachments/assets/11025cdf-0da7-4cb8-833c-162b87491e0d" />
+<img width="1919" height="1079" alt="image" src="https://github.com/user-attachments/assets/3e75cdc7-9f92-4003-8ec5-2cb28c10d127" />
+<img width="1919" height="1079" alt="image" src="https://github.com/user-attachments/assets/0ab57c5b-f220-47f8-83d4-351bd54db6a6" />
+<img width="1914" height="1074" alt="image" src="https://github.com/user-attachments/assets/a277fa94-8b19-473e-a450-58de10be5259" />
+<img width="1919" height="1079" alt="image" src="https://github.com/user-attachments/assets/a297cb35-1067-408a-b7ed-72d6e94c64f2" />
+
+
+## 12. Kết nối Backend
 
 Frontend giao tiếp với:
 
@@ -238,7 +274,7 @@ VITE_WS_URL=ws://localhost:8000/ws
 
 ---
 
-## 12. Bảo mật & xác thực
+## 13. Bảo mật & xác thực
 
 * JWT Authentication
 * Route Guard theo role
@@ -246,7 +282,7 @@ VITE_WS_URL=ws://localhost:8000/ws
 
 ---
 
-## 13. Định hướng phát triển
+## 14. Định hướng phát triển
 
 * Tối ưu SEO
 * Lazy loading & code splitting
@@ -255,7 +291,7 @@ VITE_WS_URL=ws://localhost:8000/ws
 
 ---
 
-## 14. Mục đích & giá trị dự án
+## 15. Mục đích & giá trị dự án
 
 Dự án giúp:
 
@@ -266,13 +302,13 @@ Dự án giúp:
 
 ---
 
-## 15. Tác giả
+## 16. Tác giả
 
 **Nam Nguyen**
 GitHub: [https://github.com/nam-Space](https://github.com/nam-Space)
 
 ---
 
-## 16. License
+## 17. License
 
 Project phục vụ mục đích **học tập & portfolio**.
