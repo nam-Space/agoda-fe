@@ -2,7 +2,6 @@ import { EnvironmentOutlined } from "@ant-design/icons";
 import { FaStar } from "react-icons/fa";
 import { Link } from "react-router-dom";
 import { formatCurrency } from "utils/formatCurrency";
-import { Pagination } from "antd";
 import { createHotelSlug } from "utils/slugHelpers";
 
 const HotelCardForHost = ({ hotel }) => {
@@ -80,15 +79,7 @@ const HotelCardForHost = ({ hotel }) => {
   );
 };
 
-const HotelListForHost = ({ hotels, meta, setMeta }) => {
-  const onChangePagination = (pageNumber, pageSize) => {
-    setMeta({
-      ...meta,
-      current: pageNumber,
-      pageSize: pageSize,
-    });
-  };
-
+const HotelListForHost = ({ hotels }) => {
   return (
     <div className="mt-6">
       <div className="grid grid-cols-2 gap-4">
@@ -96,17 +87,6 @@ const HotelListForHost = ({ hotels, meta, setMeta }) => {
           <HotelCardForHost key={hotel.id} hotel={hotel} />
         ))}
       </div>
-      {meta.total > 0 && (
-        <div className="flex justify-center mt-6">
-          <Pagination
-            pageSize={meta.pageSize}
-            showQuickJumper
-            total={meta.total}
-            onChange={onChangePagination}
-            current={meta.current}
-          />
-        </div>
-      )}
     </div>
   );
 };
