@@ -1,3 +1,4 @@
+import { Empty, Spin } from "antd";
 import HotelListForHost from "components/Hotel/HotelListForHost";
 import { callFetchHotelQuery } from "config/api";
 import dayjs from "dayjs";
@@ -6,6 +7,7 @@ import { useEffect, useState } from "react";
 
 export default function HostProfilePopup({ onClose, host }) {
   // Nếu chưa có host, không render để tránh lỗi
+  const [isLoading, setIsLoading] = useState(false);
   const [hotels, setHotels] = useState([]);
   const [meta, setMeta] = useState({
     current: 1,
@@ -18,6 +20,7 @@ export default function HostProfilePopup({ onClose, host }) {
     host;
 
   const handleGetHotel = async (query) => {
+    setIsLoading(true);
     const res = await callFetchHotelQuery(query);
     if (res.isSuccess) {
       setHotels(res.data);
@@ -28,6 +31,7 @@ export default function HostProfilePopup({ onClose, host }) {
         totalPages: res.meta.totalPages,
       });
     }
+    setIsLoading(false);
   };
 
   useEffect(() => {
@@ -86,15 +90,27 @@ export default function HostProfilePopup({ onClose, host }) {
             <h3 className="text-lg font-semibold mb-4 text-left w-full">
               Danh sách khách sạn ({meta.total || 0})
             </h3>
-
-            <div className="mx-auto">
-              <HotelListForHost
-                hostId={host.id}
-                hotels={hotels}
-                meta={meta}
-                setMeta={setMeta}
-              />
-            </div>
+            {isLoading ? (
+              <div className="flex justify-center py-8">
+                <Spin size="large" />
+              </div>
+            ) : hotels.length === 0 ? (
+              <div className="py-8">
+                <Empty
+                  description="Không tìm thấy khách sạn nào"
+                  image={Empty.PRESENTED_IMAGE_SIMPLE}
+                />
+              </div>
+            ) : (
+              <div className="mx-auto">
+                <HotelListForHost
+                  hostId={host.id}
+                  hotels={hotels}
+                  meta={meta}
+                  setMeta={setMeta}
+                />
+              </div>
+            )}
           </div>
         </div>
       </div>
