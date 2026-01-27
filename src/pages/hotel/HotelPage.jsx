@@ -258,6 +258,7 @@ const HotelPage = () => {
           rooms: hotelDetail.rooms || [],
           owner: hotelDetail.owner
             ? {
+                id: hotelDetail.owner.id,
                 name:
                   `${hotelDetail.owner.first_name || ""} ${
                     hotelDetail.owner.last_name || ""
@@ -270,11 +271,7 @@ const HotelPage = () => {
                 gender: hotelDetail.owner.gender || "Không rõ",
                 birthday: hotelDetail.owner.birthday || "Chưa cập nhật",
                 role: hotelDetail.owner.role || "Không rõ",
-                joinedAt: hotelDetail.owner.date_joined
-                  ? new Date(hotelDetail.owner.date_joined).toLocaleDateString(
-                      "vi-VN",
-                    )
-                  : "Chưa cập nhật",
+                joinedAt: hotelDetail.owner.date_joined,
               }
             : null,
         }
