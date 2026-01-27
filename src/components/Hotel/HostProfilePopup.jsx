@@ -1,4 +1,4 @@
-import { Empty, Spin } from "antd";
+import { Empty, Pagination, Spin } from "antd";
 import HotelListForHost from "components/Hotel/HotelListForHost";
 import { callFetchHotelQuery } from "config/api";
 import dayjs from "dayjs";
@@ -32,6 +32,14 @@ export default function HostProfilePopup({ onClose, host }) {
       });
     }
     setIsLoading(false);
+  };
+
+  const onChangePagination = (pageNumber, pageSize) => {
+    setMeta({
+      ...meta,
+      current: pageNumber,
+      pageSize: pageSize,
+    });
   };
 
   useEffect(() => {
@@ -103,11 +111,17 @@ export default function HostProfilePopup({ onClose, host }) {
               </div>
             ) : (
               <div className="mx-auto">
-                <HotelListForHost
-                  hostId={host.id}
-                  hotels={hotels}
-                  meta={meta}
-                  setMeta={setMeta}
+                <HotelListForHost hostId={host.id} hotels={hotels} />
+              </div>
+            )}
+            {meta.total > 0 && (
+              <div className="flex justify-center mt-6">
+                <Pagination
+                  pageSize={meta.pageSize}
+                  showQuickJumper
+                  total={meta.total}
+                  onChange={onChangePagination}
+                  current={meta.current}
                 />
               </div>
             )}
