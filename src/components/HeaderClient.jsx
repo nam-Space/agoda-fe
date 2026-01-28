@@ -413,7 +413,7 @@ const HeaderClient = () => {
               placement="topRight"
               onOpenChange={(val) => setOpenMenu(val)}
             >
-              <div className="w-[44px] h-[44px] text-[#2067da] font-semibold relative flex justify-center items-center rounded-[50px] border-[1px] border-white after:bg-[#2067da] after:absolute after:top-0 after:left-0 after:right-0 after:bottom-0 after:opacity-0 hover:after:opacity-10 after:transition-all after:duration-300 after:rounded-[50px]">
+              <div className="cursor-pointer w-[44px] h-[44px] text-[#2067da] font-semibold relative flex justify-center items-center rounded-[50px] border-[1px] border-white after:bg-[#2067da] after:absolute after:top-0 after:left-0 after:right-0 after:bottom-0 after:opacity-0 hover:after:opacity-10 after:transition-all after:duration-300 after:rounded-[50px]">
                 <MenuOutlined className="text-[24px]" />
               </div>
             </Popover>
