@@ -34,6 +34,7 @@ import { callUpsertUserHotelInteraction } from "config/api";
 import { stripHtml } from "utils/renderHtml";
 import { CommentOutlined } from "@ant-design/icons";
 import ChatBot from "components/Chatbot/Chatbot";
+import { createHotelSlug } from "utils/slugHelpers";
 
 const HotelPage = () => {
   const { hotelSlug } = useParams();
@@ -311,8 +312,7 @@ const HotelPage = () => {
 
   const breadcrumbs = isDetailPage
     ? [
-        { text: "Trang chủ", link: "/", isActive: true },
-        { text: "Khách sạn", link: "/hotel", isActive: false },
+        { text: "Trang chủ", link: "/", isActive: false },
         ...(transformedHotel?.cityName
           ? [
               {
@@ -324,25 +324,15 @@ const HotelPage = () => {
           : []),
         {
           text: transformedHotel?.name || "Chi tiết khách sạn",
-          link: `/hotel/${hotelId}`,
-          isActive: false,
+          link: `/hotel/${createHotelSlug(transformedHotel.name, transformedHotel.id)}`,
+          isActive: true,
         },
       ]
     : [
         { text: "Trang chủ", link: "/", isActive: true },
         {
-          text: "Khách sạn Việt Nam (107.219)",
-          link: "/vietnam-hotels",
-          isActive: false,
-        },
-        {
           text: "Khách sạn Vũng Tàu (6.329)",
           link: "/vung-tau-hotels",
-          isActive: false,
-        },
-        {
-          text: "Vũng Tàu Căn hộ (2.954)",
-          link: "/vung-tau-apartments",
           isActive: false,
         },
         {
